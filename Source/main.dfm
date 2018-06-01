@@ -5,6 +5,8 @@ object MainForm: TMainForm
   ClientHeight = 561
   ClientWidth = 1084
   Color = clBtnFace
+  Constraints.MinHeight = 400
+  Constraints.MinWidth = 600
   DefaultMonitor = dmDesktop
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -54,10 +56,19 @@ object MainForm: TMainForm
     Left = 456
     Top = 369
     Width = 620
-    Height = 184
+    Height = 160
     Anchors = [akLeft, akRight, akBottom]
     Lines.Strings = (
-      'Press load file to start')
+      'Press load file to start'
+      'Right-click packet list for filters'
+      ''
+      
+        'To adjust packet info please check parserinfo.txt in the parse f' +
+        'older'
+      ''
+      'Made by ZeromusXYZ'
+      ''
+      'Note: PacketID names are currently hard-coded')
     ReadOnly = True
     TabOrder = 2
   end
@@ -85,6 +96,17 @@ object MainForm: TMainForm
     RowHeights = (
       24
       24)
+  end
+  object CBOriginalData: TCheckBox
+    Left = 456
+    Top = 535
+    Width = 177
+    Height = 17
+    Anchors = [akLeft, akBottom]
+    Caption = 'Show Original Data'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
   end
   object OpenDialogLogFiles: TOpenDialog
     DefaultExt = '*.log'

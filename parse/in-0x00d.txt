@@ -1,0 +1,3 @@
+file;in-0x00d;PC Update;Packet contains info about another PC (i.e. coordinates).
+
+byteflag;0x0A;UpdateFlag

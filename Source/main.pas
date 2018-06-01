@@ -27,6 +27,7 @@ type
     PMPacketListN3: TMenuItem;
     PMPacketListOnlyOut: TMenuItem;
     PMPacketListOnlyIn: TMenuItem;
+    CBOriginalData: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BtnLoadFileClick(Sender: TObject);
@@ -59,7 +60,7 @@ implementation
 
 {$R *.dfm}
 
-uses System.StrUtils;
+uses System.StrUtils, packetparser;
 
 Procedure TMainForm.MoveToSync;
 VAR
@@ -188,25 +189,9 @@ begin
     AddSGRow('Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
     AddSGRow('Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
 
-    If (PD.PacketLogType = pltOut) Then
-    Case PD.PacketID of
-      $015 {Standard Client} : Begin
-        AddSGRow('Position',
-          'X:'  + FormatFloat('0.00',PD.GetFloatAtPos($4)) +
-          ' Y:' + FormatFloat('0.00',PD.GetFloatAtPos($8)) +
-          ' Z:' + FormatFloat('0.00',PD.GetFloatAtPos($C)) +
-          ' - Dir: ' + ByteToRotation(PD.GetByteAtPos($14)) );
-        AddSGRow('Run Count',IntToStr(PD.GetWordAtPos($12)));
-        // AddSGRow('Rotation',ByteToRotation(PD.GetByteAtPos($14)) );
-        AddSGRow('Flag?',IntToStr(PD.GetByteAtPos($15)));
-        AddSGRow('TargetID',IntToStr(PD.GetWordAtPos($16)));
-        // AddSGRow('TimeStamp',PD.GetTimeStampAtPos($18));
-        AddSGRow('TimeStamp',MSToStr(PD.GetUInt32AtPos($18)));
-        AddSGRow('?UInt32 @ 0x1C',IntToStr(PD.GetUInt32AtPos($1C)));
-        ExtraInfoStart := $1C ;
-      End;
-    End;
+    AddPacketInfoToStringGrid(PD,SG);
 
+    (*
     If (PD.PacketLogType = pltIn) Then
     Case PD.PacketID of
       $00D {PC Update} : AddSGRow('UpdateFlag',IntToStr(PD.GetByteAtPos($0A)));
@@ -231,6 +216,7 @@ begin
         AddSGRow('?Max HP',IntToStr(PD.GetWordAtPos($2E)));
         AddSGRow('Max MP',IntToStr(PD.GetWordAtPos($30)));
         AddSGRow('Unknown Data','14 bytes');  //-- 2E   Flags and junk? Hard to say. All 0s observed.
+        *)
         (*
     {ctype='unsigned int',      label='Flags'},                                 -- 44   Looks like a bunch of flags. Observed value if 01 00 00 00
     {ctype='unsigned char',     label='_unknown5'},                             -- 48   Potential flag to signal the list start. Observed value of 01
@@ -238,6 +224,7 @@ begin
     {ctype='unsigned char',     label='Current Monster Level'},                 -- 5F
     {ctype='unsigned int',      label='Encumbrance Flags'},                     -- 60   [legs, hands, body, head, ammo, range, sub, main,] [back, right_ring, left_ring, right_ear, left_ear, waist, neck, feet] [HP, CHR, MND, INT, AGI, VIT, DEX, STR,] [X X X X X X X MP]
         *)
+        (*
       End;
 
       $050 {Equip} : Begin
@@ -247,22 +234,32 @@ begin
         ExtraInfoStart := $7 ;
       End;
     End;
+    *)
 
+    (*
     I := ExtraInfoStart ;
     While I < PD.PacketDataSize Do
     Begin
       AddSGRow('?Byte 0x'+IntToHex(I,2)+' ' +IntToStr(I), '0x' + IntToHex(PD.GetByteAtPos(I),2) + '  ' + BytetoBit(PD.GetByteAtPos(I)) + '  ' + IntToStr(PD.GetByteAtPos(I)));
       I := I + 1 ;
     End;
+    *)
 
     // AddSGRow('??','0x' + IntToHex(PD.ra,3));
 
 
     // MInfo.Lines.Add('ID: '+S+' 0x'+ IntToHex(PD.PacketID,3) + ' -- SIZE: ' + IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
     // MInfo.Lines.Add('SYNC: ' + IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
-    MInfo.Lines.Add('RAWDATA:');
-    // MInfo.Lines.Add(PD.PrintRawBytesAsHex);
-    MInfo.Lines.Add(PD.RawText.Text);
+    MInfo.Lines.Clear ;
+    If (CBOriginalData.Checked) Then
+    Begin
+      MInfo.Lines.Add('Source:');
+      MInfo.Lines.Add(PD.RawText.Text)
+    End Else
+    Begin
+      // MInfo.Lines.Add('RAW Data:');
+      MInfo.Lines.Add(PD.PrintRawBytesAsHex);
+    End;
   End;
 
   LBPackets.Invalidate;

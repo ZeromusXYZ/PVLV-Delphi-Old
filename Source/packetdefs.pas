@@ -22,7 +22,7 @@ TYPE
     fTimeStamp : TDateTime ;
   Public
     Constructor Create ;
-    Destructor Destroy ;
+    Destructor Destroy ; Override ;
     Function AddRawLineAsBytes(S : String):Integer;
     Function PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
@@ -51,7 +51,7 @@ TYPE
     FilterIn : Array of Word ;
 
     Constructor Create(IsMaster:Boolean);
-    Destructor Destroy ;
+    Destructor Destroy ; Override ;
     Procedure Clear ;
     Procedure ClearFilters;
     Function LoadFromFile(Filename : String):Boolean;
@@ -125,14 +125,15 @@ End;
 
 Function ToBitStr(var V):String;
 VAR
-  I, N , BitSize, ByteSize, S : Integer ;
+  I, N , ByteSize, S : Integer ;
+  //BitSize : Integer ;
   B : Byte ;
   BP : PByte ;
 Begin
   {$POINTERMATH ON}
   Result := '' ;
   ByteSize := SizeOf(V);
-  BitSize := ByteSize * 8 ;
+  //BitSize := ByteSize * 8 ;
 
   For N := 0 To ByteSize-1 Do
   Begin
@@ -484,7 +485,7 @@ End;
 
 Function TPacketData.AddRawLineAsBytes(S : String):Integer;
 VAR
-  T, H : String ;
+  H : String ;
   I, C : Integer ;
   B : Byte ;
 Begin
@@ -519,18 +520,27 @@ End;
 Function TPacketData.PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
 VAR
   S : String ;
-  I : Integer ;
+  I , L : Integer ;
   B : Byte ;
 Begin
   Result := '' ;
+  Result := Result + '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' + #13#10 ;
+  Result := Result + '---+----------------------------------------------------' + #13#10 ;
+  L := 0 ;
   For I := 0 To Length(fRawBytes)-1 Do
   Begin
+    If ((I mod ValuesPerRow) = 0) Then
+    Begin
+      Result := Result + IntToHex(L,2) + ' | ' ;
+    End;
+
     B := fRawBytes[I];
     S := IntToHex(B,2);
     Result := Result + S ;
     If (I mod ValuesPerRow) = ValuesPerRow-1 Then
     Begin
       Result := Result + #13#10 ;
+      L := L + 1 ;
     End Else
     Begin
       Result := Result + ' ' ;
@@ -689,7 +699,7 @@ VAR
   S : String ;
   PreferedPacketType : Byte ;
 Begin
-  Result := False ;
+
   PreferedPacketType := 0 ;
   Try
 

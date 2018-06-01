@@ -1,0 +1,61 @@
+Place parsers .txt files into the parse folder
+The low viewer will look for a .txt file inside it with the following name
+
+parse\[data direction]-[hex packet id].txt
+
+- [data direction] is either 'in' or 'out'
+- [hex packet id] needs to be in 0x??? format (3 hex digits)
+
+example:
+
+parse\out-0x015.txt     <-- Standard Client Packet (your character's position update to the server)
+
+
+The file will be parsed line by line, and if something matches, it'll show it in the program
+Line format is as following
+
+type;offset[;name[;description]]
+
+- type are some pre-defined types in the log viewer
+- offset is the byte-offset within the raw data (including the header)
+  This can be in decimal format or hex format (C or Pascal)  10 = 0xA = 0x0A = $A = $0A
+- name is what you want to show in the row header (optional, if ommited will display your type and offset instead)
+- description is not used at this time (might use this for flags in the future)
+
+currently supported types:
+
+typename: file rem comment
+description: nothing at all
+
+
+typename: byte , char , b
+description: unsigned 8 bit (1 byte) value
+
+typename: byteflag , flag , bits
+description: unsigned byte value, but also shows the value as bits
+
+typename: word , uint16 , w
+description: unsigned 16 bit (2 byte) value
+
+typename: int , int32 , i
+description: signed 32 bit (4 byte) value
+
+typename: dword , long , longword , uint32 , u
+description: unsigned 32 bit (4 byte) value
+
+typename: float , f
+description: 4 byte floating point number
+
+typename: pos
+description: series of 3 floats to make XYZ coordinates
+
+typename: dir
+description: more visually appealing way of displaying a byte that is used for direction
+
+typename: ms , timestamp
+description: more visually appealing way of displaying a uint32 that is used as a timestamp in milliseconds
+
+
+If there is unused data left in the packet past the last defined position,
+the log viewer will display them all as byteflag values with their
+position as a name.
