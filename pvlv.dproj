@@ -45,7 +45,7 @@
         <VerInfo_Locale>2067</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <Icon_MainIcon>Icons\ffxi-found-it!.ico</Icon_MainIcon>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
@@ -97,9 +97,9 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Build>4</VerInfo_Build>
+        <VerInfo_Build>7</VerInfo_Build>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.1.0.4;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.1.0.7;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -114,9 +114,19 @@
         </DCCReference>
         <DCCReference Include="Source\packetdefs.pas"/>
         <DCCReference Include="Source\packetparser.pas"/>
+        <DCCReference Include="Source\datalookups.pas"/>
+        <DCCReference Include="Source\searchdialog.pas">
+            <Form>DlgSearch</Form>
+        </DCCReference>
         <None Include="Parse\out-0x015.txt"/>
         <None Include="Parse\in-0x00d.txt"/>
         <None Include="Parse\parserinfo.txt"/>
+        <None Include="lookup\zones.txt"/>
+        <None Include="lookup\in.txt"/>
+        <None Include="lookup\out.txt"/>
+        <None Include="lookup\equipslot.txt"/>
+        <None Include="lookup\containers.txt"/>
+        <None Include="parse\in-0x050.txt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

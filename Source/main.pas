@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, packetdefs, Vcl.CheckLst,
-  Vcl.Tabs, Vcl.Menus, Vcl.Grids;
+  Vcl.Tabs, Vcl.Menus, Vcl.Grids, Vcl.ComCtrls, System.Actions, Vcl.ActnList;
 
 type
   TMainForm = class(TForm)
@@ -28,6 +28,10 @@ type
     PMPacketListOnlyOut: TMenuItem;
     PMPacketListOnlyIn: TMenuItem;
     CBOriginalData: TCheckBox;
+    BtnSearch: TButton;
+    ActionList1: TActionList;
+    ActionSearchNext: TAction;
+    ActionSearchNew: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BtnLoadFileClick(Sender: TObject);
@@ -41,12 +45,16 @@ type
     procedure PMPacketListHideThisClick(Sender: TObject);
     procedure PMPacketListOnlyOutClick(Sender: TObject);
     procedure PMPacketListOnlyInClick(Sender: TObject);
+    procedure BtnSearchClick(Sender: TObject);
+    procedure ActionSearchNextExecute(Sender: TObject);
+    procedure ActionSearchNewExecute(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
     Procedure MoveToSync;
     procedure FillListBox ;
     Procedure AddSGRow(VarName:String;Val:String);
+    Procedure SearchNext ;
   public
     { Public declarations }
     PL, PLLoaded : TPacketList ;
@@ -60,7 +68,7 @@ implementation
 
 {$R *.dfm}
 
-uses System.StrUtils, packetparser;
+uses System.StrUtils, packetparser, searchdialog;
 
 Procedure TMainForm.MoveToSync;
 VAR
@@ -130,6 +138,31 @@ begin
   End;
 end;
 
+procedure TMainForm.BtnSearchClick(Sender: TObject);
+begin
+  // Nothnig loaded, prompt the dialog
+  If PLLoaded.Count <= 0 Then
+  Begin
+    BtnLoadFile.Click;
+  End;
+  // Still nothing loaded ?
+  If PLLoaded.Count <= 0 Then
+  Begin
+    ShowMessage('Doesn''t seem like we have anything in the current file to find');
+    Exit ;
+  End;
+
+  // Show search Dialog
+  If DlgSearch.ShowModal = mrOk Then
+  Begin
+    // Let's see if we can find it
+    SearchNext ;
+    LBPackets.SetFocus;
+  End;
+
+
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   PLLoaded := TPacketList.Create(True); // NOTE: PLLoaded actually owns all TPacketData
@@ -143,6 +176,23 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(PL);
   FreeAndNil(PLLoaded);
+end;
+
+procedure TMainForm.ActionSearchNewExecute(Sender: TObject);
+begin
+  BtnSearch.Click ;
+end;
+
+procedure TMainForm.ActionSearchNextExecute(Sender: TObject);
+begin
+  If ((DlgSearch.FormValid) and (DlgSearch.CBShowMatchesOnly.Checked = False)) Then
+  Begin
+    // When pressing F3 and we didn't filter on previous search, then search next ...
+    SearchNext ;
+  End Else
+  Begin
+    BtnSearch.Click ;
+  End;
 end;
 
 Procedure TMainForm.AddSGRow(VarName:String;Val:String);
@@ -478,5 +528,84 @@ begin
   FillListBox;
   MoveToSync;
 end;
+
+Procedure TMainForm.SearchNext ;
+VAR
+  StartIndex , Pos : Integer ;
+  PD : TPacketData ;
+  FoundThis , CheckCount : Integer ;
+Begin
+  // Nothing ?
+  If LBPackets.Count <= 0 Then Exit ;
+
+  // Safeguard start location
+  If (LBPackets.ItemIndex < 0) or (LBPackets.ItemIndex >= LBPackets.Count) Then
+  Begin
+    StartIndex := 0 ;
+    Pos := 0 ;
+    LBPackets.ItemIndex := 0 ;
+  End Else
+  Begin
+    StartIndex := LBPackets.ItemIndex ;
+    Pos := StartIndex + 1 ;
+  End;
+
+  // Save Location
+  Repeat
+    PD := PL.GetPacket(Pos);
+
+    If ((PD.PacketLogType = pltOut)and(DlgSearch.SearchOut)) or
+       ((PD.PacketLogType = pltIn)and(DlgSearch.SearchIn)) Then
+    Begin
+      // Only search types we selected
+      FoundThis := 0 ;
+      CheckCount := 0 ;
+
+      If (DlgSearch.PacketFilterOn) Then
+      Begin
+        CheckCount := CheckCount + 1 ;
+        If (PD.PacketID = DlgSearch.PacketFilter) Then FoundThis := FoundThis + 1 ;
+      End;
+
+      If (DlgSearch.SyncFilterOn) Then
+      Begin
+        CheckCount := CheckCount + 1 ;
+        If (PD.PacketSync = DlgSearch.SyncFilter) Then FoundThis := FoundThis + 1 ;
+      End;
+
+      If (DlgSearch.ByteFilterOn) Then
+      Begin
+        CheckCount := CheckCount + 1 ;
+        If (PD.FindByte(DlgSearch.ByteFilter) >= 0) Then FoundThis := FoundThis + 1 ;
+      End;
+
+      If (DlgSearch.UInt16FilterOn) Then
+      Begin
+        CheckCount := CheckCount + 1 ;
+        If (PD.FindUInt16(DlgSearch.UInt16Filter) >= 0) Then FoundThis := FoundThis + 1 ;
+      End;
+
+      If (DlgSearch.UInt32FilterOn) Then
+      Begin
+        CheckCount := CheckCount + 1 ;
+        If (PD.FindUInt32(DlgSearch.UInt32Filter) >= 0) Then FoundThis := FoundThis + 1 ;
+      End;
+
+      If (CheckCount > 0) and (FoundThis = CheckCount) Then
+      Begin
+        LBPackets.ItemIndex := Pos ;
+        LBPacketsClick(LBPackets);
+        LBPackets.Invalidate ;
+        Exit ;
+      End;
+
+    End;
+
+    Pos := Pos + 1 ;
+    If Pos >= LBPackets.Count Then Pos := 0 ;
+  Until Pos = StartIndex ;
+
+  ShowMessage('No more matches found!');
+End;
 
 end.

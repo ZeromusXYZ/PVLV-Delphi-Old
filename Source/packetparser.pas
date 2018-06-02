@@ -8,7 +8,8 @@ Function AddPacketInfoToStringGrid(PD : TPacketData;SG : TStringGrid):Boolean;
 
 implementation
 
-uses System.SysUtils, System.StrUtils, System.Contnrs, System.Classes ;
+uses System.SysUtils, System.StrUtils, System.Contnrs, System.Classes ,
+  datalookups;
 
 Procedure AddSGRow(SG : TStringGrid ; VarName:String; Val:String);
 Begin
@@ -98,7 +99,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           AddSGRow(SG,LName, '0x' + IntToHex(PD.GetByteAtPos(LOffset),2) + '  ' + BytetoBit(PD.GetByteAtPos(LOffset)) + '  ' + IntToStr(PD.GetByteAtPos(LOffset)) );
         End Else
-        If ((LType = 'word') or (LType = 'uint16') or (LType = 'w')) Then
+        If ((LType = 'word') or (LType = 'uint16') or (LType = 'ushort') or (LType = 'w')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           AddSGRow(SG,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)));
@@ -142,6 +143,27 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
           // Milliseconds
           AddSGRow(SG,LName,MSToStr(PD.GetUInt32AtPos(LOffset)));
+
+        End Else
+        If ((LType = 'equipslot') or (LType = 'slot')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
+          // Slot
+          AddSGRow(SG,LName,EquipmentSlotName(PD.GetByteAtPos(LOffset)));
+
+        End Else
+        If ((LType = 'container') or (LType = 'inventory') or (LType = 'bag')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
+          // Inventory Bag
+          AddSGRow(SG,LName,ContainerName(PD.GetByteAtPos(LOffset)));
+
+        End Else
+        If ((LType = 'zone') or (LType = 'map')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
+          // Inventory Bag
+          AddSGRow(SG,LName,Zones.GetVal(PD.GetWordAtPos(LOffset)));
 
         End Else
         Begin

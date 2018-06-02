@@ -1,0 +1,226 @@
+0x00A;Client Connect;(unencrypted/uncompressed) First packet sent when connecting to new zone.
+0x00C;Zone In 1;Likely triggers certain packets to be sent from the server.
+0x00D;Client Leave;Last packet sent from client before it leaves the zone.
+0x00F;Zone In 2;Likely triggers certain packets to be sent from the server.
+0x011;Zone In 3;Likely triggers certain packets to be sent from the server.
+0x015;Standard Client;Packet contains data that is sent almost every time (i.e your character\'s position).
+0x016;Update Request;Packet that requests a PC/NPC update packet.
+0x017;NPC Race Error;Packet sent in response to impossible incoming NPC packets (like trying to put equipment on a race 0 monster).
+0x01A;Action;An action being done on a target (i.e. an attack or spell).
+0x01E;Volunteer;Sent in response to a /volunteer command.
+0x028;Drop Item;Drops an item.
+0x029;Move Item;Move item from one inventory to another.
+0x02B;Translate Request;Request that a phrase be translated.
+0x032;Offer Trade;This is sent when you offer to trade somebody.
+0x033;Trade Tell;This packet allows you to accept or cancel a trade request.
+0x034;Trade Item;Sends the item you want to trade to the server.
+0x036;Menu Item;Use an item from the item menu.
+0x037;Use Item;Use an item.
+0x03A;Sort Item;Stacks the items in your inventory. Sent when hitting "Sort" in the menu.
+0x03D;Blacklist Command;Sent in response to /blacklist add or /blacklist delete.
+0x041;Lot Item;Lotting an item in the treasure pool.
+0x042;Pass Item;Passing an item in the treasure pool.
+0x04B;Servmes;Requests the server message (/servmes).
+0x04D;Delivery Box;Used to manipulate the delivery box.
+0x04E;Auction;Used to bid on an Auction House item.
+0x050;Equip;This command is used to equip your character.
+0x051;Equipset;This packet is sent when using /equipset.
+0x052;Equipset Build;This packet is sent when building an equipset.
+0x053;Lockstyleset;This packet is sent when locking to an equipset.
+0x059;End Synth;This packet is sent to end a synth.
+0x05A;Conquest;This command asks the server for data pertaining to conquest/besieged status.
+0x05B;Dialog choice;Chooses a dialog option.
+0x05C;Warp Request;Request a warp. Used by teleporters and the like.
+0x05D;Emote;This command is used in emotes.
+0x05E;Request Zone;Request from the client to zone.
+0x061;Equipment Screen;This command is used when you open your equipment screen.
+0x063;Digging Finished;This packet is sent when the chocobo digging animation is finished.
+0x064;New KI examination;Sent when you examine a key item with a "new" flag on it.
+0x06E;Party invite;Sent when inviting another player to either party or alliance.
+0x06F;Party leave;Sent when leaving the party or alliance.
+0x070;Party breakup;Sent when disbanding the entire party or alliance.
+0x071;Kick;Sent when you kick someone from linkshell or party.
+0x074;Party response;Sent when responding to a party or alliance invite.
+0x077;Change permissions;Sent when giving party or alliance leader to another player or elevating/decreasing linkshell permissions.
+0x078;Party list request;Sent when checking the party list.
+0x083;NPC Buy Item;Buy an item from a generic NPC.
+0x084;Appraise;Ask server for selling price.
+0x085;Sell Item;Sell an item from your inventory.
+0x096;Synth;Packet sent containing all data of an attempted synth.
+0x0A0;Nominate;Sent in response to a /nominate command.
+0x0A1;Vote;Sent in response to a /vote command.
+0x0A2;Random;Sent in response to a /random command.
+0x0AA;Guild Buy Item;Buy an item from a guild.
+0x0AB;Get Guild Inv List;Gets the offerings of the guild.
+0x0AC;Guild Sell Item;Sell an item to the guild.
+0x0AD;Get Guild Sale List;Gets the list of things the guild will buy.
+0x0B5;Speech;Packet contains normal speech.
+0x0B6;Tell;/tell\'s sent from client.
+0x0BE;Merit Point Increase;Sent when you increase a merit point ability.
+0x0BF;Job Point Increase;Sent when you increase a job point ability.
+0x0C0;Job Point Menu;Sent when you open the Job Point menu and triggers Job Point Information packets.
+0x0C3;Make Linkshell;Sent in response to the /makelinkshell command.
+0x0C4;Equip Linkshell;Sent to equip a linkshell.
+0x0CB;Open Mog;Sent when opening or closing your mog house.
+0x0D2;Party Marker Request;Requests map markers for your party.
+0x0D3;GM Call;Places a call to the GM queue.
+0x0D4;Help Desk Menu;Opens the Help Desk submenu.
+0x0DC;Type Bitmask;This command is sent when change your party-seek or /anon status.
+0x0DD;Check;Used to check other players.
+0x0DE;Set Bazaar Message;Sets your bazaar message.
+0x0E0;Search Comment;Sets your search comment.
+0x0E1;Get LS Message;Requests the current linkshell message.
+0x0E2;Set LS Message;Sets the current linkshell message.
+0x0EA;Sit;A request to sit or stand is sent to the server.
+0x0E7;Logout;A request to logout of the server.
+0x0E8;Toggle Heal;This command is used to both heal and cancel healing.
+0x0F1;Cancel;Sent when canceling a buff.
+0x0F2;Declare Subregion;Sent when moving to a new subregion of a zone (for instance, a different combination of open doors).
+0x0F4;Widescan;This command asks the server for a widescan.
+0x0F5;Widescan Track;Sent when you choose to track something on widescan.
+0x0F6;Widescan Cancel;Sent when you choose to stop track something on widescan.
+0x0FA;Place/Move Furniture;Sends new position for your furniture.
+0x0FB;Remove Furniture;Informs the server you have removed some furniture.
+0x0FC;Plant Flowerpot;Plants a seed in a flowerpot.
+0x0FD;Examine Flowerpot;Sent when you examine a flowerpot.
+0x0FE;Uproot Flowerpot;Uproots a flowerpot.
+0x100;Job Change;Sent when initiating a job change.
+0x102;Untraditional Equip;Sent when equipping a pseudo-item like an Automaton Attachment, Instinct, or Blue Magic Spell.
+0x104;Leave Bazaar;Sent when client leaves a bazaar.
+0x105;View Bazaar;Sent when viewing somebody\'s bazaar.
+0x106;Buy Bazaar Item;Buy an item from somebody\'s bazaar.
+0x109;Close Bazaar;Sent after closing your bazaar window.
+0x10A;Set Price;Set the price on a bazaar item.
+0x10B;Open Bazaar;Sent when opening your bazaar window to set prices.
+0x10C;Start RoE Quest;Sent to undertake a Records of Eminence Quest.
+0x10D;Cancel RoE Quest;Sent to cancel a Records of Eminence Quest.
+0x10E;Accept RoE Reward;Accept an RoE qust reward that was not given automatically due to inventory restrictions.
+0x10F;Currency Menu;Requests currency information for the menu.
+0x110;Fishing Action;Sent when casting, releasing a fish, catching a fish, and putting away your fishing rod.
+0x111;Lockstyle;Sent when using the lockstyle command to lock or unlock.
+0x112;RoE Log Request;Sent when zoning. Requests the ROE quest log.
+0x114;HP Map Trigger;Sent when entering a homepoint list for a zone to trigger maps to appear.
+0x115;Currency Menu 2;Requests currency 2 information for the menu.
+0x116;Unity Menu;Sent when opening the Status/Unity menu.
+0x117;Unity Ranking Menu;Sent when opening the Status/Unity/Unity Ranking menu.
+0x118;Unity Chat Status;Sent when changing unity chat status.
+in-0x009;Standard Message;A standardized message send from FFXI.
+in-0x00A;Zone In;Info about character and zone around it.
+in-0x00B;Zone Out;Packet contains IP and port of next zone to connect to.
+in-0x00D;PC Update;Packet contains info about another PC (i.e. coordinates).
+in-0x00E;NPC Update;Packet contains data about nearby targets (i.e. target\'s position, name).
+in-0x017;Incoming Chat;Packet contains data about incoming chat messages.
+in-0x01B;Job Info;Job Levels and levels unlocked.
+in-0x01C;Inventory Count;Describes number of slots in inventory.
+in-0x01D;Finish Inventory;Finish listing the items in inventory.
+in-0x01E;Modify Inventory;Modifies items in your inventory.
+in-0x01F;Item Assign;Assigns an ID to equipped items in your inventory.
+in-0x020;Item Update;Info about item in your inventory.
+in-0x021;Trade Requested;Sent when somebody offers to trade with you.
+in-0x022;Trade Action;Sent whenever something happens with the trade window.
+in-0x023;Trade Item;Sent when an item appears in the trade window.
+in-0x025;Item Accepted;Sent when the server will allow you to trade an item.
+in-0x026;Count to 80;It counts to 80 and does not have any obvious function. May have something to do with populating inventory.
+in-0x027;String Message;Message that includes a string as a parameter.
+in-0x028;Action;Packet sent when an NPC is attacking.
+in-0x029;Action Message;Packet sent for simple battle-related messages.
+in-0x02A;Resting Message;Packet sent when you rest in Abyssea.
+in-0x02D;Kill Message;Packet sent when you gain XP/LP/CP/JP/MP, advance RoE objectives, etc. by defeating a mob.
+in-0x02E;Mog House Menu;Sent when talking to moogle inside mog house.
+in-0x02F;Digging Animation;Generates the chocobo digging animation
+in-0x030;Synth Animation;Generates the synthesis animation
+in-0x031;Synth List;List of recipes or materials needed for a recipe
+in-0x032;NPC Interaction 1;Occurs before menus and some cutscenes
+in-0x033;String NPC Interaction;Triggers a menu or cutscene to appear. Contains 4 strings.
+in-0x034;NPC Interaction 2;Occurs before menus and some cutscenes
+in-0x036;NPC Chat;Dialog from NPC\'s.
+in-0x037;Update Char;Updates a characters stats and animation.
+in-0x038;Entity Animation;Sent when a model should play a specific animation.
+in-0x039;Env. Animation;Sent to force animations to specific objects.
+in-0x03A;Independ. Animation;Used for arbitrary battle animations that are unaccompanied by an action packet.
+in-0x03C;Shop;Displays items in a vendors shop.
+in-0x03D;Value;Returns the value of an item.
+in-0x03E;Open Buy/Sell;Opens the buy/sell menu for vendors.
+in-0x03F;Shop Buy Response;Sent when you buy something from normal vendors.
+in-0x041;Blacklist;Contains player ID and name for blacklist.
+in-0x042;Blacklist Command;Sent in response to /blacklist add or /blacklist delete.
+in-0x044;Job Info Extra;Contains information about Automaton stats and set Blue Magic spells.
+in-0x047;Translate Response;Response to a translate request.
+in-0x04B;Logout Acknowledge;Acknowledges a logout attempt.
+in-0x04B;Delivery Item;Item in delivery box.
+in-0x04C;Auction House Menu;Sent when visiting auction counter.
+in-0x04D;Servmes Resp;Server response when someone requests it.
+in-0x04F;Data Download 2;The data that is sent to the client when it is "Downloading data...".
+in-0x050;Equip;Updates the characters equipment slots.
+in-0x051;Model Change;Info about equipment and appearance.
+in-0x052;NPC Release;Allows your PC to move after interacting with an NPC.
+in-0x053;Logout Time;The annoying message that tells how much time till you logout.
+in-0x055;Key Item Log;Updates your key item log on zone and when appropriate.
+in-0x056;Quest/Mission Log;Updates your quest and mission log on zone and when appropriate.
+in-0x057;Weather Change;Updates the weather effect when the weather changes.
+in-0x058;Lock Target;Locks your target.
+in-0x05A;Server Emote;This packet is the server\'s response to a client /emote p.
+in-0x05B;Spawn;Server packet sent when a new mob spawns in area.
+in-0x05C;Dialogue Information;Used when all the information required for a menu cannot be fit in an NPC Interaction packet.
+in-0x05E;Camp./Besieged Map;Contains information about Campaign and Besieged status.
+in-0x05F;Music Change;Changes the current music.
+in-0x061;Char Stats;Packet contains a lot of data about your character\'s stats.
+in-0x062;Skills Update;Packet that shows your weapon and magic skill stats.
+in-0x063;Set Update;Frequently sent packet during battle that updates specific types of job information, like currently available/set automaton equipment and currently set BLU spells.
+in-0x065;Repositioning;Moves your character. Seems to be functionally idential to the Spawn packet
+in-0x067;Pet Info;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate.
+in-0x068;Pet Status;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate.
+in-0x06F;Self Synth Result;Results of an attempted synthesis process by yourself.
+in-0x070;Others Synth Result;Results of an attempted synthesis process by others.
+in-0x071;Campaign Map Info;Populates the Campaign map.
+in-0x075;Unity Start;Creates the timer and glowing fence that accompanies Unity fights.
+in-0x076;Party Buffs;Packet updated every time a party member\'s buffs change.
+in-0x078;Proposal;Carries proposal information from a /propose or /nominate command.
+in-0x079;Proposal Update;Proposal update following a /vote command.
+in-0x082;Guild Buy Response;Buy an item from a guild.
+in-0x083;Guild Inv List;Provides the items, prices, and counts for guild inventories.
+in-0x084;Guild Sell Response;Sell an item to a guild.
+in-0x085;Guild Sale List;Provides the items, prices, and counts for guild inventories.
+in-0x086;Guild Open;Sent to update the current guild status or open the guild buy/sell menu.
+in-0x08C;Merits;Contains all merit information. 3 packets are sent.
+in-0x08D;Job Points;Contains all job point information. 12 packets are sent.
+in-0x0A0;Party Map Marker;Marks where players are on your map.
+in-0x0AA;Spell List;Packet that shows the spells that you know.
+in-0x0AC;Ability List;Packet that shows your current abilities and traits.
+in-0x0AE;Mount List;Packet that shows your current mounts.
+in-0x0B4;Seek AnonResp;Server response sent after you put up party or anon flag.
+in-0x0B5;Help Desk Open;Sent when you open the Help Desk submenu.
+in-0x0BF;Reservation Response;Sent to inform the client about the status of entry to an instanced area.
+in-0x0C8;Party Struct Update;Updates all party member info in one struct. No player vital data (HP/MP/TP) or names are sent here.
+in-0x0C9;Show Equip;Shows another player your equipment after using the Check command.
+in-0x0CA;Bazaar Message;Shows another players bazaar message after using the Check command or sets your own on zoning.
+in-0x0CC;Linkshell Message;/lsmes text and headers.
+in-0x0D2;Found Item;This command shows an item found on defeated mob or from a Treasure Chest.
+in-0x0D3;Lot/drop item;Sent when someone casts a lot on an item or when the item drops to someone.
+in-0x0DC;Party Invite;Party Invite packet.
+in-0x0DD;Party Member Update;Alliance/party member info - zone, HP%, HP% etc.
+in-0x0DF;Char Update;A packet sent from server which updates character HP, MP and TP.
+in-0x0E0;Linkshell Equip;Updates your linkshell menu with the current linkshell.
+in-0x0E1;Party Member List;Sent when you look at the party member list.
+in-0x0E2;Char Info;Sends name, HP, HP%, etc.
+in-0x0F4;Widescan Mob;Displays one monster.
+in-0x0F5;Widescan Track;Updates information when tracking a monster.
+in-0x0F6;Widescan Mark;Marks the start and ending of a widescan list.
+in-0x0F9;Reraise Activation;Reassigns targetable status on reraise activation?
+in-0x0FA;Furniture Interact;Confirms furniture manipulation.
+in-0x105;Data Download 4;The data that is sent to the client when it is "Downloading data...".
+in-0x106;Bazaar Seller Info;Information on the purchase sent to the buyer when they attempt to buy something.
+in-0x107;Bazaar closed;Tells you when a bazaar you are currently in has closed.
+in-0x108;Data Download 5;The data that is sent to the client when it is "Downloading data...".
+in-0x109;Bazaar Purch. Info;Information on the purchase sent to the buyer when the purchase is successful.
+in-0x10A;Bazaar Buyer Info;Information on the purchase sent to the seller when a sale is successful.
+in-0x110;Sparks Update;Occurs when you sparks increase and generates the related message.
+in-0x111;Eminence Update;Causes Records of Eminence messages.
+in-0x112;RoE Quest Log;Updates your RoE quest log on zone and when appropriate.
+in-0x113;Currency Info;Contains all currencies to be displayed in the currency menu.
+in-0x115;Fish Bite Info;Contains information about the fish that you hooked.
+in-0x116;Equipset Build Response;Returned from the server when building a set.
+in-0x117;Equipset Response;Returned from the server after the /equipset command.
+in-0x118;Currency 2 Info;Contains all currencies to be displayed in the currency menu.
+in-0x119;Ability Recasts;Contains the currently available job abilities and their remaining recast times.
+

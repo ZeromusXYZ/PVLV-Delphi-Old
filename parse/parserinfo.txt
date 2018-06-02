@@ -55,6 +55,16 @@ description: more visually appealing way of displaying a byte that is used for d
 typename: ms , timestamp
 description: more visually appealing way of displaying a uint32 that is used as a timestamp in milliseconds
 
+typename: equipslot , slot
+description: Shows named version of a equipment slot byte (uses equipslot.txt)
+
+typename: container , inventory , bag
+description: Shows named version of inventory bag byte (uses containers.txt)
+
+typename: zone , map
+description: Shows named version of map name (uses zones.txt)
+
+
 
 If there is unused data left in the packet past the last defined position,
 the log viewer will display them all as byteflag values with their

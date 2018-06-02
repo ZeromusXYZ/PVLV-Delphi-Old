@@ -59,16 +59,18 @@ object MainForm: TMainForm
     Height = 160
     Anchors = [akLeft, akRight, akBottom]
     Lines.Strings = (
-      'Press load file to start'
+      'Made by ZeromusXYZ'
+      ''
+      'Press "Load File" to start'
       'Right-click packet list for filters'
+      'Ctrl+F = New Search'
+      'F3 = Find Next'
       ''
       
         'To adjust packet info please check parserinfo.txt in the parse f' +
         'older'
-      ''
-      'Made by ZeromusXYZ'
-      ''
-      'Note: PacketID names are currently hard-coded')
+      'lookup folders is used to create some custom value names'
+      '')
     ReadOnly = True
     TabOrder = 2
   end
@@ -107,6 +109,15 @@ object MainForm: TMainForm
     Checked = True
     State = cbChecked
     TabOrder = 5
+  end
+  object BtnSearch: TButton
+    Left = 328
+    Top = 8
+    Width = 115
+    Height = 25
+    Caption = 'Search ...'
+    TabOrder = 6
+    OnClick = BtnSearchClick
   end
   object OpenDialogLogFiles: TOpenDialog
     DefaultExt = '*.log'
@@ -155,6 +166,20 @@ object MainForm: TMainForm
     object PMPacketListReset: TMenuItem
       Caption = 'Reset all filters'
       OnClick = PMPacketListResetClick
+    end
+  end
+  object ActionList1: TActionList
+    Left = 184
+    Top = 192
+    object ActionSearchNext: TAction
+      Caption = 'SearchNext'
+      ShortCut = 114
+      OnExecute = ActionSearchNextExecute
+    end
+    object ActionSearchNew: TAction
+      Caption = 'SearchNew'
+      ShortCut = 16454
+      OnExecute = ActionSearchNewExecute
     end
   end
 end
