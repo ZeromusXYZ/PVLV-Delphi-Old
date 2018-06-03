@@ -28,7 +28,11 @@ VAR
   PacketInNames : TDataLookup ;
   EquipmentSlots : TDataLookup ;
   ContainerNames : TDataLookup ;
-
+  ItemNames : TDataLookup ;
+  ItemModelNames : TDataLookup ;
+  MusicNames : TDataLookup ;
+  JobNames : TDataLookup ;
+  WeatherNames : TDataLookup ;
 
 implementation
 
@@ -123,6 +127,11 @@ PacketOutNames := TDataLookup.Create('lookup\out.txt');
 PacketInNames := TDataLookup.Create('lookup\in.txt');
 EquipmentSlots := TDataLookup.Create('lookup\equipslot.txt');
 ContainerNames := TDataLookup.Create('lookup\containers.txt'); ;
+ItemNames := TDataLookup.Create('lookup\items.txt'); ;
+ItemModelNames := TDataLookup.Create('lookup\itemmodels.txt'); ;
+MusicNames := TDataLookup.Create('lookup\music.txt'); ;
+JobNames := TDataLookup.Create('lookup\jobs.txt'); ;
+WeatherNames := TDataLookup.Create('lookup\weather.txt'); ;
 
 Finalization
 
@@ -131,5 +140,10 @@ FreeAndnil(PacketOutNames);
 FreeAndnil(PacketInNames);
 FreeAndnil(EquipmentSlots);
 FreeAndnil(ContainerNames);
+FreeAndNil(ItemNames);
+FreeAndNil(ItemModelNames);
+FreeAndNil(MusicNames);
+FreeAndNil(JobNames);
+FreeAndNil(WeatherNames);
 
 end.

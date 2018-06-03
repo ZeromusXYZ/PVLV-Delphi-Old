@@ -27,10 +27,14 @@ TYPE
     Function PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
     Function GetWordAtPos(Pos:Integer):Word;
+    Function GetInt16AtPos(Pos:Integer):Int16;
     Function GetInt32AtPos(Pos:Integer):Int32;
     Function GetUInt32AtPos(Pos:Integer):Cardinal;
     Function GetFloatAtPos(Pos:Integer):Single;
     Function GetTimeStampAtPos(Pos:Integer):String;
+    Function GetStringAtPos(Pos:Integer):String;
+    Function GetDataAtPos(Pos,Size:Integer):String;
+    Function GetIP4AtPos(Pos:Integer):String;
     Procedure CompileData ;
     Function FindByte(AByte : Byte):Integer;
     Function FindUInt16(AUInt16 : Word):Integer;
@@ -72,6 +76,7 @@ Function EquipmentSlotName(SlotID:Byte):String;
 Function ContainerName(ContainerID:Byte):String;
 Function ByteToRotation(B : Byte):String;
 Function MSToStr(T : UInt32):String;
+Function FramesToStr(T : UInt32):String;
 
 Function ToBitStr(var V):String;
 
@@ -122,7 +127,38 @@ Begin
     End;
   End;
 
+End;
 
+Function FramesToStr(T : UInt32):String;
+VAR
+  R, V : UInt32 ;
+Begin
+  R := T div 60 ;
+  V := T mod 60 ;
+  Result := Format('%.2d',[V]) + 'frame';
+
+  If (R > 0) Then
+  Begin
+    V := R mod 60 ;
+    R := R div 60 ;
+    Result := Format('%.2d',[V]) + 's ' + Result ;
+    If (R > 0) Then
+    Begin
+      V := R mod 60 ;
+      R := R div 60 ;
+      Result := Format('%.2d',[V]) + 'm ' + Result ;
+      If (R > 0) Then
+      Begin
+        V := R mod 24 ;
+        R := R div 24 ;
+        Result := Format('%.2d',[V]) + 'h ' + Result ;
+        If (R > 0) Then
+        Begin
+          Result := Format('%d',[R]) + 'd ' + Result ;
+        End;
+      End;
+    End;
+  End;
 
 End;
 
@@ -316,6 +352,22 @@ Begin
   End;
 End;
 
+Function TPacketData.GetInt16AtPos(Pos:Integer):Int16;
+VAR
+  V : ^Int16 ;
+Begin
+  Result := 0 ;
+  Try
+    If (Pos > length(fRawBytes)-2) Then Exit ;
+    V := @fRawBytes[Pos] ;
+    // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
+    Result := V^ ;
+    Exit ;
+  Except
+    Result := 0 ;
+  End;
+End;
+
 Function TPacketData.GetInt32AtPos(Pos:Integer):Int32;
 VAR
   V : ^Int32 ;
@@ -362,6 +414,43 @@ Begin
     Result := 'ERROR' ;
   End;
 End;
+
+Function TPacketData.GetStringAtPos(Pos:Integer):String;
+VAR
+  I : Integer ;
+Begin
+  Result := '' ;
+  I := Pos ;
+  While (I < length(fRawBytes)-1) and (fRawBytes[I] <> 0) Do
+  Begin
+    Result := Result + Char(fRawBytes[I]);
+    I := I + 1 ;
+  End;
+End;
+
+Function TPacketData.GetDataAtPos(Pos,Size:Integer):String;
+VAR
+  I : Integer ;
+Begin
+  Result := '' ;
+  I := 0 ;
+  While ((I + Pos) < length(fRawBytes)) and (I < Size) and (I < 256) Do
+  Begin
+    Result := Result + IntToHex(fRawBytes[I+Pos],2) + ' ' ;
+    I := I + 1 ;
+  End;
+End;
+
+Function TPacketData.GetIP4AtPos(Pos:Integer):String;
+VAR
+  I : Integer ;
+Begin
+  Result := '' ;
+  If (Pos >= Length(fRawBytes)-4) Then Exit ;
+  Result := IntToStr(fRawBytes[Pos+0]) + '.' + IntToStr(fRawBytes[Pos+1]) + '.' + IntToStr(fRawBytes[Pos+2]) + '.' + IntToStr(fRawBytes[Pos+3]);
+End;
+
+
 
 
 Function TPacketData.GetByteAtPos(Pos:Integer):Byte;

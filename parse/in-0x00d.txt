@@ -1,3 +1,82 @@
 file;in-0x00d;PC Update;Packet contains info about another PC (i.e. coordinates).
 
-byteflag;0x0A;UpdateFlag
+uint32;$04;Player ID
+uint16;$08;Index
+byteflag;0x0A;UpdateFlag1
+rem:$0A:0;{ctype='boolbit',           label='Update Position'},                       -- 0A:0 Position, Rotation, Target, Speed  
+rem:$0A:1;{ctype='boolbit',           label='Update Status'},                         -- 0A:1 Not used for 0x00D
+rem:$0A:2;{ctype='boolbit',           label='Update Vitals'},                         -- 0A:2 HP%, Status, Flags, LS color, "Face Flags"
+rem:$0A:3;{ctype='boolbit',           label='Update Name'},                           -- 0A:3 Name
+rem:$0A:4;{ctype='boolbit',           label='Update Model'},                          -- 0A:4 Race, Face, Gear models
+rem:$0A:5;{ctype='boolbit',           label='Despawn'},                               -- 0A:5 Only set if player runs out of range or zones
+rem:$0A:6;{ctype='boolbit',           label='_unknown1'},                             -- 0A:6
+rem:$0A:7;{ctype='boolbit',           label='_unknown2'},                             -- 0A:7
+dir;$0B;Direction
+pos;$0C;Position
+uint16;$18;Run Count
+uint16;$1A;Target Index
+byte;$1C;Movement Speed;0x32 represents 100%
+byte;$1D;Animation Speed;0x32 represents 100%
+byte;$1E;HP %
+byte;$1F;Status
+byteflag;$20;Flags byte 1
+byteflag;$21;Flags byte 2
+byteflag;$22;Flags byte 3
+byteflag;$23;Flags byte 4
+
+rem;$20:0;Flag1 bit0 - None
+rem;$20:1;Flag1 bit1 - Deletes everyone
+rem;$20:2;Flag1 bit2 - Deletes everyone
+rem;$20:3;Flag1 bit3 - None
+rem;$20:4;Flag1 bit4 - None
+rem;$20:5;Flag1 bit5 - None
+rem;$20:6;Flag1 bit6 - None
+rem;$20:7;Flag1 bit7 - None
+
+rem;$21:0;Flag2 bit0 - None
+rem;$21:1;Flag2 bit1 - None
+rem;$21:2;Flag2 bit2 - None
+rem;$21:3;Flag2 bit3 - LFG
+rem;$21:4;Flag2 bit4 - Anon
+rem;$21:5;Flag2 bit5 - Orange
+rem;$21:6;Flag2 bit6 - Away
+rem;$21:7;Flag2 bit7 - None
+
+rem;$22:0;Flag3 bit0 - POL Icon
+rem;$22:1;Flag3 bit1 - No Effect
+rem;$22:2;Flag3 bit2 - DC-ing
+rem;$22:3;Flag3 bit3 - Untargettable
+rem;$22:4;Flag3 bit4 - No LS
+rem;$22:5;Flag3 bit5 - No LS
+rem;$22:6;Flag3 bit6 - No LS
+rem;$22:7;Flag3 bit7 - No LS
+
+rem;$23:0;Flag4 bit0 - Trial Account
+rem;$23:1;Flag4 bit1 - Trial Account
+rem;$23:2;Flag4 bit2 - GM Mode
+rem;$23:3;Flag4 bit3 - None
+rem;$23:4;Flag4 bit4 - None
+rem;$23:5;Flag4 bit5 - Invisible models
+rem;$23:6;Flag4 bit6 - None
+rem;$23:7;Flag4 bit7 - Bazaar
+
+byte;$24;Linkshell Red
+byte;$25;Linkshell Green
+byte;$26;Linkshell Blue
+byte;$27;_unknown5;Probably junk from the LS color dword
+data$1B;$28;_unknown6;{ctype='data[0x1B]',        label='_unknown6'},                             -- 28   DSP notes that the 6th bit of byte 54 is the Ballista flag
+byteflag;$43;Flace Flags;0, 3, 4, or 8
+uint32;$44;_unknown7
+
+byte;$48;Face
+byte;$49;Race
+item-head;$4A;Head Model;-$1000
+item-body;$4C;Body Model;-$2000
+item-hands;$4E;Hands Model;-$3000
+item-legs;$50;Legs Model;-$4000
+item-feet;$52;Feet Model;-$5000
+item-main;$54;Main Weapon Model;-$6000
+item-sub;$56;Sub Weapon Model;-$7000
+item-ranged;$58;Ranged Weapon Model;-$8000
+
+string;$5A;Character Name

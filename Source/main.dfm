@@ -72,6 +72,7 @@ object MainForm: TMainForm
       'lookup folders is used to create some custom value names'
       '')
     ReadOnly = True
+    ScrollBars = ssVertical
     TabOrder = 2
   end
   object CBAppend: TCheckBox

@@ -37,6 +37,9 @@ description: unsigned byte value, but also shows the value as bits
 typename: word , uint16 , w
 description: unsigned 16 bit (2 byte) value
 
+typename: int16 , short
+description: signed 16 bit (2 byte) value
+
 typename: int , int32 , i
 description: signed 32 bit (4 byte) value
 
@@ -46,14 +49,29 @@ description: unsigned 32 bit (4 byte) value
 typename: float , f
 description: 4 byte floating point number
 
+typename: string
+description: shows a null terminated string
+
+typename: data??
+description: ?? bytes or raw data displayed in Hex. (e.g. data16)
+
+typename: ip4 , ip
+description: 4 byte IP adress in 0.0.0.0 format
+
 typename: pos
 description: series of 3 floats to make XYZ coordinates
 
 typename: dir
 description: more visually appealing way of displaying a byte that is used for direction
 
+typename: job
+description: short job name
+
 typename: ms , timestamp
 description: more visually appealing way of displaying a uint32 that is used as a timestamp in milliseconds
+
+typename: frames , frame
+description: more visually appealing way of displaying a uint32 that is used as a timestamp in frames (60 second)
 
 typename: equipslot , slot
 description: Shows named version of a equipment slot byte (uses equipslot.txt)
@@ -61,8 +79,20 @@ description: Shows named version of a equipment slot byte (uses equipslot.txt)
 typename: container , inventory , bag
 description: Shows named version of inventory bag byte (uses containers.txt)
 
+typename: item
+description: 2 byte itemid with name (using items.txt)
+
+typename: item-head , item-body , item-hands , item-legs , item-feet , item-main , item-sub , item-ranged
+description: 2 byte itemmodelid with name (using itemmodels.txt)
+
 typename: zone , map
-description: Shows named version of map name (uses zones.txt)
+description: 2 byte map name (uses zones.txt)
+
+typename: music , bgm
+description: 2 byte music number and track name (uses music.txt)
+
+typename: weather
+description: 2 byte number and weather name (uses weather.txt)
 
 
 
