@@ -17,108 +17,152 @@ object MainForm: TMainForm
   Position = poDesktopCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  DesignSize = (
-    1084
-    561)
   PixelsPerInch = 96
   TextHeight = 15
-  object LInfo: TLabel
-    Left = 456
-    Top = 20
-    Width = 28
-    Height = 15
-    Caption = 'Info'
+  object Splitter1: TSplitter
+    Left = 375
+    Top = 0
+    Width = 5
+    Height = 561
+    Beveled = True
+    ResizeStyle = rsUpdate
+    OnMoved = Splitter1Moved
   end
-  object BtnLoadFile: TButton
-    Left = 8
-    Top = 8
-    Width = 75
-    Height = 25
-    Caption = 'Load File'
+  object LeftPanel: TPanel
+    Left = 0
+    Top = 0
+    Width = 375
+    Height = 561
+    Align = alLeft
+    BevelOuter = bvNone
+    Caption = ' '
+    Constraints.MinHeight = 400
+    Constraints.MinWidth = 300
     TabOrder = 0
-    OnClick = BtnLoadFileClick
+    DesignSize = (
+      375
+      561)
+    object BtnSearch: TButton
+      Left = 269
+      Top = 8
+      Width = 99
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Search ...'
+      TabOrder = 0
+      OnClick = BtnSearchClick
+      ExplicitLeft = 344
+    end
+    object CBAppend: TCheckBox
+      Left = 112
+      Top = 16
+      Width = 121
+      Height = 17
+      Caption = 'Append to list'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+    end
+    object BtnLoadFile: TButton
+      Left = 8
+      Top = 8
+      Width = 99
+      Height = 25
+      Caption = 'Load File'
+      TabOrder = 2
+      OnClick = BtnLoadFileClick
+    end
+    object LBPackets: TListBox
+      Left = 8
+      Top = 39
+      Width = 360
+      Height = 514
+      Style = lbOwnerDrawFixed
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      ExtendedSelect = False
+      ItemHeight = 15
+      PopupMenu = PMPacketList
+      TabOrder = 3
+      OnClick = LBPacketsClick
+      OnDrawItem = LBPacketsDrawItem
+      ExplicitWidth = 435
+    end
   end
-  object LBPackets: TListBox
-    Left = 8
-    Top = 39
-    Width = 435
-    Height = 514
-    Style = lbOwnerDrawFixed
-    Anchors = [akLeft, akTop, akBottom]
-    ExtendedSelect = False
-    ItemHeight = 15
-    PopupMenu = PMPacketList
+  object Panel1: TPanel
+    Left = 380
+    Top = 0
+    Width = 704
+    Height = 561
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    Constraints.MinWidth = 200
     TabOrder = 1
-    OnClick = LBPacketsClick
-    OnDrawItem = LBPacketsDrawItem
-  end
-  object MInfo: TMemo
-    Left = 456
-    Top = 369
-    Width = 620
-    Height = 160
-    Anchors = [akLeft, akRight, akBottom]
-    Lines.Strings = (
-      'Made by ZeromusXYZ'
-      ''
-      'Press "Load File" to start'
-      'Right-click packet list for filters'
-      'Ctrl+F = New Search'
-      'F3 = Find Next'
-      ''
-      
-        'To adjust packet info please check parserinfo.txt in the parse f' +
-        'older'
-      'lookup folders is used to create some custom value names'
-      '')
-    ReadOnly = True
-    ScrollBars = ssVertical
-    TabOrder = 2
-  end
-  object CBAppend: TCheckBox
-    Left = 96
-    Top = 16
-    Width = 121
-    Height = 17
-    Caption = 'Append to list'
-    Checked = True
-    State = cbChecked
-    TabOrder = 3
-  end
-  object SG: TStringGrid
-    Left = 456
-    Top = 41
-    Width = 620
-    Height = 322
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    ColCount = 2
-    RowCount = 2
-    FixedRows = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
-    TabOrder = 4
-    RowHeights = (
-      24
-      24)
-  end
-  object CBOriginalData: TCheckBox
-    Left = 456
-    Top = 535
-    Width = 177
-    Height = 17
-    Anchors = [akLeft, akBottom]
-    Caption = 'Show Original Data'
-    Checked = True
-    State = cbChecked
-    TabOrder = 5
-  end
-  object BtnSearch: TButton
-    Left = 328
-    Top = 8
-    Width = 115
-    Height = 25
-    Caption = 'Search ...'
-    TabOrder = 6
-    OnClick = BtnSearchClick
+    ExplicitLeft = 528
+    ExplicitTop = 24
+    ExplicitWidth = 433
+    ExplicitHeight = 305
+    DesignSize = (
+      704
+      561)
+    object LInfo: TLabel
+      Left = 6
+      Top = 18
+      Width = 28
+      Height = 15
+      Caption = 'Info'
+    end
+    object SG: TStringGrid
+      Left = 6
+      Top = 39
+      Width = 684
+      Height = 322
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      ColCount = 2
+      RowCount = 2
+      FixedRows = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
+      TabOrder = 0
+      ExplicitWidth = 620
+      RowHeights = (
+        24
+        24)
+    end
+    object MInfo: TMemo
+      Left = 6
+      Top = 367
+      Width = 684
+      Height = 160
+      Anchors = [akLeft, akRight, akBottom]
+      Lines.Strings = (
+        'Made by ZeromusXYZ'
+        ''
+        'Press "Load File" to start'
+        'Right-click packet list for filters'
+        'Ctrl+F = New Search'
+        'F3 = Find Next'
+        ''
+        
+          'To adjust packet info please check parserinfo.txt in the parse f' +
+          'older'
+        'lookup folders is used to create some custom value names'
+        '')
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 1
+      ExplicitWidth = 620
+    end
+    object CBOriginalData: TCheckBox
+      Left = 6
+      Top = 533
+      Width = 177
+      Height = 17
+      Anchors = [akLeft, akBottom]
+      Caption = 'Show Original Data'
+      Checked = True
+      State = cbChecked
+      TabOrder = 2
+    end
   end
   object OpenDialogLogFiles: TOpenDialog
     DefaultExt = '*.log'

@@ -5,16 +5,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, packetdefs, Vcl.CheckLst,
-  Vcl.Tabs, Vcl.Menus, Vcl.Grids, Vcl.ComCtrls, System.Actions, Vcl.ActnList;
+  Vcl.Tabs, Vcl.Menus, Vcl.Grids, Vcl.ComCtrls, System.Actions, Vcl.ActnList,
+  Vcl.ExtCtrls;
 
 type
   TMainForm = class(TForm)
-    BtnLoadFile: TButton;
-    LBPackets: TListBox;
-    MInfo: TMemo;
     OpenDialogLogFiles: TOpenDialog;
-    CBAppend: TCheckBox;
-    LInfo: TLabel;
     PMPacketList: TPopupMenu;
     PMPacketListShow: TMenuItem;
     PMPacketListN1: TMenuItem;
@@ -23,15 +19,23 @@ type
     PMPacketListN2: TMenuItem;
     PMPacketListReset: TMenuItem;
     PMPacketListOpenFile: TMenuItem;
-    SG: TStringGrid;
     PMPacketListN3: TMenuItem;
     PMPacketListOnlyOut: TMenuItem;
     PMPacketListOnlyIn: TMenuItem;
-    CBOriginalData: TCheckBox;
-    BtnSearch: TButton;
     ActionList1: TActionList;
     ActionSearchNext: TAction;
     ActionSearchNew: TAction;
+    LeftPanel: TPanel;
+    BtnSearch: TButton;
+    CBAppend: TCheckBox;
+    BtnLoadFile: TButton;
+    LBPackets: TListBox;
+    Splitter1: TSplitter;
+    Panel1: TPanel;
+    LInfo: TLabel;
+    SG: TStringGrid;
+    MInfo: TMemo;
+    CBOriginalData: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BtnLoadFileClick(Sender: TObject);
@@ -48,6 +52,7 @@ type
     procedure BtnSearchClick(Sender: TObject);
     procedure ActionSearchNextExecute(Sender: TObject);
     procedure ActionSearchNewExecute(Sender: TObject);
+    procedure Splitter1Moved(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -216,7 +221,7 @@ begin
   Begin
     PD := PL.GetPacket(LBPackets.ItemIndex);
     CurrentSync := PD.PacketSync ;
-    LInfo.Caption := PD.Header ;
+    LInfo.Caption := PD.OriginalHeader ;
     // MInfo.Text := PD.RawText.Text ;
     MInfo.Lines.Clear ;
     Case PD.PacketLogType Of
@@ -372,6 +377,11 @@ begin
     Canvas.Brush.Color := BackCol ;
     Canvas.FillRect(Rect);
 
+    Canvas.Font.Color := TextCol ;
+    Canvas.Brush.Color := BackCol ;
+    Flags := DrawTextBiDiModeFlags(DT_SINGLELINE or DT_VCENTER or DT_NOPREFIX);
+    DrawText(Canvas.Handle, Items[Index], Length(Items[Index]), Rect, Flags);
+
     // Draw Side-bar markings if needed
     If (BarOn) Then
     Begin
@@ -383,12 +393,9 @@ begin
         BarRect.Left := Rect.Right - 8 ;
 
       Canvas.FillRect(BarRect);
+      Canvas.Brush.Color := BackCol ;
     End;
 
-    Canvas.Font.Color := TextCol ;
-    Canvas.Brush.Color := BackCol ;
-    Flags := DrawTextBiDiModeFlags(DT_SINGLELINE or DT_VCENTER or DT_NOPREFIX);
-    DrawText(Canvas.Handle, Items[Index], Length(Items[Index]), Rect, Flags);
   End;
 end;
 
@@ -607,5 +614,10 @@ Begin
 
   ShowMessage('No more matches found!');
 End;
+
+procedure TMainForm.Splitter1Moved(Sender: TObject);
+begin
+  LBPackets.Invalidate ;
+end;
 
 end.

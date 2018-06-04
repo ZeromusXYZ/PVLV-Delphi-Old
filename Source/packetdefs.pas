@@ -14,25 +14,28 @@ TYPE
   Protected
     fRawText : TStringList ;
     fHeaderText : String ;
+    fOriginalHeaderText : String ;
     fRawBytes : Array of Byte ;
     fPacketLogType : Byte ; // 0 = unknown ; 1 = outgoing ; 2 = incomming
     fPacketID : Word ;
     fPacketDataSize : Word ;
     fPacketSync : Word ;
     fTimeStamp : TDateTime ;
+    fOriginalTimeString : String ;
   Public
     Constructor Create ;
     Destructor Destroy ; Override ;
     Function AddRawLineAsBytes(S : String):Integer;
     Function PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
+    Function GetBitAtPos(Pos,BitOffset:Integer):Boolean;
     Function GetWordAtPos(Pos:Integer):Word;
     Function GetInt16AtPos(Pos:Integer):Int16;
     Function GetInt32AtPos(Pos:Integer):Int32;
     Function GetUInt32AtPos(Pos:Integer):Cardinal;
     Function GetFloatAtPos(Pos:Integer):Single;
     Function GetTimeStampAtPos(Pos:Integer):String;
-    Function GetStringAtPos(Pos:Integer):String;
+    Function GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
     Function GetDataAtPos(Pos,Size:Integer):String;
     Function GetIP4AtPos(Pos:Integer):String;
     Procedure CompileData ;
@@ -41,6 +44,7 @@ TYPE
     Function FindUInt32(AUInt32 : LongWord):Integer;
     Property RawText : TStringList read fRawText ;
     Property Header : String read fHeaderText ;
+    Property OriginalHeader : String read fOriginalHeaderText ;
     Property PacketLogType : Byte read fPacketLogType ;
     Property PacketID : Word read fPacketID ;
     Property PacketDataSize : Word read fPacketDataSize ;
@@ -82,7 +86,7 @@ Function ToBitStr(var V):String;
 
 implementation
 
-Uses System.SysUtils, DateUtils , datalookups;
+Uses System.SysUtils, DateUtils , System.Variants, datalookups;
 
 CONST
   CompasDirectionNames : Array[0..15] of String = ('E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N', 'NNE', 'NE', 'ENE');
@@ -203,7 +207,7 @@ Begin
   Begin
     R := PacketInNames.GetVal(PacketID);
   End;
-  If R = '' Then R := 'Unknown' ;
+  If R = '' Then R := '??? unknown' ;
   Result := R ;
 End;
 
@@ -254,6 +258,7 @@ begin
   Inherited Create ;
   fRawText := TStringList.Create ;
   fHeaderText := 'Unknown Header' ;
+  fOriginalHeaderText := '' ;
   fPacketLogType := pltUnknown ;
   fTimeStamp := 0 ;
   fPacketID := $000 ;
@@ -415,13 +420,13 @@ Begin
   End;
 End;
 
-Function TPacketData.GetStringAtPos(Pos:Integer):String;
+Function TPacketData.GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
 VAR
   I : Integer ;
 Begin
   Result := '' ;
   I := Pos ;
-  While (I < length(fRawBytes)-1) and (fRawBytes[I] <> 0) Do
+  While (I < length(fRawBytes)-1) and (fRawBytes[I] <> 0) and ((MaxSize = -1) or (Length(Result) < MaxSize) ) Do
   Begin
     Result := Result + Char(fRawBytes[I]);
     I := I + 1 ;
@@ -469,6 +474,30 @@ Begin
   End;
 End;
 
+Function TPacketData.GetBitAtPos(Pos,BitOffset:Integer):Boolean;
+VAR
+  V : ^Byte ;
+  BitFilter : Byte ;
+Begin
+  Result := False ;
+  Try
+    If (Pos > length(fRawBytes)-2) Then Exit ;
+    V := @fRawBytes[Pos] ;
+    // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
+    BitFilter := $01 ;
+    While BitOffset > 0 Do
+    Begin
+      BitFilter := BitFilter shl 1 ;
+      BitOffset := BitOffset - 1 ;
+    End;
+
+    Result := ((V^ and BitFilter) <> 0);
+    Exit ;
+  Except
+    Result := False ;
+  End;
+End;
+
 Function TPacketData.GetFloatAtPos(Pos:Integer):Single;
 VAR
   V : ^Single ;
@@ -489,17 +518,51 @@ End;
 
 
 Procedure TPacketData.CompileData;
+VAR
+  S, TS : String ;
+  P1, P2 : Integer ;
 begin
   If Length(fRawBytes) < 4 then
   Begin
     fPacketID := $FFFF ; // invalid data
     fPacketDataSize := 0 ;
+    fHeaderText := 'Invalid Packet Size < 4' ;
     Exit ;
   End;
   fPacketID := fRawBytes[$0] + ((fRawBytes[$1] AND $01) * $100) ;
   fPacketDataSize := (fRawBytes[$1] AND $FE) * 2; // basically, all packets are always multiples of 4 bytes
   fPacketSync := fRawBytes[$2] + (fRawBytes[$3] * $100); // packet order number
 
+  // Try to determine timestamp from header
+  fOriginalTimeString := '' ;
+  P1 := Pos('[',fOriginalHeaderText);
+  P2 := Pos(']',fOriginalHeaderText);
+  If (P1 > 0) and (P2 > 0) and (P2 > P1) Then
+  Begin
+    fOriginalTimeString := Copy(fOriginalHeaderText,P1+1,P2-P1-1);
+    If (Length(fOriginalTimeString) > 0) Then
+    Try
+      fTimeStamp := VarToDateTime(fOriginalTimeString); // <-- seems to work better than anything I'd like to try
+      // fTimeStamp := StrToDateTime(fOriginalTimeString);
+      DateTimeToString(TS,'hh:nn:ss',TimeStamp);
+    Except
+      TS := '' ;
+      fTimeStamp := 0 ;
+      fOriginalTimeString := '0000-00-00 00:00' ;
+    End;
+  End;
+
+  If (fTimeStamp = 0) Then TS := '??:??:??' ;
+
+  Case PacketLogType Of
+    1 : S := 'OUT ' ;
+    2 : S := 'IN  ' ;
+  Else
+    S := '??? ' ;
+  End;
+  S := TS + ' : ' + S + '0x' + IntToHex(PacketID,3) + ' - ' ;
+
+  fHeaderText := S + PacketTypeToString(PacketLogType,PacketID);
 end;
 
 Function TPacketData.FindByte(AByte : Byte):Integer;
@@ -615,6 +678,7 @@ Begin
         End;
         PD.fRawText.Add(S);
         PD.fHeaderText := S ;
+        PD.fOriginalHeaderText := S ;
 
       End else
       If ((S <> '') and Assigned(PD)) Then

@@ -3,14 +3,11 @@ file;in-0x00e;NPC Update;Packet contains info about another PC (i.e. coordinates
 uint32;$04;NPC
 uint16;$08;Index
 byteflag;$0A;Update Mask;-- 0A   Bits that control which parts of the packet are actual updates (rest is zeroed). Model is always sent
-rem:$0A:0;-- 0A   Bit 0: Position, Rotation, Walk Count
-rem:$0A:1;-- 0A   Bit 1: Claimer ID
-rem:$0A:2;-- 0A   Bit 2: HP, Status
-rem:$0A:3;-- 0A   Bit 3: Name
-rem:$0A:4;-- 0A   Bit 4:
-rem:$0A:5;-- 0A   Bit 5: The client stops displaying the mob when this bit is set (dead, out of range, etc.)
-rem:$0A:6;-- 0A   Bit 6:
-rem:$0A:7;-- 0A   Bit 7:
+bit;$0A:0;  Bit0: Pos,Rot,Walk
+bit;$0A:1;  Bit1: Claimer ID
+bit;$0A:2;  Bit2: HP, Status
+bit;$0A:3;  Bit3: Name
+bit;$0A:5;  Bit5: Despawn
 dir;$0B;Direction
 pos;$0C;Position
 uint32;$18;Walk Count;Steadily increases until rotation changes. Does not reset while the mob isn't walking. Only goes until 0xFF1F.

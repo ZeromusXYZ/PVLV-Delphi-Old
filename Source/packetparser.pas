@@ -31,9 +31,9 @@ Function AddPacketInfoToStringGrid(PD : TPacketData;SG : TStringGrid):Boolean;
 VAR
   FN : String ;
   SL, Line : TStringList ;
-  I, LOffset : Integer ;
-  LType, LOffsetStr, LName, LDescription : String ;
-  LastPos, DataSize : Integer ;
+  I, LOffset , LSubOffset : Integer ;
+  LType, LOffsetStr, LSubOffsetStr, LName, LDescription, S : String ;
+  LastPos, DataSize, P : Integer ;
 Begin
   Result := True ;
   FN := 'parse\' ;
@@ -59,16 +59,30 @@ Begin
         // We want a  type:offset[:name[:description]] format
         LType := LowerCase(Line[0]);
         LOffsetStr := LowerCase(Line[1]);
+        LSubOffsetStr := '0' ;
         LOffset := 4 ;
         If (Line.Count > 2) Then LName := Line[2] else LName := '' ;
         If (Line.Count > 3) Then LDescription := Line[3] else LDescription := '???' ; // we're not actually using this (yet)
 
+
+        P := Pos(':',LOffsetStr);
+        If (P > 0) Then
+        Begin
+          LSubOffsetStr := Copy(LOffsetStr,P+1,Length(LOffsetStr));
+          LOffsetStr := Copy(LOffsetStr,1,P-1);
+        End;
 
         If (TryStrToInt(LOffsetStr,LOffset) = False) Then
         Begin
           // Invalid offset value, skip this line
           Continue;
         End;
+        If (TryStrToInt(LSubOffsetStr,LSubOffset) = False) Then
+        Begin
+          // Invalid suboffset value, default it to 0
+          LSubOffset := 0 ;
+        End;
+
 
         If (LName = '') Then
         Begin
@@ -88,6 +102,11 @@ Begin
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           AddSGRow(SG,LName, '0x' + IntToHex(PD.GetByteAtPos(LOffset),2) + '  ' + BytetoBit(PD.GetByteAtPos(LOffset)) + '  ' + IntToStr(PD.GetByteAtPos(LOffset)) );
+        End Else
+        If ((LType = 'bit') or (LType = 'bool')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
+          AddSGRow(SG,LName, BoolToStr( PD.GetBitAtPos(LOffset,LSubOffset),True ) );
         End Else
         If ((LType = 'word') or (LType = 'uint16') or (LType = 'ushort') or (LType = 'w')) Then
         Begin
@@ -149,6 +168,16 @@ Begin
 
         End Else
 
+        If (Copy(LType,1,6) = 'string') Then
+        Begin
+          // Zero terminated String
+          DataSize := StrToIntDef(Copy(LType,7,Length(LType)),-1);
+
+          AddSGRow(SG,LName,PD.GetStringAtPos(LOffset,DataSize));
+          If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
+
+        End Else
+        {
         If (LType = 'string') Then
         Begin
           // Zero terminated String
@@ -156,6 +185,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
 
         End Else
+        }
 
         If (Copy(LType,1,4) = 'data') Then
         Begin

@@ -2,15 +2,13 @@ file;in-0x00d;PC Update;Packet contains info about another PC (i.e. coordinates)
 
 uint32;$04;Player ID
 uint16;$08;Index
-byteflag;0x0A;UpdateFlag1
-rem:$0A:0;{ctype='boolbit',           label='Update Position'},                       -- 0A:0 Position, Rotation, Target, Speed  
-rem:$0A:1;{ctype='boolbit',           label='Update Status'},                         -- 0A:1 Not used for 0x00D
-rem:$0A:2;{ctype='boolbit',           label='Update Vitals'},                         -- 0A:2 HP%, Status, Flags, LS color, "Face Flags"
-rem:$0A:3;{ctype='boolbit',           label='Update Name'},                           -- 0A:3 Name
-rem:$0A:4;{ctype='boolbit',           label='Update Model'},                          -- 0A:4 Race, Face, Gear models
-rem:$0A:5;{ctype='boolbit',           label='Despawn'},                               -- 0A:5 Only set if player runs out of range or zones
-rem:$0A:6;{ctype='boolbit',           label='_unknown1'},                             -- 0A:6
-rem:$0A:7;{ctype='boolbit',           label='_unknown2'},                             -- 0A:7
+byteflag;0x0A;Update Mask 1
+bit;$0A:0;  Bit0: Pos,Rot,Target,Speed
+bit;$0A:1;  Bit1: Status;-- 0A:1 Not used for 0x00D
+bit;$0A:2;  Bit2: Vitals;-- 0A:2 HP%, Status, Flags, LS color, "Face Flags"
+bit;$0A:3;  Bit3: Name
+bit;$0A:4;  Bit4: Model
+bit;$0A:5;  Bit5: Despawn
 dir;$0B;Direction
 pos;$0C;Position
 uint16;$18;Run Count
@@ -19,46 +17,46 @@ byte;$1C;Movement Speed;0x32 represents 100%
 byte;$1D;Animation Speed;0x32 represents 100%
 byte;$1E;HP %
 byte;$1F;Status
-byteflag;$20;Flags byte 1
-byteflag;$21;Flags byte 2
-byteflag;$22;Flags byte 3
-byteflag;$23;Flags byte 4
 
-rem;$20:0;Flag1 bit0 - None
-rem;$20:1;Flag1 bit1 - Deletes everyone
-rem;$20:2;Flag1 bit2 - Deletes everyone
-rem;$20:3;Flag1 bit3 - None
-rem;$20:4;Flag1 bit4 - None
-rem;$20:5;Flag1 bit5 - None
-rem;$20:6;Flag1 bit6 - None
-rem;$20:7;Flag1 bit7 - None
+byteflag;$20;Flags Byte 1
+rem;$20:0;  Bit0: None
+bit;$20:1;  Bit1: Deletes everyone
+bit;$20:2;  Bit2: Deletes everyone
+rem;$20:3;  Bit3: None
+rem;$20:4;  Bit4: None
+rem;$20:5;  Bit5: None
+rem;$20:6;  Bit6: None
+rem;$20:7;  Bit7: None
 
-rem;$21:0;Flag2 bit0 - None
-rem;$21:1;Flag2 bit1 - None
-rem;$21:2;Flag2 bit2 - None
-rem;$21:3;Flag2 bit3 - LFG
-rem;$21:4;Flag2 bit4 - Anon
-rem;$21:5;Flag2 bit5 - Orange
-rem;$21:6;Flag2 bit6 - Away
-rem;$21:7;Flag2 bit7 - None
+byteflag;$21;Flags Byte 2
+rem;$21:0;  Bit0: None
+rem;$21:1;  Bit1: None
+rem;$21:2;  Bit2: None
+bit;$21:3;  Bit3: LFG
+bit;$21:4;  Bit4: Anon
+bit;$21:5;  Bit5: Orange name
+bit;$21:6;  Bit6: Away
+rem;$21:7;  Bit7: None
 
-rem;$22:0;Flag3 bit0 - POL Icon
-rem;$22:1;Flag3 bit1 - No Effect
-rem;$22:2;Flag3 bit2 - DC-ing
-rem;$22:3;Flag3 bit3 - Untargettable
-rem;$22:4;Flag3 bit4 - No LS
-rem;$22:5;Flag3 bit5 - No LS
-rem;$22:6;Flag3 bit6 - No LS
-rem;$22:7;Flag3 bit7 - No LS
+byteflag;$22;Flags Byte 3
+bit;$22:0;  Bit0: POL Icon
+bit;$22:1;  Bit1: No Effect
+bit;$22:2;  Bit2: DC-ing
+bit;$22:3;  Bit3: Untargettable
+bit;$22:4;  Bit4: No LS
+bit;$22:5;  Bit5: No LS
+bit;$22:6;  Bit6: No LS
+bit;$22:7;  Bit7: No LS
 
-rem;$23:0;Flag4 bit0 - Trial Account
-rem;$23:1;Flag4 bit1 - Trial Account
-rem;$23:2;Flag4 bit2 - GM Mode
-rem;$23:3;Flag4 bit3 - None
-rem;$23:4;Flag4 bit4 - None
-rem;$23:5;Flag4 bit5 - Invisible models
-rem;$23:6;Flag4 bit6 - None
-rem;$23:7;Flag4 bit7 - Bazaar
+byteflag;$23;Flags Byte 4
+bit;$23:0;  Bit0: AccLvBit1;Bit 1 & 2 defines GM level if GM level is set
+bit;$23:1;  Bit1: AccLvBit2;Shows trial account of these are set without GM
+bit;$23:2;  Bit2: GM Mode;Toggles GM mode on, use with Bit 1 & 2 to get higher-level GM icons/levels. 0=GM, 1=SeniorGM, 2=LeadGM, 3=Producer
+rem;$23:3;  Bit3: None
+rem;$23:4;  Bit4: None
+bit;$23:5;  Bit5: Invisible models
+rem;$23:6;  Bit6: None
+bit;$23:7;  Bit7: Bazaar
 
 byte;$24;Linkshell Red
 byte;$25;Linkshell Green

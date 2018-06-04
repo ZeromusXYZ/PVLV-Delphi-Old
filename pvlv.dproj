@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>pvlv.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -102,9 +102,9 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Build>7</VerInfo_Build>
+        <VerInfo_Build>10</VerInfo_Build>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.1.0.7;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.1.0.10;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -132,6 +132,10 @@
         <None Include="lookup\equipslot.txt"/>
         <None Include="lookup\containers.txt"/>
         <None Include="parse\in-0x050.txt"/>
+        <None Include="parse\in-0x00a.txt"/>
+        <None Include="parse\in-0x00b.txt"/>
+        <None Include="parse\in-0x00e.txt"/>
+        <None Include="parse\in-0x017.txt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
