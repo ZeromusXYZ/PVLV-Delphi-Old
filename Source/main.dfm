@@ -13,6 +13,7 @@ object MainForm: TMainForm
   Font.Height = -13
   Font.Name = 'Consolas'
   Font.Style = []
+  Menu = MM
   OldCreateOrder = False
   Position = poDesktopCenter
   OnCreate = FormCreate
@@ -42,50 +43,19 @@ object MainForm: TMainForm
     DesignSize = (
       375
       561)
-    object BtnSearch: TButton
-      Left = 269
-      Top = 8
-      Width = 99
-      Height = 25
-      Anchors = [akTop, akRight]
-      Caption = 'Search ...'
-      TabOrder = 0
-      OnClick = BtnSearchClick
-      ExplicitLeft = 344
-    end
-    object CBAppend: TCheckBox
-      Left = 112
-      Top = 16
-      Width = 121
-      Height = 17
-      Caption = 'Append to list'
-      Checked = True
-      State = cbChecked
-      TabOrder = 1
-    end
-    object BtnLoadFile: TButton
-      Left = 8
-      Top = 8
-      Width = 99
-      Height = 25
-      Caption = 'Load File'
-      TabOrder = 2
-      OnClick = BtnLoadFileClick
-    end
     object LBPackets: TListBox
       Left = 8
-      Top = 39
+      Top = 8
       Width = 360
-      Height = 514
+      Height = 545
       Style = lbOwnerDrawFixed
       Anchors = [akLeft, akTop, akRight, akBottom]
       ExtendedSelect = False
       ItemHeight = 15
       PopupMenu = PMPacketList
-      TabOrder = 3
+      TabOrder = 0
       OnClick = LBPacketsClick
       OnDrawItem = LBPacketsDrawItem
-      ExplicitWidth = 435
     end
   end
   object Panel1: TPanel
@@ -98,10 +68,6 @@ object MainForm: TMainForm
     Caption = 'Panel1'
     Constraints.MinWidth = 200
     TabOrder = 1
-    ExplicitLeft = 528
-    ExplicitTop = 24
-    ExplicitWidth = 433
-    ExplicitHeight = 305
     DesignSize = (
       704
       561)
@@ -123,7 +89,6 @@ object MainForm: TMainForm
       FixedRows = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
       TabOrder = 0
-      ExplicitWidth = 620
       RowHeights = (
         24
         24)
@@ -135,22 +100,17 @@ object MainForm: TMainForm
       Height = 160
       Anchors = [akLeft, akRight, akBottom]
       Lines.Strings = (
-        'Made by ZeromusXYZ'
-        ''
-        'Press "Load File" to start'
-        'Right-click packet list for filters'
-        'Ctrl+F = New Search'
-        'F3 = Find Next'
+        'Click File -> Open to start'
         ''
         
           'To adjust packet info please check parserinfo.txt in the parse f' +
           'older'
-        'lookup folders is used to create some custom value names'
+        '"lookup" folder is used to create some custom value names'
+        '"filters" folder containts custom filters'
         '')
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 1
-      ExplicitWidth = 620
     end
     object CBOriginalData: TCheckBox
       Left = 6
@@ -167,7 +127,7 @@ object MainForm: TMainForm
   object OpenDialogLogFiles: TOpenDialog
     DefaultExt = '*.log'
     Filter = 'Log Files|*.log|All Files|*.*'
-    Options = [ofReadOnly, ofHideReadOnly, ofFileMustExist, ofEnableSizing]
+    Options = [ofReadOnly, ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Open Log file'
     Left = 48
     Top = 72
@@ -213,18 +173,99 @@ object MainForm: TMainForm
       OnClick = PMPacketListResetClick
     end
   end
-  object ActionList1: TActionList
-    Left = 184
-    Top = 192
-    object ActionSearchNext: TAction
-      Caption = 'SearchNext'
+  object AL: TActionList
+    Left = 272
+    Top = 72
+    object ALSearchNext: TAction
+      Caption = 'Search next'
       ShortCut = 114
-      OnExecute = ActionSearchNextExecute
+      OnExecute = ALSearchNextExecute
     end
-    object ActionSearchNew: TAction
-      Caption = 'SearchNew'
+    object ALSearchNew: TAction
+      Caption = 'Search ...'
       ShortCut = 16454
-      OnExecute = ActionSearchNewExecute
+      OnExecute = ALSearchNewExecute
+    end
+    object ALOpenFile: TAction
+      Caption = 'Open ...'
+      ShortCut = 32847
+      OnExecute = ALOpenFileExecute
+    end
+    object ALAppendFile: TAction
+      Caption = 'Append ...'
+      ShortCut = 41039
+      OnExecute = ALAppendFileExecute
+    end
+    object ALOpenSource: TAction
+      Caption = 'Open source on GitHub'
+      OnExecute = ALOpenSourceExecute
+    end
+    object ALAbout: TAction
+      Caption = 'About ...'
+      OnExecute = ALAboutExecute
+    end
+  end
+  object MM: TMainMenu
+    Left = 208
+    Top = 72
+    object MMFile: TMenuItem
+      Caption = '&File'
+      OnClick = MMFileClick
+      object MMFileOpen: TMenuItem
+        Action = ALOpenFile
+      end
+      object MMFileAppend: TMenuItem
+        Action = ALAppendFile
+        Enabled = False
+      end
+      object MMFileN1: TMenuItem
+        Caption = '-'
+      end
+      object MMFileExit: TMenuItem
+        Caption = 'E&xit'
+        OnClick = MMFileExitClick
+      end
+    end
+    object MMSearch: TMenuItem
+      Caption = '&Search'
+      object MMSearchFind: TMenuItem
+        Action = ALSearchNew
+      end
+      object MMSearchFindNext: TMenuItem
+        Action = ALSearchNext
+      end
+    end
+    object MMFilter: TMenuItem
+      Caption = 'Fi&lter'
+      OnClick = MMFilterClick
+      object MMFilterEdit: TMenuItem
+        Caption = 'Edit ...'
+        OnClick = MMFilterEditClick
+      end
+      object MMFilterReset: TMenuItem
+        Caption = 'Reset'
+        OnClick = MMFilterResetClick
+      end
+      object MMFilterN1: TMenuItem
+        Caption = '-'
+      end
+      object MMFilterApply: TMenuItem
+        Caption = 'Apply'
+        object MMFilterApplyN1: TMenuItem
+          Tag = -1
+          Caption = '-'
+          OnClick = MMFilterApplyN1Click
+        end
+      end
+    end
+    object About1: TMenuItem
+      Caption = '&About'
+      object OpenonGitHub1: TMenuItem
+        Action = ALOpenSource
+      end
+      object About2: TMenuItem
+        Action = ALAbout
+      end
     end
   end
 end

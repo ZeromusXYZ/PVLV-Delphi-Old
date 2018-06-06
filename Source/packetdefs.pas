@@ -10,6 +10,14 @@ CONST
   pltIn      = 2 ;
 
 TYPE
+  TFilterType = (
+    ftFilterOff,
+    ftHidePackets,
+    ftShowPackets,
+    ftAllowNone );
+
+
+TYPE
   TPacketData = Class
   Protected
     fRawText : TStringList ;
@@ -56,10 +64,10 @@ TYPE
   Protected
     fPacketDataList : TObjectList ;
   Public
-    FilterOutOnly : Word ;
-    FilterOut : Array of Word ;
-    FilterInOnly : Word ;
-    FilterIn : Array of Word ;
+    FilterOutType : TFilterType ;
+    FilterOutList : Array of Word ;
+    FilterInType : TFilterType ;
+    FilterInList : Array of Word ;
 
     Constructor Create(IsMaster:Boolean);
     Destructor Destroy ; Override ;
@@ -71,6 +79,7 @@ TYPE
     Function CopyFrom(Original: TPacketList):Integer;
     // Function FilteredFrom(Original: TPacketList;HideFilteredIn:Boolean;FilterIn:Array of Word;HideFilteredOut:Boolean;FilterOut:Array of Word):Integer;
     Function FilterFrom(Original: TPacketList):Integer; // Uses filter vars to copy items
+    Function DoIShowThis(PacketID : Word;FT : TFilterType;FL : Array of Word) : Boolean ;
   End;
 
 Function ByteToBit(B : Byte):String;
@@ -627,10 +636,10 @@ end;
 
 Procedure TPacketList.ClearFilters;
 Begin
-  SetLength(FilterIn,0);
-  FilterInOnly := $000 ;
-  SetLength(FilterOut,0);
-  FilterOutOnly := $000 ;
+  SetLength(FilterOutList,0);
+  FilterOutType := ftFilterOff ;
+  SetLength(FilterInList,0);
+  FilterInType := ftFilterOff ;
 End;
 
 Function TPacketList.LoadFromFile(Filename : String):Boolean;
@@ -746,6 +755,31 @@ begin
   Result := C ;
 end;
 
+Function TPacketList.DoIShowThis(PacketID : Word;FT : TFilterType;FL : Array of Word) : Boolean ;
+Begin
+  Result := True ;
+  If (FT = ftFilterOff) Then
+  Begin
+    Result := True ;
+    Exit ;
+  End;
+  If (FT = ftAllowNone) Then
+  Begin
+    Result := False ;
+    Exit ;
+  End;
+  If (FT = ftShowPackets) Then
+  Begin
+    Result := WordInArray(PacketID,FL);
+    Exit ;
+  End;
+  If (FT = ftHidePackets) Then
+  Begin
+    Result := Not WordInArray(PacketID,FL);
+    Exit ;
+  End;
+End;
+
 Function TPacketList.FilterFrom(Original: TPacketList):Integer;
 VAR
   I, C : Integer ;
@@ -764,38 +798,14 @@ begin
     If (PD.PacketLogType = pltOut) Then
     Begin
       // Outgoing
-      If (FilterOutOnly <> $000) Then
-      Begin
-        DoAdd := False ;
-        If (FilterOutOnly = PD.PacketID) Then DoAdd := True ;
-      End Else
-      If (Length(FilterOut) > 0) Then
-      Begin
-        DoAdd := True ;
-        If WordInArray(PD.PacketID,FilterOut) Then DoAdd := False ;
-      End Else
-      Begin
-        DoAdd := True ;
-      End;
+      DoAdd := DoIShowThis(PD.PacketID,FilterOutType,FilterOutList);
     End;
 
     // In filters
     If (PD.PacketLogType = pltIn) Then
     Begin
       // Incomming
-      If (FilterInOnly <> $000) Then
-      Begin
-        DoAdd := False ;
-        If (FilterInOnly = PD.PacketID) Then DoAdd := True ;
-      End Else
-      If (Length(FilterIn) > 0) Then
-      Begin
-        DoAdd := True ;
-        If WordInArray(PD.PacketID,FilterIn) Then DoAdd := False ;
-      End Else
-      Begin
-        DoAdd := True ;
-      End;
+      DoAdd := DoIShowThis(PD.PacketID,FilterInType,FilterInList);
     End;
 
     If DoAdd Then

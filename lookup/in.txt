@@ -40,7 +40,7 @@
 0x042;Blacklist Command;Sent in response to /blacklist add or /blacklist delete.
 0x044;Job Info Extra;Contains information about Automaton stats and set Blue Magic spells.
 0x047;Translate Response;Response to a translate request.
-0x04B;Logout Acknowledge;Acknowledges a logout attempt.
+rem;0x04B;Logout Acknowledge;Acknowledges a logout attempt.
 0x04B;Delivery Item;Item in delivery box.
 0x04C;Auction House Menu;Sent when visiting auction counter.
 0x04D;Servmes Resp;Server response when someone requests it.

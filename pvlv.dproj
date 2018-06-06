@@ -61,13 +61,10 @@
         <DCC_K>false</DCC_K>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_MinorVer>1</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.1.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_MinorVer>2</VerInfo_MinorVer>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.2.0.7;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_UsePackage>bindcompvcl;vclie;vcltouch;bindcompfmx;vclribbon;VclSmp;fmx;dsnap;rtl;dbrtl;fmxase;vcl;IndyCore;bindcomp;IndySystem;fmxobj;vclx;svnui;xmlrtl;svn;vclimg;fmxdae;IndyProtocols;MetropolisUILiveTile;vclactnband;bindengine;vcldb;vcldsnap;$(DCC_UsePackage)</DCC_UsePackage>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
@@ -101,14 +98,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Build>10</VerInfo_Build>
-        <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.1.0.10;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
-        <VerInfo_MinorVer>1</VerInfo_MinorVer>
+        <VerInfo_Build>12</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=0.2.0.12;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.1.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_MinorVer>2</VerInfo_MinorVer>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -122,6 +116,9 @@
         <DCCReference Include="Source\datalookups.pas"/>
         <DCCReference Include="Source\searchdialog.pas">
             <Form>DlgSearch</Form>
+        </DCCReference>
+        <DCCReference Include="Source\filterdialog.pas">
+            <Form>DlgFilter</Form>
         </DCCReference>
         <None Include="Parse\out-0x015.txt"/>
         <None Include="Parse\in-0x00d.txt"/>

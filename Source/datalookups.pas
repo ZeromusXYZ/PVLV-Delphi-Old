@@ -20,6 +20,8 @@ TYPE
     Procedure LoadFromFile(FN : String);
     Function GetVal(ID : Int64):String;
     Procedure AddEntry(ID : Int64 ; Val , Extra : String);
+    Function Count : Integer ;
+    Function GetItem(Index : Integer):TDataLookupEntry;
   End;
 
 VAR
@@ -36,7 +38,7 @@ VAR
 
 implementation
 
-uses System.SysUtils ;
+uses Vcl.Forms, System.SysUtils ;
 
 procedure Split(Delimiter: Char; Str: string; ListOfStrings: TStrings) ;
 begin
@@ -51,7 +53,7 @@ Constructor TDataLookup.Create(FN : String);
 Begin
   Inherited Create ;
   fList := TList.Create();
-  LoadFromFile(FN);
+  LoadFromFile(ExtractFilePath(Application.ExeName) + FN);
 End;
 
 Destructor TDataLookup.Destroy ;
@@ -119,6 +121,17 @@ Begin
   DLE.Extra := Extra ;
   fList.Add(DLE);
 End;
+
+Function TDataLookup.Count : Integer ;
+Begin
+  Result := fList.Count ;
+End;
+
+Function TDataLookup.GetItem(Index : Integer):TDataLookupEntry;
+Begin
+  Result := TDataLookupEntry(fList.Items[Index]);
+End;
+
 
 Initialization
 

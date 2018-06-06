@@ -22,13 +22,10 @@ type
     PMPacketListN3: TMenuItem;
     PMPacketListOnlyOut: TMenuItem;
     PMPacketListOnlyIn: TMenuItem;
-    ActionList1: TActionList;
-    ActionSearchNext: TAction;
-    ActionSearchNew: TAction;
+    AL: TActionList;
+    ALSearchNext: TAction;
+    ALSearchNew: TAction;
     LeftPanel: TPanel;
-    BtnSearch: TButton;
-    CBAppend: TCheckBox;
-    BtnLoadFile: TButton;
     LBPackets: TListBox;
     Splitter1: TSplitter;
     Panel1: TPanel;
@@ -36,9 +33,30 @@ type
     SG: TStringGrid;
     MInfo: TMemo;
     CBOriginalData: TCheckBox;
+    MM: TMainMenu;
+    MMFile: TMenuItem;
+    MMFileOpen: TMenuItem;
+    MMFileAppend: TMenuItem;
+    MMFileN1: TMenuItem;
+    MMFileExit: TMenuItem;
+    MMSearch: TMenuItem;
+    MMSearchFind: TMenuItem;
+    MMSearchFindNext: TMenuItem;
+    About1: TMenuItem;
+    OpenonGitHub1: TMenuItem;
+    About2: TMenuItem;
+    ALOpenFile: TAction;
+    ALAppendFile: TAction;
+    ALOpenSource: TAction;
+    ALAbout: TAction;
+    MMFilter: TMenuItem;
+    MMFilterEdit: TMenuItem;
+    MMFilterN1: TMenuItem;
+    MMFilterReset: TMenuItem;
+    MMFilterApply: TMenuItem;
+    MMFilterApplyN1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure BtnLoadFileClick(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
     procedure LBPacketsDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
@@ -49,17 +67,29 @@ type
     procedure PMPacketListHideThisClick(Sender: TObject);
     procedure PMPacketListOnlyOutClick(Sender: TObject);
     procedure PMPacketListOnlyInClick(Sender: TObject);
-    procedure BtnSearchClick(Sender: TObject);
-    procedure ActionSearchNextExecute(Sender: TObject);
-    procedure ActionSearchNewExecute(Sender: TObject);
+    procedure ALSearchNextExecute(Sender: TObject);
+    procedure ALSearchNewExecute(Sender: TObject);
     procedure Splitter1Moved(Sender: TObject);
+    procedure MMFileExitClick(Sender: TObject);
+    procedure ALOpenFileExecute(Sender: TObject);
+    procedure ALAppendFileExecute(Sender: TObject);
+    procedure ALOpenSourceExecute(Sender: TObject);
+    procedure ALAboutExecute(Sender: TObject);
+    procedure MMFilterClick(Sender: TObject);
+    procedure MMFilterApplyN1Click(Sender: TObject);
+    procedure MMFilterDeleteN1Click(Sender: TObject);
+    procedure MMFileClick(Sender: TObject);
+    procedure MMFilterEditClick(Sender: TObject);
+    procedure MMFilterResetClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
+    FilterList : TStringList ;
     Procedure MoveToSync;
     procedure FillListBox ;
     Procedure AddSGRow(VarName:String;Val:String);
     Procedure SearchNext ;
+    Procedure ApplyFromDialog;
   public
     { Public declarations }
     PL, PLLoaded : TPacketList ;
@@ -73,7 +103,44 @@ implementation
 
 {$R *.dfm}
 
-uses System.StrUtils, packetparser, searchdialog;
+uses System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
+
+procedure GetBuildInfo(var V1, V2, V3, V4: word);
+var
+  VerInfoSize, VerValueSize, Dummy: DWORD;
+  VerInfo: Pointer;
+  VerValue: PVSFixedFileInfo;
+begin
+  VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
+  if VerInfoSize > 0 then
+  begin
+      GetMem(VerInfo, VerInfoSize);
+      try
+        if GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo) then
+        begin
+          VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
+          with VerValue^ do
+          begin
+            V1 := dwFileVersionMS shr 16;
+            V2 := dwFileVersionMS and $FFFF;
+            V3 := dwFileVersionLS shr 16;
+            V4 := dwFileVersionLS and $FFFF;
+          end;
+        end;
+      finally
+        FreeMem(VerInfo, VerInfoSize);
+      end;
+  end;
+end;
+
+function GetBuildInfoAsString: string;
+var
+  V1, V2, V3, V4: word;
+begin
+  GetBuildInfo(V1, V2, V3, V4);
+  Result := IntToStr(V1) + '.' + IntToStr(V2) + '.' +
+    IntToStr(V3) + '.' + IntToStr(V4);
+end;
 
 Procedure TMainForm.MoveToSync;
 VAR
@@ -112,19 +179,207 @@ Begin
   LBPackets.Cursor := crDefault ;
 End;
 
-procedure TMainForm.BtnLoadFileClick(Sender: TObject);
+procedure TMainForm.MMFileClick(Sender: TObject);
+begin
+  MMFileAppend.Enabled := PLLoaded.Count > 0 ;
+end;
+
+procedure TMainForm.MMFileExitClick(Sender: TObject);
+begin
+  Close ;
+end;
+
+procedure TMainForm.MMFilterApplyN1Click(Sender: TObject);
+Var
+  MI : TMenuItem ;
+begin
+  // Apply filter
+  If (Sender is TMenuItem) Then MI := (Sender as TMenuItem) else MI := nil ;
+
+  If Assigned(MI) and (MI.Tag >= 0) Then
+  Begin
+    Try
+      DlgFilter.LoadFromFile(ExtractFilePath(Application.ExeName)+'filters\'+FilterList[MI.Tag]);
+      ApplyFromDialog ;
+      // ShowMessage('Apply -> ' + FilterList[MI.Tag]);
+    Except
+
+    End;
+  End;
+end;
+
+procedure TMainForm.MMFilterClick(Sender: TObject);
+Var
+  DI : TSearchRec ;
+  I , Res : Integer ;
+  MI : TMenuItem ;
+begin
+  // Populate filter menu items
+  MMFilterReset.Enabled := (PL.FilterOutType <> ftFilterOff) or (PL.FilterInType <> ftFilterOff);
+  MMFilterApply.Enabled := PLLoaded.Count > 0 ;
+  Try
+    // Clear menu items
+    For I := MMFilterApply.Count-1 DownTo 0 Do
+    If (MMFilterApply.Items[I].Tag >= 0) Then
+    Begin
+      MMFilterApply.Items[I].Free ;
+      //MMFilterApply.Delete(I);
+    End;
+    FilterList.Clear ;
+
+    Res := FindFirst(ExtractFilePath(Application.ExeName)+'filters\*.pfl',faAnyFile,DI);
+    While (Res = 0) Do
+    Begin
+      If ((DI.Attr and faDirectory) = 0) Then
+      Begin
+        FilterList.Add(DI.Name);
+        MI := TMenuItem.Create(MMFilterApply);
+        MI.Caption := ChangeFileExt(DI.Name,'');
+        MI.Tag := FilterList.Count-1 ; // list offset
+        MI.OnClick := MMFilterApplyN1Click ;
+        MMFilterApply.Add(MI);
+      End;
+
+      Res := FindNext(DI);
+    End;
+    FindClose(DI);
+  Finally
+
+  End;
+end;
+
+procedure TMainForm.MMFilterDeleteN1Click(Sender: TObject);
+begin
+  // Delete stuff
+end;
+
+procedure TMainForm.MMFilterEditClick(Sender: TObject);
+begin
+  DlgFilter.CopySettingsFromPacketList(PL);
+  If DlgFilter.ShowModal <> mrOk Then Exit ;
+  // Copy settings from form
+
+  ApplyFromDialog ;
+End;
+
+Procedure TMainForm.ApplyFromDialog;
+VAR
+  I, V, P : Integer ;
+  S : String ;
+Begin
+  If (DlgFilter.RBOutOff.Checked) Then PL.FilterOutType := ftFilterOff ;
+  If (DlgFilter.RBOutHide.Checked) Then PL.FilterOutType := ftHidePackets ;
+  If (DlgFilter.RBOutShow.Checked) Then PL.FilterOutType := ftShowPackets ;
+  If (DlgFilter.RBOutNone.Checked) Then PL.FilterOutType := ftAllowNone ;
+
+  If (DlgFilter.RBInOff.Checked) Then PL.FilterInType := ftFilterOff ;
+  If (DlgFilter.RBInHide.Checked) Then PL.FilterInType := ftHidePackets ;
+  If (DlgFilter.RBInShow.Checked) Then PL.FilterInType := ftShowPackets ;
+  If (DlgFilter.RBInNone.Checked) Then PL.FilterInType := ftAllowNone ;
+
+  SetLength(PL.FilterOutList,0);
+  For I := 0 To DlgFilter.LBOut.Count-1 Do
+  Begin
+    S := DlgFilter.LBOut.Items[I];
+    P := Pos(' ',S);
+    If (P > 0) Then S := Copy(S,1,P-1);
+
+    If TryStrToInt(S,V) Then
+    Begin
+      SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
+      PL.FilterOutList[Length(PL.FilterOutList)-1] := V ;
+    End;
+  End;
+
+  SetLength(PL.FilterInList,0);
+  For I := 0 To DlgFilter.LBIn.Count-1 Do
+  Begin
+    S := DlgFilter.LBIn.Items[I];
+    P := Pos(' ',S);
+    If (P > 0) Then S := Copy(S,1,P-1);
+
+    If TryStrToInt(S,V) Then
+    Begin
+      SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
+      PL.FilterInList[Length(PL.FilterInList)-1] := V ;
+    End;
+  End;
+
+  PL.FilterFrom(PLLoaded);
+  FillListBox;
+  MoveToSync;
+end;
+
+procedure TMainForm.MMFilterResetClick(Sender: TObject);
+begin
+  PL.ClearFilters ;
+  PL.CopyFrom(PLLoaded);
+  FillListBox;
+  MoveToSync;
+end;
+
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+  PLLoaded := TPacketList.Create(True); // NOTE: PLLoaded actually owns all TPacketData
+  PL := TPacketList.Create(False); // NOTE: PL just copies reference of TPacketData as needed by the filter
+  LBPackets.Clear ;
+  MyAppName := Caption ;
+  CurrentSync := $FFFF ;
+  FilterList := TStringList.Create ;
+end;
+
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FilterList);
+  FreeAndNil(PL);
+  FreeAndNil(PLLoaded);
+end;
+
+
+
+procedure TMainForm.ALAboutExecute(Sender: TObject);
+begin
+  // If you contribute to the code, please add your nickname here
+  MessageDlg('Made by ZeromusXYZ'+
+    #10#13+
+    'Version ' + GetBuildInfoAsString,mtInformation,[mbClose],-1);
+end;
+
+procedure TMainForm.ALAppendFileExecute(Sender: TObject);
 VAR
   I : Integer ;
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
     LBPackets.Clear ;
-    if (Not CBAppend.Checked) Then
+    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName) Then
     Begin
-      PL.Clear ;
-      PL.ClearFilters ;
-      PLLoaded.Clear ;
+      // Fill listbox
+      PL.ClearFilters;
+      PL.CopyFrom(PLLoaded);
+
+      FillListBox ;
+
+      Caption := MyAppName + ' - multiple files loaded' ;
+    End else
+    Begin
+      // Clear Listbox
+      LBPackets.Items.Add('Failed Loading Data');
+      Caption := MyAppName ;
     End;
+  End;
+end;
+
+procedure TMainForm.ALOpenFileExecute(Sender: TObject);
+VAR
+  I : Integer ;
+begin
+  If OpenDialogLogFiles.Execute() Then
+  Begin
+    LBPackets.Clear ;
+    PL.Clear ;
+    PL.ClearFilters ;
+    PLLoaded.Clear ;
     If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName) Then
     Begin
       // Fill listbox
@@ -143,12 +398,17 @@ begin
   End;
 end;
 
-procedure TMainForm.BtnSearchClick(Sender: TObject);
+procedure TMainForm.ALOpenSourceExecute(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open','https://github.com/ZeromusXYZ/PacketViewerLogViewer',nil,nil, SW_SHOWNORMAL) ;
+end;
+
+procedure TMainForm.ALSearchNewExecute(Sender: TObject);
 begin
   // Nothnig loaded, prompt the dialog
   If PLLoaded.Count <= 0 Then
   Begin
-    BtnLoadFile.Click;
+    ALOpenFile.Execute;
   End;
   // Still nothing loaded ?
   If PLLoaded.Count <= 0 Then
@@ -164,31 +424,9 @@ begin
     SearchNext ;
     LBPackets.SetFocus;
   End;
-
-
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  PLLoaded := TPacketList.Create(True); // NOTE: PLLoaded actually owns all TPacketData
-  PL := TPacketList.Create(False); // NOTE: PL just copies reference of TPacketData as needed by the filter
-  LBPackets.Clear ;
-  MyAppName := Caption ;
-  CurrentSync := $FFFF ;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(PL);
-  FreeAndNil(PLLoaded);
-end;
-
-procedure TMainForm.ActionSearchNewExecute(Sender: TObject);
-begin
-  BtnSearch.Click ;
-end;
-
-procedure TMainForm.ActionSearchNextExecute(Sender: TObject);
+procedure TMainForm.ALSearchNextExecute(Sender: TObject);
 begin
   If ((DlgSearch.FormValid) and (DlgSearch.CBShowMatchesOnly.Checked = False)) Then
   Begin
@@ -196,7 +434,7 @@ begin
     SearchNext ;
   End Else
   Begin
-    BtnSearch.Click ;
+    ALSearchNew.Execute ;
   End;
 end;
 
@@ -407,8 +645,14 @@ begin
 
   If Assigned(PD) and (PD.PacketLogType = pltOut) Then
   Begin
-    SetLength(PL.FilterOut,Length(PL.FilterOut)+1);
-    PL.FilterOut[Length(PL.FilterOut)-1] := PD.PacketID ;
+    If (PL.FilterOutType <> ftHidePackets) Then
+    Begin
+      SetLength(PL.FilterOutList,0);
+      PL.FilterOutType := ftHidePackets ;
+    End;
+    SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
+    PL.FilterOutList[Length(PL.FilterOutList)-1] := PD.PacketID ;
+
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
@@ -416,8 +660,15 @@ begin
   End Else
   If Assigned(PD) and (PD.PacketLogType = pltIn) Then
   Begin
-    SetLength(PL.FilterIn,Length(PL.FilterIn)+1);
-    PL.FilterIn[Length(PL.FilterIn)-1] := PD.PacketID ;
+    If (PL.FilterInType <> ftHidePackets) Then
+    Begin
+      SetLength(PL.FilterInList,0);
+      PL.FilterInType := ftHidePackets ;
+    End;
+
+    SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
+    PL.FilterInList[Length(PL.FilterInList)-1] := PD.PacketID ;
+
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
@@ -428,8 +679,10 @@ end;
 
 procedure TMainForm.PMPacketListOnlyInClick(Sender: TObject);
 begin
-  PL.FilterOutOnly := $FFFF ;
-  If (PL.FilterInOnly = $FFFF) Then PL.FilterInOnly := 0 ;
+  PL.FilterOutType := ftAllowNone ;
+  If PL.FilterInType = ftAllowNone Then
+    PL.FilterInType := ftFilterOff ;
+
   PL.FilterFrom(PLLoaded);
   FillListBox;
   MoveToSync;
@@ -437,8 +690,10 @@ end;
 
 procedure TMainForm.PMPacketListOnlyOutClick(Sender: TObject);
 begin
-  PL.FilterInOnly := $FFFF ;
-  If (PL.FilterOutOnly = $FFFF) Then PL.FilterOutOnly := 0 ;
+  PL.FilterInType := ftAllowNone ;
+  If PL.FilterOutType = ftAllowNone Then
+    PL.FilterOutType := ftFilterOff ;
+
   PL.FilterFrom(PLLoaded);
   FillListBox;
   MoveToSync;
@@ -452,18 +707,33 @@ begin
 
   If Assigned(PD) and (PD.PacketLogType = pltOut) Then
   Begin
-    PL.FilterOutOnly := PD.PacketID ;
+    If (PL.FilterOutType <> ftShowPackets) Then
+    Begin
+      SetLength(PL.FilterOutList,0);
+      PL.FilterOutType := ftShowPackets ;
+    End;
+    SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
+    PL.FilterOutList[Length(PL.FilterOutList)-1] := PD.PacketID ;
+
     PL.FilterFrom(PLLoaded);
     FillListBox;
-    //MoveToSync;
+    MoveToSync;
     Exit ;
   End Else
   If Assigned(PD) and (PD.PacketLogType = pltIn) Then
   Begin
-    PL.FilterInOnly := PD.PacketID ;
+    If (PL.FilterInType <> ftShowPackets) Then
+    Begin
+      SetLength(PL.FilterInList,0);
+      PL.FilterInType := ftShowPackets ;
+    End;
+
+    SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
+    PL.FilterInList[Length(PL.FilterInList)-1] := PD.PacketID ;
+
     PL.FilterFrom(PLLoaded);
     FillListBox;
-    //MoveToSync;
+    MoveToSync;
     Exit ;
   End;
 
@@ -471,7 +741,7 @@ end;
 
 procedure TMainForm.PMPacketListOpenFileClick(Sender: TObject);
 begin
-  BtnLoadFile.Click;
+  ALOpenFile.Execute ;
 end;
 
 procedure TMainForm.PMPacketListPopup(Sender: TObject);
@@ -504,19 +774,25 @@ begin
       End;
 
       PMPacketListOnlyShow.Visible := (PD.PacketLogType = pltOut) or (PD.PacketLogType = pltIn);
-      PMPacketListOnlyShow.Enabled := PMPacketListOnlyShow.Visible and (((PD.PacketLogType = pltOut) and (PD.PacketID <> PL.FilterOutOnly)) or ((PD.PacketLogType = pltIn) and (PD.PacketID <> PL.FilterInOnly)));
+      PMPacketListOnlyShow.Enabled := PMPacketListOnlyShow.Visible and
+        ( // (
+          (PD.PacketLogType = pltOut)// and (PL.FilterOutType = ft (PD.PacketID <> PL.FilterOutOnly))
+          or // (
+          (PD.PacketLogType = pltIn)// and (PD.PacketID <> PL.FilterInOnly))
+        );
 
       PMPacketListHideThis.Visible := (PD.PacketLogType = pltOut) or (PD.PacketLogType = pltIn);
       PMPacketListHideThis.Enabled := PMPacketListHideThis.Visible and PMPacketListOnlyShow.Enabled and
-        (
-        ((PD.PacketLogType = pltOut) and (Not WordInArray(PD.PacketID,PL.FilterOut))) or
-        ((PD.PacketLogType = pltIn) and (Not WordInArray(PD.PacketID,PL.FilterIn)))
+        ( // (
+        (PD.PacketLogType = pltOut) // and (Not WordInArray(PD.PacketID,PL.FilterOutList)))
+        or // (
+        (PD.PacketLogType = pltIn) // and (Not WordInArray(PD.PacketID,PL.FilterInList)))
         );
 
-      PMPacketListOnlyOut.Visible := (PL.FilterInOnly <> $FFFF);
-      PMPacketListOnlyIn.Visible := (PL.FilterOutOnly <> $FFFF);
+      PMPacketListOnlyOut.Visible := (PL.FilterOutType <> ftAllowNone);
+      PMPacketListOnlyIn.Visible := (PL.FilterInType <> ftAllowNone);
 
-      PMPacketListReset.Visible := (PL.FilterOutOnly <> 0) or (PL.FilterInOnly <> 0) or (Length(PL.FilterOut) > 0) or (Length(PL.FilterIn) > 0);
+      PMPacketListReset.Visible := (PL.FilterOutType <> ftFilterOff) or (PL.FilterInType <> ftFilterOff);
     End Else
     Begin
 
