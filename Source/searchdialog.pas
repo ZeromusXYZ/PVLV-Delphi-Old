@@ -166,14 +166,14 @@ Begin
       fByteFilter := I ;
       fByteFilterOn := True ;
       HasData := True ;
-    End;
-    If (I >= 0) and (I <= $FFFF) Then
+    End else
+    If (I >= $100) and (I <= $FFFF) Then
     Begin
       fUInt16Filter := I ;
       fUInt16FilterOn := True ;
       HasData := True ;
-    End;
-    If (I >= 0) and (I <= $FFFFFFFF) Then
+    End Else
+    If (I >= $10000) and (I <= $FFFFFFFF) Then
     Begin
       fUInt32Filter := I ;
       fUInt32FilterOn := True ;

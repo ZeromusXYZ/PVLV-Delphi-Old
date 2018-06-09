@@ -484,50 +484,6 @@ begin
 
     AddPacketInfoToStringGrid(PD,SG);
 
-    (*
-    If (PD.PacketLogType = pltIn) Then
-    Case PD.PacketID of
-      $00D {PC Update} : AddSGRow('UpdateFlag',IntToStr(PD.GetByteAtPos($0A)));
-
-      $01B {Job Info} : Begin
-        AddSGRow('Unknown uint',IntToStr(PD.GetUInt32AtPos($4))); // Observed value of 5
-        AddSGRow('Main Job',IntToStr(PD.GetByteAtPos($8)));
-        AddSGRow('Main Job Lv?',IntToStr(PD.GetByteAtPos($9)));
-        AddSGRow('Sub Job Lv?',IntToStr(PD.GetByteAtPos($A)));
-        AddSGRow('Sub Job',IntToStr(PD.GetByteAtPos($B)));
-        AddSGRow('Sub Job flag',IntToStr(PD.GetUInt32AtPos($C))); // Indicate whether subjob is unlocked and which jobs are unlocked. lsb of 0x0C indicates subjob unlock.
-        AddSGRow('Unknown byte',IntToStr(PD.GetByteAtPos($10)));
-        For I := $00 to $0F Do
-          AddSGRow('Job'+IntToStr(I),IntToStr(PD.GetByteAtPos($11+I)));
-        AddSGRow('Base STR',IntToStr(PD.GetWordAtPos($20)));
-        AddSGRow('Base DEX',IntToStr(PD.GetWordAtPos($22)));
-        AddSGRow('Base VIT',IntToStr(PD.GetWordAtPos($24)));
-        AddSGRow('Base AGI',IntToStr(PD.GetWordAtPos($26)));
-        AddSGRow('Base INT',IntToStr(PD.GetWordAtPos($28)));
-        AddSGRow('Base MND',IntToStr(PD.GetWordAtPos($2A)));
-        AddSGRow('Base CHR',IntToStr(PD.GetWordAtPos($2C)));
-        AddSGRow('?Max HP',IntToStr(PD.GetWordAtPos($2E)));
-        AddSGRow('Max MP',IntToStr(PD.GetWordAtPos($30)));
-        AddSGRow('Unknown Data','14 bytes');  //-- 2E   Flags and junk? Hard to say. All 0s observed.
-        *)
-        (*
-    {ctype='unsigned int',      label='Flags'},                                 -- 44   Looks like a bunch of flags. Observed value if 01 00 00 00
-    {ctype='unsigned char',     label='_unknown5'},                             -- 48   Potential flag to signal the list start. Observed value of 01
-    {ref=types.job_level,       lookup={res.jobs, 0x01},    count=0x16},        -- 49
-    {ctype='unsigned char',     label='Current Monster Level'},                 -- 5F
-    {ctype='unsigned int',      label='Encumbrance Flags'},                     -- 60   [legs, hands, body, head, ammo, range, sub, main,] [back, right_ring, left_ring, right_ear, left_ear, waist, neck, feet] [HP, CHR, MND, INT, AGI, VIT, DEX, STR,] [X X X X X X X MP]
-        *)
-        (*
-      End;
-
-      $050 {Equip} : Begin
-        AddSGRow('Inventory Index',IntToStr(PD.GetByteAtPos($4)));
-        AddSGRow('Equipment Slot',EquipmentSlotName(PD.GetByteAtPos($5)) + ' - ' + IntToStr(PD.GetByteAtPos($5)));
-        AddSGRow('Inventory Bag',ContainerName(PD.GetByteAtPos($6)) + ' - ' + IntToStr(PD.GetByteAtPos($6)));
-        ExtraInfoStart := $7 ;
-      End;
-    End;
-    *)
 
     (*
     I := ExtraInfoStart ;

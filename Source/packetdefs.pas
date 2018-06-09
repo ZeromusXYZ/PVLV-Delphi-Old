@@ -46,6 +46,7 @@ TYPE
     Function GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
     Function GetDataAtPos(Pos,Size:Integer):String;
     Function GetIP4AtPos(Pos:Integer):String;
+    Function GetJobflagsAtPos(Pos:Integer):String;
     Procedure CompileData ;
     Function FindByte(AByte : Byte):Integer;
     Function FindUInt16(AUInt16 : Word):Integer;
@@ -465,7 +466,31 @@ Begin
 End;
 
 
-
+Function TPacketData.GetJobflagsAtPos(Pos:Integer):String;
+VAR
+  I : Integer ;
+  Flags : UInt32 ;
+  BitShiftCount : Integer ;
+  JobName : String ;
+Begin
+  Result := '' ;
+  If (Pos >= Length(fRawBytes)-4) Then Exit ;
+  Flags := GetUInt32AtPos(Pos);
+  For BitShiftCount := 0 To 31 Do
+  Begin
+    If ((Flags and $0000001) = 1) Then
+    Begin
+      Case BitShiftCount Of
+        0 : JobName := 'SubJob' ;
+      Else
+        JobName := JobNames.GetVal(BitShiftCount);
+        If (JobName = '') Then JobName := '[Bit'+IntToStr(BitShiftCount)+']';
+      End;
+      Result := Result + JobName + ' ' ;
+    End;
+    Flags := Flags shr 1 ;
+  End;
+End;
 
 Function TPacketData.GetByteAtPos(Pos:Integer):Byte;
 VAR
@@ -590,26 +615,34 @@ End;
 Function TPacketData.FindUInt16(AUInt16 : Word):Integer;
 VAR
   I : Integer ;
+  SUInt16 : Word ;
 Begin
   Result := -1 ;
   For I := 0 to Length(fRawBytes)-2 Do
-  If ( ((fRawBytes[I+1]) + (fRawBytes[I] * $100)) = AUInt16) Then
   Begin
-    Result := I ;
-    Exit ;
+    SUInt16 := GetWordAtPos(I);
+    If (SUInt16 = AUInt16) Then
+    Begin
+      Result := I ;
+      Exit ;
+    End;
   End;
 End;
 
 Function TPacketData.FindUInt32(AUInt32 : LongWord):Integer;
 VAR
   I : Integer ;
+  SUInt32 : LongWord ;
 Begin
   Result := -1 ;
-  For I := 0 to Length(fRawBytes)-2 Do
-  If ( ((fRawBytes[I+3]) + (fRawBytes[I+2] * $100) + (fRawBytes[I+1] * $10000) + (fRawBytes[I] * $1000000)) = AUInt32) Then
+  For I := 0 to Length(fRawBytes)-4 Do
   Begin
-    Result := I ;
-    Exit ;
+    SUInt32 := GetUInt32AtPos(I);
+    If (SUInt32 = AUInt32) Then
+    Begin
+      Result := I ;
+      Exit ;
+    End;
   End;
 End;
 

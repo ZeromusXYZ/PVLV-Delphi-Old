@@ -235,6 +235,14 @@ Begin
 
         End Else
 
+        If (LType = 'jobflags') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
+          // Job unlock flags
+          AddSGRow(SG,LName,'0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetJobflagsAtPos(LOffset));
+
+        End Else
+
         If ((LType = 'item') or (LType = 'itemid')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
