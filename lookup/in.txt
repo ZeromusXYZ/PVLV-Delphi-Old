@@ -16,7 +16,7 @@
 0x025;Item Accepted;Sent when the server will allow you to trade an item.
 0x026;Count to 80;It counts to 80 and does not have any obvious function. May have something to do with populating inventory.
 0x027;String Message;Message that includes a string as a parameter.
-0x028;Action;Packet sent when an NPC is attacking.
+0x028;Action by NPC;Packet sent when an NPC is attacking.
 0x029;Action Message;Packet sent for simple battle-related messages.
 0x02A;Resting Message;Packet sent when you rest in Abyssea.
 0x02D;Kill Message;Packet sent when you gain XP/LP/CP/JP/MP, advance RoE objectives, etc. by defeating a mob.
@@ -33,13 +33,14 @@
 0x039;Env. Animation;Sent to force animations to specific objects.
 0x03A;Independ. Animation;Used for arbitrary battle animations that are unaccompanied by an action packet.
 0x03C;Shop;Displays items in a vendors shop.
-0x03D;Value;Returns the value of an item.
+0x03D;Price Response;Returns the value of an item.
 0x03E;Open Buy/Sell;Opens the buy/sell menu for vendors.
 0x03F;Shop Buy Response;Sent when you buy something from normal vendors.
 0x041;Blacklist;Contains player ID and name for blacklist.
 0x042;Blacklist Command;Sent in response to /blacklist add or /blacklist delete.
 0x044;Job Info Extra;Contains information about Automaton stats and set Blue Magic spells.
 0x047;Translate Response;Response to a translate request.
+0x048;Linkshell Concierge List;Looks related to linkshell concierge list, but doesn't seem to contain data
 rem;0x04B;Logout Acknowledge;Acknowledges a logout attempt.
 0x04B;Delivery Item;Item in delivery box.
 0x04C;Auction House Menu;Sent when visiting auction counter.

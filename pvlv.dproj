@@ -92,8 +92,8 @@
         <DCC_DebugInformation>false</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>14</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.2.1.14;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Build>15</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.2.1.15;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>

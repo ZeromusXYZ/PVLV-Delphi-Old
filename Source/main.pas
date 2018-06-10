@@ -55,6 +55,8 @@ type
     MMFilterReset: TMenuItem;
     MMFilterApply: TMenuItem;
     MMFilterApplyN1: TMenuItem;
+    CBShowBlock: TComboBox;
+    LShowBlock: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -81,15 +83,17 @@ type
     procedure MMFileClick(Sender: TObject);
     procedure MMFilterEditClick(Sender: TObject);
     procedure MMFilterResetClick(Sender: TObject);
+    procedure CBShowBlockClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
     FilterList : TStringList ;
     Procedure MoveToSync;
     procedure FillListBox ;
-    Procedure AddSGRow(VarName:String;Val:String);
+    Procedure AddSGRow(Pos : Integer; VarName:String; Val:String);
     Procedure SearchNext ;
     Procedure ApplyFromDialog;
+    Procedure UpdatePacketDetails(ShowBlock:String);
   public
     { Public declarations }
     PL, PLLoaded : TPacketList ;
@@ -103,7 +107,7 @@ implementation
 
 {$R *.dfm}
 
-uses System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
+uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -310,6 +314,11 @@ Begin
   MoveToSync;
 end;
 
+procedure TMainForm.CBShowBlockClick(Sender: TObject);
+begin
+  UpdatePacketDetails(CBShowBlock.Text);
+end;
+
 procedure TMainForm.MMFilterResetClick(Sender: TObject);
 begin
   PL.ClearFilters ;
@@ -346,8 +355,6 @@ begin
 end;
 
 procedure TMainForm.ALAppendFileExecute(Sender: TObject);
-VAR
-  I : Integer ;
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
@@ -371,8 +378,6 @@ begin
 end;
 
 procedure TMainForm.ALOpenFileExecute(Sender: TObject);
-VAR
-  I : Integer ;
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
@@ -438,79 +443,97 @@ begin
   End;
 end;
 
-Procedure TMainForm.AddSGRow(VarName:String;Val:String);
+Procedure TMainForm.AddSGRow(Pos : integer;VarName:String;Val:String);
 Begin
   SG.RowCount := SG.RowCount + 1 ;
-  SG.Cells[0,SG.RowCount-1] := VarName ;
-  SG.Cells[1,SG.RowCount-1] := Val ;
+  SG.Cells[0,SG.RowCount-1] := '0x'+IntToHex(Pos,2);
+  SG.Cells[1,SG.RowCount-1] := VarName ;
+  SG.Cells[2,SG.RowCount-1] := Val ;
 End;
 
-procedure TMainForm.LBPacketsClick(Sender: TObject);
+Procedure TMainForm.UpdatePacketDetails(ShowBlock:String);
 VAR
   PD : TPacketData ;
   S : String ;
   I : Integer ;
-  ExtraInfoStart : Integer ;
+Begin
+  PD := PL.GetPacket(LBPackets.ItemIndex);
+  CurrentSync := PD.PacketSync ;
+  LInfo.Caption := PD.OriginalHeader ;
+  // MInfo.Text := PD.RawText.Text ;
+  MInfo.Lines.Clear ;
+  Case PD.PacketLogType Of
+    1 : S := 'OUT' ;
+    2 : S := 'IN ' ;
+  Else
+    S := '???' ;
+  End;
+
+  // Reset StringGrid
+  SG.RowCount := 0 ;
+  SG.ColCount := 3 ;
+  SG.ColWidths[0] := 40 ;
+  SG.ColWidths[1] := 150 ;
+  SG.ColWidths[2] := SG.Width - 200 ;
+  SG.Cols[0].Text := 'Pos' ;
+  SG.Cols[1].Text := 'VAR' ;
+  SG.Cols[2].Text := 'Value' ;
+
+  AddSGRow($0,'ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID) );
+  AddSGRow($2,'Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
+  AddSGRow($2,'Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
+
+  CBShowBlock.Enabled := False ;
+  CBShowBlock.Text := '' ;
+
+  AddPacketInfoToStringGrid(PD,SG,ShowBlock);
+
+  MInfo.Lines.Clear ;
+  If (CBOriginalData.Checked) Then
+  Begin
+    MInfo.Lines.Add('Source:');
+    MInfo.Lines.Add(PD.RawText.Text)
+  End Else
+  Begin
+    // MInfo.Lines.Add('RAW Data:');
+    MInfo.Lines.Add(PD.PrintRawBytesAsHex);
+  End;
+
+  If (AvailableBlocks.Count > 0) Then
+  Begin
+    CBShowBlock.Clear ;
+    CBShowBlock.Items.Add('');
+    CBShowBlock.Items.AddStrings(AvailableBlocks);
+    CBShowBlock.Text := '' ;
+    CBShowBlock.ItemIndex := 0 ;
+    CBShowBlock.Enabled := True ;
+  End else
+  Begin
+    CBShowBlock.Text := '' ;
+    CBShowBlock.Clear ;
+    CBShowBlock.Enabled := False ;
+  End;
+
+  For I := CBShowBlock.Items.Count-1 DownTo 0  Do
+  If CBShowBlock.Items[I] = ShowBlock Then
+  Begin
+    CBShowBlock.ItemIndex := I ;
+    Break ;
+  End;
+  CBShowBlock.Visible := AvailableBlocks.Count > 0;
+  LShowBlock.Visible := CBShowBlock.Visible ;
+
+End;
+
+procedure TMainForm.LBPacketsClick(Sender: TObject);
 begin
   If (LBPackets.ItemIndex < 0) or (LBPackets.ItemIndex >= LBPackets.Count) Then
   Begin
     MInfo.Text := 'Please select a valid item from the left' ;
   End else
   Begin
-    PD := PL.GetPacket(LBPackets.ItemIndex);
-    CurrentSync := PD.PacketSync ;
-    LInfo.Caption := PD.OriginalHeader ;
-    // MInfo.Text := PD.RawText.Text ;
-    MInfo.Lines.Clear ;
-    Case PD.PacketLogType Of
-      1 : S := 'OUT' ;
-      2 : S := 'IN ' ;
-    Else
-      S := '???' ;
-    End;
-
-    // Reset StringGrid
-    SG.RowCount := 0 ;
-    SG.ColCount := 2 ;
-    SG.ColWidths[0] := 150 ;
-    SG.ColWidths[1] := SG.Width - 155 ;
-    SG.Cols[0].Text := 'VAR' ;
-    SG.Cols[1].Text := 'Value' ;
-    ExtraInfoStart := $4 ;
-
-    AddSGRow('ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID) );
-    AddSGRow('Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
-    AddSGRow('Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
-
-    AddPacketInfoToStringGrid(PD,SG);
-
-
-    (*
-    I := ExtraInfoStart ;
-    While I < PD.PacketDataSize Do
-    Begin
-      AddSGRow('?Byte 0x'+IntToHex(I,2)+' ' +IntToStr(I), '0x' + IntToHex(PD.GetByteAtPos(I),2) + '  ' + BytetoBit(PD.GetByteAtPos(I)) + '  ' + IntToStr(PD.GetByteAtPos(I)));
-      I := I + 1 ;
-    End;
-    *)
-
-    // AddSGRow('??','0x' + IntToHex(PD.ra,3));
-
-
-    // MInfo.Lines.Add('ID: '+S+' 0x'+ IntToHex(PD.PacketID,3) + ' -- SIZE: ' + IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
-    // MInfo.Lines.Add('SYNC: ' + IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
-    MInfo.Lines.Clear ;
-    If (CBOriginalData.Checked) Then
-    Begin
-      MInfo.Lines.Add('Source:');
-      MInfo.Lines.Add(PD.RawText.Text)
-    End Else
-    Begin
-      // MInfo.Lines.Add('RAW Data:');
-      MInfo.Lines.Add(PD.PrintRawBytesAsHex);
-    End;
+    UpdatePacketDetails('');
   End;
-
   LBPackets.Invalidate;
 end;
 
@@ -527,8 +550,6 @@ begin
   S := LBPackets.Items[Index];
   B := (Index = LBPackets.ItemIndex);
   BarCol := clBlack ;
-  TextCol := clBlack ;
-  BackCol := clWhite ;
   BarOn := False ;
   PD := PL.GetPacket(Index);
   With (Control as TListBox) Do

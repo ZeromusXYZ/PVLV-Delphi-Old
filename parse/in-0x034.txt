@@ -1,0 +1,10 @@
+file;in-0x034;NPC Interaction 2;Occurs before menus and some cutscenes
+
+uint32;$04;NPC ID
+data32;$08;Menu Parameters
+uint16;$28;NPC Index
+zone;$2A;Zone
+uint16;$2C;Menu ID
+uint16;$2E;_unknown?;-- 2E   Usually 8, but often not for newer menus
+zone;$30;_dupeZone?
+uint16;$31;_junk?

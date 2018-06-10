@@ -68,6 +68,7 @@ object MainForm: TMainForm
     Caption = 'Panel1'
     Constraints.MinWidth = 200
     TabOrder = 1
+    ExplicitLeft = 381
     DesignSize = (
       704
       561)
@@ -77,6 +78,17 @@ object MainForm: TMainForm
       Width = 28
       Height = 15
       Caption = 'Info'
+    end
+    object LShowBlock: TLabel
+      Left = 400
+      Top = 18
+      Width = 154
+      Height = 15
+      Alignment = taRightJustify
+      Anchors = [akTop, akRight]
+      Caption = 'Select info to view =>'
+      Enabled = False
+      Visible = False
     end
     object SG: TStringGrid
       Left = 6
@@ -122,6 +134,19 @@ object MainForm: TMainForm
       Checked = True
       State = cbChecked
       TabOrder = 2
+    end
+    object CBShowBlock: TComboBox
+      Left = 560
+      Top = 10
+      Width = 129
+      Height = 23
+      AutoDropDown = True
+      AutoCloseUp = True
+      Style = csDropDownList
+      Anchors = [akTop, akRight]
+      TabOrder = 3
+      Visible = False
+      OnClick = CBShowBlockClick
     end
   end
   object OpenDialogLogFiles: TOpenDialog

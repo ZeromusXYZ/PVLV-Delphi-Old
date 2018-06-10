@@ -1,0 +1,10 @@
+file;in-0x028;Action (incomplete);Packet sent when an NPC is attacking.
+
+info;0;Unsupported;The current parser can not handle details about this packet yet
+byte;$04;Size
+uint32;$05;Actor
+rem;    {ctype='bit[10]',           label='Target Count'},                          -- 09:0
+rem;    {ctype='bit[4]',            label='Category',           fn=e+{'action_in'}},-- 0A:2
+rem;    {ctype='bit[16]',           label='Param'},                                 -- 0C:6
+rem;    {ctype='bit[16]',           label='_unknown1'},                             -- 0E:6
+rem;    {ctype='bit[32]',           label='Recast'},                                -- 10:6

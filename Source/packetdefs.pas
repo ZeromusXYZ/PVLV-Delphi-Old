@@ -51,6 +51,7 @@ TYPE
     Function FindByte(AByte : Byte):Integer;
     Function FindUInt16(AUInt16 : Word):Integer;
     Function FindUInt32(AUInt32 : LongWord):Integer;
+    Function RawSize : Integer ;
     Property RawText : TStringList read fRawText ;
     Property Header : String read fHeaderText ;
     Property OriginalHeader : String read fOriginalHeaderText ;
@@ -644,6 +645,12 @@ Begin
       Exit ;
     End;
   End;
+End;
+
+
+Function TPacketData.RawSize : Integer ;
+Begin
+  Result := Length(fRawBytes);
 End;
 
 

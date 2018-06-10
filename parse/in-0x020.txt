@@ -1,0 +1,10 @@
+file;in-0x020;Item Update;Info about item in your inventory.
+
+uint32;$04;Count
+uint32;$08;Bazaar Gil
+item;$0C;Item
+container;$0E;Bag
+byte;$0F;Index
+byteflag;$10;Status
+data24;$11;ExtData
+data3;$29;_junk?

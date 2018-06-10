@@ -1,0 +1,8 @@
+file;in-0x048;Linkshell Concierge;
+
+info;0;Remark;Doesn't seem to actually contain the linkshell data
+info;0;;Maybe it's loaded in a simular way to player search ?
+rem;-- Unknown 0x048 incoming :: Sent when loading linkshell information from the Linkshell Concierge
+rem;-- One per entry, 128 bytes long, mostly empty, does not contain name as far as I can see.
+rem;-- Likely contributes to that information.
+
