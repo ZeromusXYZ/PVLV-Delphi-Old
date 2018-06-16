@@ -34,9 +34,10 @@ TYPE
     Constructor Create ;
     Destructor Destroy ; Override ;
     Function AddRawLineAsBytes(S : String):Integer;
-    Function PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
+    Function PrintRawBytesAsHex() : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
     Function GetBitAtPos(Pos,BitOffset:Integer):Boolean;
+    Function GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64;
     Function GetWordAtPos(Pos:Integer):Word;
     Function GetInt16AtPos(Pos:Integer):Int16;
     Function GetInt32AtPos(Pos:Integer):Int32;
@@ -92,6 +93,7 @@ Function ContainerName(ContainerID:Byte):String;
 Function ByteToRotation(B : Byte):String;
 Function MSToStr(T : UInt32):String;
 Function FramesToStr(T : UInt32):String;
+Function DWordToVanaTime(V : UInt32):String;
 
 Function ToBitStr(var V):String;
 
@@ -250,6 +252,75 @@ Begin
   End;
 End;
 
+Function VanaDoW(DoW : Byte):String;
+Begin
+  Case DoW Of
+    0 : Result := 'Firesday' ;
+    1 : Result := 'Earthsday' ;
+    2 : Result := 'Watersday' ;
+    3 : Result := 'Windsday' ;
+    4 : Result := 'Iceday' ;
+    5 : Result := 'Thundersday' ;
+    6 : Result := 'Lightsday' ;
+    7 : Result := 'Darksday' ;
+  Else
+    Result := '???' ;
+  End;
+End;
+
+Function DWordToVanaTime(V : UInt32):String;
+CONST
+  VTIME_BASEDATE = 1009810800	; // unix epoch - 1009810800 = se epoch (in earth seconds)
+  VTIME_YEAR   = 518400 ;       // 360 * GameDay
+  VTIME_MONTH  = 43200 ;        // 30 * GameDay
+  VTIME_WEEK   = 11520 ;        // 8 * GameDay
+  VTIME_DAY    = 1440	;         // 24 hours * GameHour
+  VTIME_HOUR   = 60	;           // 60 minutes
+  VTIME_FIRSTYEAR = 886 ;
+
+VAR
+  VanaDate : UInt32 ;
+  vYear, vMonth, vDay, vDoW, vHour, vMinute : UInt32 ;
+Begin
+  VanaDate := V ;
+  vYear := VanaDate div VTIME_YEAR ;
+  vMonth := ((VanaDate div VTIME_MONTH) mod 12) + 1 ;
+  vDay := ((VanaDate div VTIME_DAY) mod 30 ) + 1 ;
+  vDoW := ((VanaDate mod VTIME_WEEK) div VTIME_DAY);
+  vHour := ((VanaDate mod VTIME_DAY) div VTIME_HOUR);
+  vMinute := (VanaDate mod VTIME_HOUR);
+
+  Result := VanaDoW(vDoW)+ ' - ' +
+    IntToStr(vYear+VTIME_FIRSTYEAR) + '/' + IntToStr(vMonth) + '/' + IntToStr(vDay) + ' - ' +
+    IntToStr(vHour) + ':' + IntToStr(vMinute) +
+    '  (0x'+IntToHex(V,8)+' - ' + IntToStr(V) +')';
+
+(*
+    m_vanaDate  = (uint32)(this->getVanaTime() / 60.0 * 25) + 886 * VTIME_YEAR; //convert vana time (from SE epoch in earth seconds) to vanadiel minutes and add 886 vana years
+
+    m_vYear = (uint32)( m_vanaDate / VTIME_YEAR);
+    m_vMon  = (uint32)((m_vanaDate / VTIME_MONTH) % 12) + 1;
+    m_vDate = (uint32)((m_vanaDate / VTIME_DAY) % 30 ) + 1;
+    m_vDay  = (uint32)((m_vanaDate % VTIME_WEEK)  / VTIME_DAY);
+    m_vHour = (uint32)((m_vanaDate % VTIME_DAY)   / VTIME_HOUR);
+    m_vMin  = (uint32)( m_vanaDate % VTIME_HOUR);
+
+  Result := '' ;
+  N := V mod 60 ; Result := '.' + IntToStr(N) + Result ; // Seconds
+  V := V div 60 ;
+  N := V mod 60 ; Result := ':' + IntToStr(N) + Result ; // Minutes
+  V := V div 60 ;
+  N := V mod 24 ; Result := ' - ' + IntToStr(N) + Result ; // Hours
+  V := V div 24 ;
+  N := V mod 30 ; Result := '/' + IntToStr(N) + Result ; // days
+  V := V div 30 ;
+  N := V mod 12 ; Result := '/' + IntToStr(N) + Result ; // months
+  V := V div 12 ;
+  Result := 'Vana-time ' + IntToStr(V) + Result ; // years
+*)
+End;
+
+
 Function WordInArray(AWord:Word;AArray: Array of Word):Boolean;
 VAR
   I : Integer ;
@@ -319,7 +390,9 @@ Begin
   Result := C ;
 End;
 
-Function TPacketData.PrintRawBytesAsHex(ValuesPerRow : Integer = 16) : String ;
+Function TPacketData.PrintRawBytesAsHex() : String ;
+CONST
+  ValuesPerRow = 16 ;
 VAR
   S : String ;
   I , L : Integer ;
@@ -349,7 +422,6 @@ Begin
       If (I mod 4) = 3 Then Result := Result + ' ' ; // extra spacing every 4 bytes
     End;
   End;
-
 End;
 
 Function TPacketData.GetWordAtPos(Pos:Integer):Word;
@@ -532,6 +604,37 @@ Begin
     Result := False ;
   End;
 End;
+
+Function TPacketData.GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64;
+VAR
+  P, B, Rest : Integer ;
+  Mask : Int64 ;
+Begin
+  Result := 0 ;
+  P := Pos ;
+  B := BitOffset ;
+  Rest := BitsSize ;
+  Mask := 1 ;
+  While Rest > 0 Do
+  Begin
+    // Add mask value if bit set
+    If GetBitAtPos(P,B) Then Result := Result + Mask ;
+    // count down remaining bits to check
+    Rest := Rest - 1 ;
+    // Multiply mask by 2
+    Mask := Mask shl 1 ;
+    // Increase current bit counter
+    B := B + 1 ;
+    // If too high, jump to next byte
+    If B >= 8 Then
+    Begin
+      P := P + 1 ;
+      B := 0 ;
+    End;
+  End;
+
+End;
+
 
 Function TPacketData.GetFloatAtPos(Pos:Integer):Single;
 VAR

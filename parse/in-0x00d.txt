@@ -61,9 +61,16 @@ bit;$23:7;  Bit7: Bazaar
 byte;$24;Linkshell Red
 byte;$25;Linkshell Green
 byte;$26;Linkshell Blue
-byte;$27;_unknown5;Probably junk from the LS color dword
-data$1B;$28;_unknown6;{ctype='data[0x1B]',        label='_unknown6'},                             -- 28   DSP notes that the 6th bit of byte 54 is the Ballista flag
-byteflag;$43;Flace Flags;0, 3, 4, or 8
+byte;$27;Charmed Flag?
+byte;$29;Allegiance Type
+bit;$2A:7;Bit7: New Player
+bit;$2B:0;Bit0: Mentor
+uint16;$30;Costume
+uint32;$34;_unknown?
+uint16;$3C;Pet Target
+data$10;$30;_mostlyunknown6; {ctype='data[0x1B]', label='_unknown6'}, -- 28   DSP notes that the 6th bit of byte 54 is the Ballista flag
+uint16;$44;Mount Type?
+byteflag;$43;Face Flags;0, 3, 4, or 8
 uint32;$44;_unknown7
 
 byte;$48;Face

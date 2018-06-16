@@ -11,15 +11,15 @@ Function AddPacketInfoToStringGrid(PD : TPacketData;SG : TStringGrid;BlockName :
 
 implementation
 
-uses System.SysUtils, System.StrUtils ,
-  datalookups;
+uses System.SysUtils, System.StrUtils , datalookups, System.DateUtils ;
 
-Procedure AddSGRow(SG : TStringGrid ; Pos: Integer; VarName:String; Val:String);
+Procedure AddSGRow(SG: TStringGrid; Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);
 Begin
   SG.RowCount := SG.RowCount + 1 ;
   SG.Cells[0,SG.RowCount-1] := '0x'+IntToHex(Pos,2);
-  SG.Cells[1,SG.RowCount-1] := VarName ;
-  SG.Cells[2,SG.RowCount-1] := Val ;
+  SG.Cells[1,SG.RowCount-1] := IntToStr(DataSize);
+  SG.Cells[2,SG.RowCount-1] := VarName ;
+  SG.Cells[3,SG.RowCount-1] := Val ;
 End;
 
 procedure Split(Delimiter: Char; Str: string; ListOfStrings: TStrings) ;
@@ -35,11 +35,20 @@ Function AddPacketInfoToStringGrid(PD : TPacketData;SG : TStringGrid;BlockName :
 VAR
   FN : String ;
   SL, Line : TStringList ;
-  I, N, C, LOffset , LSubOffset : Integer ;
-  LType, LOffsetStr, LSubOffsetStr, LName, LDescription, S, CurrentBlock : String ;
   LastPos, DataSize, P : Integer ;
+  I, N, C, LOffset , LSubOffset, SwitchVal, LSizeOffset : Integer ;
+  LType, LOffsetStr, LSubOffsetStr, LRangeOffsetStr, LName, LDescription : String ;
+  S, CurrentBlock : String ;
+  AllowAutoSwitchBlock : Boolean ;
+  DT : TDateTime ;
 Begin
   Result := True ;
+  AllowAutoSwitchBlock := False ;
+  If (BlockName = '-') Then
+  Begin
+    AllowAutoSwitchBlock := True ;
+    BlockName := '' ;
+  End;
   FN := 'parse\' ;
   If (PD.PacketLogType = pltIn) Then FN := FN + 'in-' ;
   If (PD.PacketLogType = pltOut) Then FN := FN + 'out-' ;
@@ -80,21 +89,29 @@ Begin
         LType := LowerCase(Line[0]);
         LOffsetStr := LowerCase(Line[1]);
         LSubOffsetStr := '0' ;
+        LRangeOffsetStr := '0' ;
         LOffset := 4 ;
         If (Line.Count > 2) Then LName := Line[2] else LName := '' ;
         If (Line.Count > 3) Then LDescription := Line[3] else LDescription := '???' ; // we're not actually using this (yet)
 
-
+        // Find SubOffset Value (if any)
         P := Pos(':',LOffsetStr);
         If (P > 0) Then
         Begin
           LSubOffsetStr := Copy(LOffsetStr,P+1,Length(LOffsetStr));
           LOffsetStr := Copy(LOffsetStr,1,P-1);
         End;
+        // Find RangeOffset Value (if any)
+        P := Pos('-',LSubOffsetStr);
+        If (P > 0) Then
+        Begin
+          LRangeOffsetStr := Copy(LSubOffsetStr,P+1,Length(LSubOffsetStr));
+          LSubOffsetStr := Copy(LSubOffsetStr,1,P-1);
+        End;
 
         If (TryStrToInt(LOffsetStr,LOffset) = False) Then
         Begin
-          // Invalid offset value, skip this line
+          // Invalid main offset value, skip this line
           Continue;
         End;
         If (TryStrToInt(LSubOffsetStr,LSubOffset) = False) Then
@@ -102,7 +119,11 @@ Begin
           // Invalid suboffset value, default it to 0
           LSubOffset := 0 ;
         End;
-
+        If (TryStrToInt(LRangeOffsetStr,LSizeOffset) = False) Then
+        Begin
+          // Invalid rangeoffset value, default it to 0
+          LSizeOffset := 0 ;
+        End;
 
         If (LName = '') Then
         Begin
@@ -113,17 +134,40 @@ Begin
         Begin
           // It's just a comment or header, ignore ...
         End Else
+
         If (LType = 'info') Then
         Begin
           // Just displays the comment field of this line
-          AddSGRow(SG,LOffset,LName,LDescription);
+          AddSGRow(SG,LOffset,LName,LDescription,0);
         End Else
+
+        If (LType = 'switchblock') Then
+        Begin
+          If (AllowAutoSwitchBlock) Then
+          Begin
+            // switchblock;checkpos;checkval;blockname
+            // Compares BYTE value at checkpos, if checkval matches, activate blockname as current block
+
+            // enable auto-switching of freashly loaded blocks
+            If (TryStrToInt(LName,SwitchVal) = True) Then
+            Begin
+              // OK switchval seems valid, next compare it
+              If PD.GetByteAtPos(LOffset) = SwitchVal Then
+              Begin
+                BlockName := LDescription ;
+                AllowAutoSwitchBlock := False ;
+                Continue;
+              End;
+            End;
+          End;
+        End Else
+
         If ((LType = 'byte') or (LType = 'char') or (LType = 'b') or (LType = 'unsigned char')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetByteAtPos(LOffset),2) + '  ' + IntToStr(PD.GetByteAtPos(LOffset)));
         End Else
-        If ((LType = 'byteflag') or (LType = 'flag') or (LType = 'bits')) Then
+        If ((LType = 'byteflag') or (LType = 'flag')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           AddSGRow(SG,LOffset,LName, '0x' + IntToHex(PD.GetByteAtPos(LOffset),2) + '  ' + BytetoBit(PD.GetByteAtPos(LOffset)) + '  ' + IntToStr(PD.GetByteAtPos(LOffset)) );
@@ -131,32 +175,39 @@ Begin
         If ((LType = 'bit') or (LType = 'bool')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
-          AddSGRow(SG,LOffset,LName, BoolToStr( PD.GetBitAtPos(LOffset,LSubOffset),True ) );
+          AddSGRow(SG,LOffset,LName, BoolToStr( PD.GetBitAtPos(LOffset,LSubOffset),True ));
+        End Else
+        If ((LType = 'bits') or (LType = 'bitrange')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
+          If (LSizeOffset <= 0) Then LSizeOffset := 1 ;
+
+          AddSGRow(SG,LOffset,LName, '0x' + IntToHex( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset),2 ) + ' - ' + IntToStr( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset) ) , (LSizeOffset div 8)+1 );
         End Else
         If ((LType = 'word') or (LType = 'uint16') or (LType = 'ushort') or (LType = 'w') or (LType = 'unsigned short') ) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)),2);
         End Else
         If ((LType = 'int16') or (LType = 'short')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetInt16AtPos(LOffset),4) + '  ' + IntToStr( PD.GetInt16AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetInt16AtPos(LOffset),4) + '  ' + IntToStr( PD.GetInt16AtPos(LOffset)),2);
         End Else
         If ((LType = 'int') or (LType = 'int32') or (LType = 'i')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetInt32AtPos(LOffset),8) + '  ' + IntToStr(PD.GetInt32AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetInt32AtPos(LOffset),8) + '  ' + IntToStr(PD.GetInt32AtPos(LOffset)),4);
         End Else
         If ((LType = 'dword') or (LType = 'long') or (LType = 'longword') or (LType = 'uint32') or (LType = 'u') or (LType = 'unsigned int') ) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetUInt32AtPos(LOffset),8) + '  ' + IntToStr(PD.GetUInt32AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetUInt32AtPos(LOffset),8) + '  ' + IntToStr(PD.GetUInt32AtPos(LOffset)),4);
         End Else
         If ((LType = 'float') or (LType = 'f')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetUInt32AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetUInt32AtPos(LOffset)),4);
 
         End Else
         // Special types
@@ -167,29 +218,38 @@ Begin
           AddSGRow(SG,LOffset,LName,
             'X:'  + FormatFloat('0.00',PD.GetFloatAtPos(LOffset)) +
             ' Y:' + FormatFloat('0.00',PD.GetFloatAtPos(LOffset+4)) +
-            ' Z:' + FormatFloat('0.00',PD.GetFloatAtPos(LOffset+8)));
+            ' Z:' + FormatFloat('0.00',PD.GetFloatAtPos(LOffset+8)),
+            12);
 
         End Else
         If (LType = 'dir') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           // Direction as byte
-          AddSGRow(SG,LOffset,LName,ByteToRotation(PD.GetByteAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,ByteToRotation(PD.GetByteAtPos(LOffset)),1);
 
         End Else
         If ((LType = 'ms') or (LType = 'timestamp')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
           // Milliseconds
-          AddSGRow(SG,LOffset,LName,MSToStr(PD.GetUInt32AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,MSToStr(PD.GetUInt32AtPos(LOffset)),4);
 
+        End Else
+        If (LType = 'vanatime') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
+          // date/time
+          // DT := EncodeDate(1970,1,1) + PD.GetUInt32AtPos(LOffset) / 86400 ;
+          // AddSGRow(SG,LOffset,LName,FormatDateTime('yyyy/mm/dd hh:nn:ss',DT));
+          AddSGRow(SG,LOffset,LName, DWordToVanaTime( PD.GetUInt32AtPos(LOffset) ) , 4);
         End Else
 
         If ((LType = 'frames') or (LType = 'frame')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
           // Milliseconds
-          AddSGRow(SG,LOffset,LName,FramesToStr(PD.GetUInt32AtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,FramesToStr(PD.GetUInt32AtPos(LOffset)) , 4);
 
         End Else
 
@@ -198,7 +258,7 @@ Begin
           // Zero terminated String
           DataSize := StrToIntDef(Copy(LType,7,Length(LType)),-1);
 
-          AddSGRow(SG,LOffset,LName,PD.GetStringAtPos(LOffset,DataSize));
+          AddSGRow(SG,LOffset,LName,PD.GetStringAtPos(LOffset,DataSize),Length(PD.GetStringAtPos(LOffset,DataSize))+1);
           If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
 
         End Else
@@ -216,7 +276,7 @@ Begin
         Begin
           // simple byte data
           DataSize := StrToIntDef(Copy(LType,5,Length(LType)),1);
-          AddSGRow(SG,LOffset,LName,PD.GetDataAtPos(LOffset,DataSize));
+          AddSGRow(SG,LOffset,LName,PD.GetDataAtPos(LOffset,DataSize),DataSize);
           If (LOffset >= LastPos) Then LastPos := LOffset + DataSize ;
 
         End Else
@@ -224,7 +284,7 @@ Begin
         If ((LType = 'ip4') or (LType = 'ip')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetUInt32AtPos(LOffset),8) + ' => ' + PD.GetIP4AtPos(LOffset));
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetUInt32AtPos(LOffset),8) + ' => ' + PD.GetIP4AtPos(LOffset),4);
         End Else
 
         // Specialized items
@@ -233,14 +293,14 @@ Begin
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           // Slot
-          AddSGRow(SG,LOffset,LName,EquipmentSlotName(PD.GetByteAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,EquipmentSlotName(PD.GetByteAtPos(LOffset)),1);
 
         End Else
         If ((LType = 'container') or (LType = 'inventory') or (LType = 'bag')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           // Inventory Bag
-          AddSGRow(SG,LOffset,LName,ContainerName(PD.GetByteAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,ContainerName(PD.GetByteAtPos(LOffset)),1);
 
         End Else
 
@@ -248,7 +308,7 @@ Begin
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           // Inventory Bag
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + Zones.GetVal(PD.GetWordAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + Zones.GetVal(PD.GetWordAtPos(LOffset)),2);
 
         End Else
 
@@ -256,7 +316,7 @@ Begin
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
           // Job
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetByteAtPos(LOffset)) + ' => ' + JobNames.GetVal(PD.GetByteAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetByteAtPos(LOffset)) + ' => ' + JobNames.GetVal(PD.GetByteAtPos(LOffset)),1);
 
         End Else
 
@@ -264,14 +324,14 @@ Begin
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 4 ;
           // Job unlock flags
-          AddSGRow(SG,LOffset,LName,'0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetJobflagsAtPos(LOffset));
+          AddSGRow(SG,LOffset,LName,'0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetJobflagsAtPos(LOffset),4);
         End Else
 
         If (LType = 'blacklistentry') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 20 ;
           // Blacklist entry
-          AddSGRow(SG,LOffset,LName,'ID: 0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetStringAtPos(LOffset+4,16));
+          AddSGRow(SG,LOffset,LName,'ID: 0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetStringAtPos(LOffset+4,16),20);
         End Else
 
         If (LType = 'shopitems') Then
@@ -290,7 +350,7 @@ Begin
               ItemNames.GetVal(PD.GetWordAtPos(N+4)) +
               ' => Gil: '+IntToStr(PD.GetUInt32AtPos(N)) +
               ' Skill: 0x'+IntToHex(PD.GetWordAtPos(N+8),4)+
-              ' Rank: 0x'+IntToHex(PD.GetWordAtPos(N+$A),4) );
+              ' Rank: 0x'+IntToHex(PD.GetWordAtPos(N+$A),4) ,14);
 
             N := N + $C ;
             If (N >= LastPos) Then LastPos := N ;
@@ -300,68 +360,68 @@ Begin
         If ((LType = 'item') or (LType = 'itemid')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + ItemNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + ItemNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-head') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-body') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-hands') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-legs') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-feet') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-main') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-sub') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If ((LType = 'item-ranged') or (LType = 'item-range')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If ((LType = 'music') or (LType = 'bgm')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + MusicNames.GetVal(PD.GetWordAtPos(LOffset)) );
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + MusicNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'weather') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           // Weather
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + WeatherNames.GetVal(PD.GetWordAtPos(LOffset)));
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + WeatherNames.GetVal(PD.GetWordAtPos(LOffset)),2);
 
         End Else
 

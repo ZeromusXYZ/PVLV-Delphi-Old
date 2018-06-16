@@ -21,7 +21,7 @@
 20;SCH;Scholar
 21;GEO;Geomancer
 22;RUN;Rune Fencer
-23;???;???
+23;MON;Monipulator
 24;888;888
 25;999;999
 26;AAA;AAA

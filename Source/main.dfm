@@ -68,7 +68,6 @@ object MainForm: TMainForm
     Caption = 'Panel1'
     Constraints.MinWidth = 200
     TabOrder = 1
-    ExplicitLeft = 381
     DesignSize = (
       704
       561)
@@ -80,13 +79,13 @@ object MainForm: TMainForm
       Caption = 'Info'
     end
     object LShowBlock: TLabel
-      Left = 400
+      Left = 428
       Top = 18
-      Width = 154
+      Width = 126
       Height = 15
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
-      Caption = 'Select info to view =>'
+      Caption = 'view other info =>'
       Enabled = False
       Visible = False
     end
@@ -96,33 +95,15 @@ object MainForm: TMainForm
       Width = 684
       Height = 322
       Anchors = [akLeft, akTop, akRight, akBottom]
-      ColCount = 2
+      ColCount = 4
+      FixedColor = clGray
       RowCount = 2
-      FixedRows = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goFixedColClick, goFixedRowClick]
       TabOrder = 0
+      OnFixedCellClick = SGFixedCellClick
       RowHeights = (
         24
         24)
-    end
-    object MInfo: TMemo
-      Left = 6
-      Top = 367
-      Width = 684
-      Height = 160
-      Anchors = [akLeft, akRight, akBottom]
-      Lines.Strings = (
-        'Click File -> Open to start'
-        ''
-        
-          'To adjust packet info please check parserinfo.txt in the parse f' +
-          'older'
-        '"lookup" folder is used to create some custom value names'
-        '"filters" folder containts custom filters'
-        '')
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 1
     end
     object CBOriginalData: TCheckBox
       Left = 6
@@ -131,9 +112,8 @@ object MainForm: TMainForm
       Height = 17
       Anchors = [akLeft, akBottom]
       Caption = 'Show Original Data'
-      Checked = True
-      State = cbChecked
-      TabOrder = 2
+      TabOrder = 1
+      OnClick = CBOriginalDataClick
     end
     object CBShowBlock: TComboBox
       Left = 560
@@ -144,9 +124,26 @@ object MainForm: TMainForm
       AutoCloseUp = True
       Style = csDropDownList
       Anchors = [akTop, akRight]
-      TabOrder = 3
+      TabOrder = 2
       Visible = False
       OnClick = CBShowBlockClick
+    end
+    object MInfo: TRichEdit
+      Left = 6
+      Top = 367
+      Width = 683
+      Height = 160
+      Anchors = [akLeft, akRight, akBottom]
+      Lines.Strings = (
+        'Click File -> Open to start'
+        ''
+        
+          'To adjust packet info please check parserinfo.txt in the parse f' +
+          'older'
+        '"lookup" folder is used to create some custom value names'
+        '"filters" folder containts custom filters')
+      ScrollBars = ssBoth
+      TabOrder = 3
     end
   end
   object OpenDialogLogFiles: TOpenDialog

@@ -6,6 +6,9 @@ job;$04;Job
 job;$05;Sub Job
 uint16;$06;_unknown?
 
+switchblock;$04;18;Puppet Master
+switchblock;$04;23;Monstrosity
+
 [[Puppet Master]]
 info;$04;Info;--- Info as PUP ---
 byte;$08;Automaton Head;-- 08   Harlequinn 1, Valoredge 2, Sharpshot 3, Stormwaker 4, Soulsoother 5, Spiritreaver 6

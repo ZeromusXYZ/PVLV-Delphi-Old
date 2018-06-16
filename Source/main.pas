@@ -31,7 +31,6 @@ type
     Panel1: TPanel;
     LInfo: TLabel;
     SG: TStringGrid;
-    MInfo: TMemo;
     CBOriginalData: TCheckBox;
     MM: TMainMenu;
     MMFile: TMenuItem;
@@ -57,6 +56,7 @@ type
     MMFilterApplyN1: TMenuItem;
     CBShowBlock: TComboBox;
     LShowBlock: TLabel;
+    MInfo: TRichEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -84,16 +84,20 @@ type
     procedure MMFilterEditClick(Sender: TObject);
     procedure MMFilterResetClick(Sender: TObject);
     procedure CBShowBlockClick(Sender: TObject);
+    procedure SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
+    procedure CBOriginalDataClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
     FilterList : TStringList ;
     Procedure MoveToSync;
     procedure FillListBox ;
-    Procedure AddSGRow(Pos : Integer; VarName:String; Val:String);
+    Procedure AddSGRow(Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);
     Procedure SearchNext ;
     Procedure ApplyFromDialog;
     Procedure UpdatePacketDetails(ShowBlock:String);
+    Procedure PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
+    Function GetREPosForRawByte(Pos : Integer):Integer;
   public
     { Public declarations }
     PL, PLLoaded : TPacketList ;
@@ -108,6 +112,14 @@ implementation
 {$R *.dfm}
 
 uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
+
+CONST
+  RawDataHeader1 = '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' ;
+  RawDataHeader2 = '---+----------------------------------------------------';
+  CR = #13 ; // #13#10 ; // We only use CR because the TRichEdit ignores the LF when adding stuff
+  RawDataRowHeaderSize = 5 ;
+  ValuesPerRow = 16 ;
+
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -182,6 +194,103 @@ Begin
   LBPackets.Invalidate;
   LBPackets.Cursor := crDefault ;
 End;
+
+Function TMainForm.GetREPosForRawByte(Pos : Integer):Integer;
+CONST
+  BeginOfData = Length(RawDataHeader1) + Length(RawDataHeader2) + (Length(CR)*2) + RawDataRowHeaderSize ;
+VAR
+  I, N : Integer ;
+Begin
+  N := BeginOfData ; // Base
+  For I := 0 To Pos-1 Do
+  Begin
+    // New Line
+    If (I > 0) and ((I mod ValuesPerRow) = 0) Then
+      N := N + RawDataRowHeaderSize ;
+
+    // 1 Byte + space
+    N := N + 3 ;
+
+    // Extra spaces every 4 bytes
+    If (I mod 4) = 3 Then
+      N := N + 1 ;
+
+    // EoL if needed
+    If ((I mod ValuesPerRow) = ValuesPerRow-1) Then
+      N := N + Length(CR);
+
+  End;
+  Result := N ;
+End;
+
+Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
+
+  Procedure W(Txt : String;Col : TColor = -1;EoL:Boolean=True);
+  Begin
+    RE.SelStart := Length(RE.Text);
+    RE.SelLength := 0 ;
+    If Col <> -1 Then
+      RE.SelAttributes.Color := Col ;
+    If EoL Then
+      RE.SelText := Txt + CR
+    Else
+      RE.SelText := Txt ;
+    RE.SelStart := Length(RE.Text);
+    RE.SelLength := 0 ;
+  End;
+
+CONST
+  Cols : Array[0..6] of TColor = (clBlack,clRed,clGreen,clBlue,clPurple,clMaroon,clTeal);
+
+VAR
+  Result , S : String ;
+  I , L , Line : Integer ;
+  B : Byte ;
+  NCol : Byte ;
+  C : TColor ;
+Begin
+  RE.Clear ;
+  RE.Brush.Color := clWhite ;
+  RE.Font.Color := clBlack ;
+  NCol := 0 ;
+
+  W(RawDataHeader1,clBlack);
+  W(RawDataHeader2);
+  L := 0 ;
+  For I := 0 To PD.RawSize-1 Do
+  Begin
+    If (NCol >= Length(Cols)) Then NCol := 0 ;
+    C := Cols[NCol];
+
+    If ((I mod ValuesPerRow) = 0) Then
+    Begin
+      W(IntToHex(L,2) + ' | ',clBlack,False);
+    End;
+
+    B := PD.GetByteAtPos(I);
+    S := IntToHex(B,2);
+    W(S,C,False);
+    // Result := Result + S ;
+
+    If (I mod 4) = 3 Then
+    Begin
+      W(' ',clBlack,False); // Result := Result + ' ' ; // extra spacing every 4 bytes
+      NCol := NCol + 1 ;
+    End;
+
+    If (I mod ValuesPerRow) = ValuesPerRow-1 Then
+    Begin
+      W(' ');
+      // Result := Result + #13#10 ;
+      L := L + 1 ;
+    End Else
+    Begin
+      W(' ',clBlack,False);
+      // Result := Result + ' ' ;
+    End;
+  End;
+End;
+
 
 procedure TMainForm.MMFileClick(Sender: TObject);
 begin
@@ -314,6 +423,11 @@ Begin
   MoveToSync;
 end;
 
+procedure TMainForm.CBOriginalDataClick(Sender: TObject);
+begin
+  LBPacketsClick(nil);
+end;
+
 procedure TMainForm.CBShowBlockClick(Sender: TObject);
 begin
   UpdatePacketDetails(CBShowBlock.Text);
@@ -443,12 +557,13 @@ begin
   End;
 end;
 
-Procedure TMainForm.AddSGRow(Pos : integer;VarName:String;Val:String);
+Procedure TMainForm.AddSGRow(Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);
 Begin
   SG.RowCount := SG.RowCount + 1 ;
   SG.Cells[0,SG.RowCount-1] := '0x'+IntToHex(Pos,2);
-  SG.Cells[1,SG.RowCount-1] := VarName ;
-  SG.Cells[2,SG.RowCount-1] := Val ;
+  SG.Cells[1,SG.RowCount-1] := IntToStr(DataSize);
+  SG.Cells[2,SG.RowCount-1] := VarName ;
+  SG.Cells[3,SG.RowCount-1] := Val ;
 End;
 
 Procedure TMainForm.UpdatePacketDetails(ShowBlock:String);
@@ -471,33 +586,42 @@ Begin
 
   // Reset StringGrid
   SG.RowCount := 0 ;
-  SG.ColCount := 3 ;
+  SG.ColCount := 4 ;
   SG.ColWidths[0] := 40 ;
-  SG.ColWidths[1] := 150 ;
-  SG.ColWidths[2] := SG.Width - 200 ;
+  SG.ColWidths[1] := 0 ;
+  SG.ColWidths[2] := 150 ;
+  SG.ColWidths[3] := SG.Width - 220 ;
   SG.Cols[0].Text := 'Pos' ;
-  SG.Cols[1].Text := 'VAR' ;
-  SG.Cols[2].Text := 'Value' ;
+  SG.Cols[1].Text := 'Size' ;
+  SG.Cols[2].Text := 'VAR' ;
+  SG.Cols[3].Text := 'Value' ;
 
-  AddSGRow($0,'ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID) );
-  AddSGRow($2,'Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')');
-  AddSGRow($2,'Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')');
+
+  AddSGRow($0,'ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID),2 );
+  AddSGRow($2,'Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')',2);
+  AddSGRow($2,'Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')',2);
 
   CBShowBlock.Enabled := False ;
   CBShowBlock.Text := '' ;
 
   AddPacketInfoToStringGrid(PD,SG,ShowBlock);
 
+  SG.FixedCols := 1 ;
+  SG.FixedRows := 1 ;
+
   MInfo.Lines.Clear ;
   If (CBOriginalData.Checked) Then
   Begin
+    MInfo.SelAttributes.Color := clBlack ;
     MInfo.Lines.Add('Source:');
     MInfo.Lines.Add(PD.RawText.Text)
   End Else
   Begin
     // MInfo.Lines.Add('RAW Data:');
-    MInfo.Lines.Add(PD.PrintRawBytesAsHex);
+    // MInfo.Lines.Add(PD.PrintRawBytesAsHex);
+    PrintRawBytesAsHexRE(PD,MInfo);
   End;
+
 
   If (AvailableBlocks.Count > 0) Then
   Begin
@@ -532,7 +656,7 @@ begin
     MInfo.Text := 'Please select a valid item from the left' ;
   End else
   Begin
-    UpdatePacketDetails('');
+    UpdatePacketDetails('-');
   End;
   LBPackets.Invalidate;
 end;
@@ -867,6 +991,26 @@ Begin
 
   ShowMessage('No more matches found!');
 End;
+
+procedure TMainForm.SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
+VAR
+  N,S,EndPos : Integer ;
+begin
+  // Only try if using custom raw data, and clicking a used row header
+  If (CBOriginalData.Checked = False) and (ACol = 0) and (ARow > 0) then
+    If TryStrToInt(SG.Cells[ACol,ARow],N) Then
+    Begin
+      MInfo.SelectAll ;
+      MInfo.SelAttributes.Color := clGray ;
+      MInfo.SelStart := GetREPosForRawByte(N);
+      If Not TryStrToInt(SG.Cells[1,ARow],S) Then S := 1 ;
+      EndPos := GetREPosForRawByte(N+S);
+      MInfo.SelLength := EndPos - MInfo.SelStart ;
+      MInfo.SelAttributes.Color := clBlue ;
+      //ShowMessage('->'+MInfo.SelText+'<- ' + IntToStr( MInfo.SelStart) + ' + ' + IntToStr(MInfo.SelLength) );
+      MInfo.SelLength := 0 ;
+    End;
+end;
 
 procedure TMainForm.Splitter1Moved(Sender: TObject);
 begin
