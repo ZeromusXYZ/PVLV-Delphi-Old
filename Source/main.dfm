@@ -44,8 +44,8 @@ object MainForm: TMainForm
       375
       561)
     object LBPackets: TListBox
-      Left = 8
-      Top = 8
+      Left = 9
+      Top = 10
       Width = 360
       Height = 545
       Style = lbOwnerDrawFixed
@@ -100,6 +100,7 @@ object MainForm: TMainForm
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goFixedColClick, goFixedRowClick]
       TabOrder = 0
+      OnDrawCell = SGDrawCell
       OnFixedCellClick = SGFixedCellClick
       RowHeights = (
         24

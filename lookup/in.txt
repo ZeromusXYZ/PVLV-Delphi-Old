@@ -57,7 +57,7 @@ rem;0x04B;Logout Acknowledge;Acknowledges a logout attempt.
 0x05A;Server Emote;This packet is the server\'s response to a client /emote p.
 0x05B;Spawn;Server packet sent when a new mob spawns in area.
 0x05C;Dialogue Information;Used when all the information required for a menu cannot be fit in an NPC Interaction packet.
-0x05E;Camp./Besieged Map;Contains information about Campaign and Besieged status.
+0x05E;Campaign/Besieged Map;Contains information about Campaign and Besieged status.
 0x05F;Music Change;Changes the current music.
 0x061;Char Stats;Packet contains a lot of data about your character\'s stats.
 0x062;Skills Update;Packet that shows your weapon and magic skill stats.

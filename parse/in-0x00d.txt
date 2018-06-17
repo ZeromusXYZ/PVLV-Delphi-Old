@@ -68,7 +68,7 @@ bit;$2B:0;Bit0: Mentor
 uint16;$30;Costume
 uint32;$34;_unknown?
 uint16;$3C;Pet Target
-data$10;$30;_mostlyunknown6; {ctype='data[0x1B]', label='_unknown6'}, -- 28   DSP notes that the 6th bit of byte 54 is the Ballista flag
+rem;data$10;$30;_mostlyunknown6; {ctype='data[0x1B]', label='_unknown6'}, -- 28   DSP notes that the 6th bit of byte 54 is the Ballista flag
 uint16;$44;Mount Type?
 byteflag;$43;Face Flags;0, 3, 4, or 8
 uint32;$44;_unknown7

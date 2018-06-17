@@ -86,6 +86,8 @@ type
     procedure CBShowBlockClick(Sender: TObject);
     procedure SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
     procedure CBOriginalDataClick(Sender: TObject);
+    procedure SGDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
+      State: TGridDrawState);
   private
     { Private declarations }
     MyAppName : String ;
@@ -97,7 +99,6 @@ type
     Procedure ApplyFromDialog;
     Procedure UpdatePacketDetails(ShowBlock:String);
     Procedure PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
-    Function GetREPosForRawByte(Pos : Integer):Integer;
   public
     { Public declarations }
     PL, PLLoaded : TPacketList ;
@@ -112,14 +113,6 @@ implementation
 {$R *.dfm}
 
 uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
-
-CONST
-  RawDataHeader1 = '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' ;
-  RawDataHeader2 = '---+----------------------------------------------------';
-  CR = #13 ; // #13#10 ; // We only use CR because the TRichEdit ignores the LF when adding stuff
-  RawDataRowHeaderSize = 5 ;
-  ValuesPerRow = 16 ;
-
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -195,34 +188,6 @@ Begin
   LBPackets.Cursor := crDefault ;
 End;
 
-Function TMainForm.GetREPosForRawByte(Pos : Integer):Integer;
-CONST
-  BeginOfData = Length(RawDataHeader1) + Length(RawDataHeader2) + (Length(CR)*2) + RawDataRowHeaderSize ;
-VAR
-  I, N : Integer ;
-Begin
-  N := BeginOfData ; // Base
-  For I := 0 To Pos-1 Do
-  Begin
-    // New Line
-    If (I > 0) and ((I mod ValuesPerRow) = 0) Then
-      N := N + RawDataRowHeaderSize ;
-
-    // 1 Byte + space
-    N := N + 3 ;
-
-    // Extra spaces every 4 bytes
-    If (I mod 4) = 3 Then
-      N := N + 1 ;
-
-    // EoL if needed
-    If ((I mod ValuesPerRow) = ValuesPerRow-1) Then
-      N := N + Length(CR);
-
-  End;
-  Result := N ;
-End;
-
 Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
 
   Procedure W(Txt : String;Col : TColor = -1;EoL:Boolean=True);
@@ -239,14 +204,11 @@ Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
     RE.SelLength := 0 ;
   End;
 
-CONST
-  Cols : Array[0..6] of TColor = (clBlack,clRed,clGreen,clBlue,clPurple,clMaroon,clTeal);
-
 VAR
   Result , S : String ;
   I , L , Line : Integer ;
   B : Byte ;
-  NCol : Byte ;
+  NCol : Integer ;
   C : TColor ;
 Begin
   RE.Clear ;
@@ -259,8 +221,8 @@ Begin
   L := 0 ;
   For I := 0 To PD.RawSize-1 Do
   Begin
-    If (NCol >= Length(Cols)) Then NCol := 0 ;
-    C := Cols[NCol];
+    // C := DataCol(NCol);
+    C := RGB($CC,$CC,$CC);
 
     If ((I mod ValuesPerRow) = 0) Then
     Begin
@@ -584,6 +546,22 @@ Begin
     S := '???' ;
   End;
 
+  // Raw Data viewer
+  MInfo.Lines.Clear ;
+  If (CBOriginalData.Checked) Then
+  Begin
+    MInfo.SelAttributes.Color := clBlack ;
+    MInfo.Lines.Add('Source:');
+    MInfo.Lines.Add(PD.RawText.Text);
+    UpdateActiveRE := nil ; // Disable color fields
+  End Else
+  Begin
+    // MInfo.Lines.Add('RAW Data:');
+    // MInfo.Lines.Add(PD.PrintRawBytesAsHex);
+    UpdateActiveRE := MInfo ; // Enable color fields
+    PrintRawBytesAsHexRE(PD,MInfo);
+  End;
+
   // Reset StringGrid
   SG.RowCount := 0 ;
   SG.ColCount := 4 ;
@@ -596,33 +574,21 @@ Begin
   SG.Cols[2].Text := 'VAR' ;
   SG.Cols[3].Text := 'Value' ;
 
-
+  // Add general header
   AddSGRow($0,'ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID),2 );
   AddSGRow($2,'Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')',2);
   AddSGRow($2,'Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')',2);
 
+  // Clear switch block info
   CBShowBlock.Enabled := False ;
   CBShowBlock.Text := '' ;
-
+  // Fill info grid
   AddPacketInfoToStringGrid(PD,SG,ShowBlock);
-
+  // Re-Mark headers
   SG.FixedCols := 1 ;
   SG.FixedRows := 1 ;
 
-  MInfo.Lines.Clear ;
-  If (CBOriginalData.Checked) Then
-  Begin
-    MInfo.SelAttributes.Color := clBlack ;
-    MInfo.Lines.Add('Source:');
-    MInfo.Lines.Add(PD.RawText.Text)
-  End Else
-  Begin
-    // MInfo.Lines.Add('RAW Data:');
-    // MInfo.Lines.Add(PD.PrintRawBytesAsHex);
-    PrintRawBytesAsHexRE(PD,MInfo);
-  End;
-
-
+  // Block switch combobox
   If (AvailableBlocks.Count > 0) Then
   Begin
     CBShowBlock.Clear ;
@@ -647,6 +613,7 @@ Begin
   CBShowBlock.Visible := AvailableBlocks.Count > 0;
   LShowBlock.Visible := CBShowBlock.Visible ;
 
+  UpdateActiveRE := nil ;
 End;
 
 procedure TMainForm.LBPacketsClick(Sender: TObject);
@@ -992,9 +959,31 @@ Begin
   ShowMessage('No more matches found!');
 End;
 
+procedure TMainForm.SGDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+VAR
+  SG : TStringGrid ;
+  Canvas : TCanvas ;
+begin
+  If (ACol = 0) and (CBOriginalData.Checked = false) Then
+  Begin
+    SG := (Sender as TStringGrid);
+    Canvas := SG.Canvas ;
+    Canvas.Brush.Color := clWindow ;
+    // Canvas.Brush.Color := RGB($EE,$EE,$EE);
+    Canvas.FillRect(Rect);
+    If (ARow > 3) Then
+      Canvas.Font.Color := DataCol(ARow-3)
+    Else
+      Canvas.Font.Color := clBlack ;
+
+    Canvas.TextOut(Rect.Left + BevelWidth+1,Rect.CenterPoint.Y - (Canvas.TextHeight('0') div 2) - BevelWidth,(Sender as TStringGrid).Cells[ACol,ARow]);
+  End;
+end;
+
 procedure TMainForm.SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
 VAR
-  N,S,EndPos : Integer ;
+  N,S : Integer ;
 begin
   // Only try if using custom raw data, and clicking a used row header
   If (CBOriginalData.Checked = False) and (ACol = 0) and (ARow > 0) then
@@ -1002,13 +991,9 @@ begin
     Begin
       MInfo.SelectAll ;
       MInfo.SelAttributes.Color := clGray ;
-      MInfo.SelStart := GetREPosForRawByte(N);
-      If Not TryStrToInt(SG.Cells[1,ARow],S) Then S := 1 ;
-      EndPos := GetREPosForRawByte(N+S);
-      MInfo.SelLength := EndPos - MInfo.SelStart ;
-      MInfo.SelAttributes.Color := clBlue ;
-      //ShowMessage('->'+MInfo.SelText+'<- ' + IntToStr( MInfo.SelStart) + ' + ' + IntToStr(MInfo.SelLength) );
-      MInfo.SelLength := 0 ;
+      // Try to grab size from grid
+      If Not TryStrToInt(SG.Cells[1,ARow],S) Then S := 1 ; // default to 1
+      MarkREBytes(MInfo,N,S,clBlue);
     End;
 end;
 

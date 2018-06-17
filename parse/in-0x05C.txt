@@ -1,0 +1,3 @@
+file;in-0x05C;Dialogue Information;Used when all the information required for a menu cannot be fit in an NPC Interaction packet
+
+data32;$04;Menu Parameters
