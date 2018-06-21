@@ -27,8 +27,8 @@ type
     ALSearchNew: TAction;
     LeftPanel: TPanel;
     LBPackets: TListBox;
-    Splitter1: TSplitter;
-    Panel1: TPanel;
+    SplitterVertical: TSplitter;
+    DataPanel: TPanel;
     LInfo: TLabel;
     SG: TStringGrid;
     CBOriginalData: TCheckBox;
@@ -71,7 +71,7 @@ type
     procedure PMPacketListOnlyInClick(Sender: TObject);
     procedure ALSearchNextExecute(Sender: TObject);
     procedure ALSearchNewExecute(Sender: TObject);
-    procedure Splitter1Moved(Sender: TObject);
+    procedure SplitterVerticalMoved(Sender: TObject);
     procedure MMFileExitClick(Sender: TObject);
     procedure ALOpenFileExecute(Sender: TObject);
     procedure ALAppendFileExecute(Sender: TObject);
@@ -997,7 +997,7 @@ begin
     End;
 end;
 
-procedure TMainForm.Splitter1Moved(Sender: TObject);
+procedure TMainForm.SplitterVerticalMoved(Sender: TObject);
 begin
   LBPackets.Invalidate ;
 end;

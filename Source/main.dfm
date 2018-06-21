@@ -20,14 +20,14 @@ object MainForm: TMainForm
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 15
-  object Splitter1: TSplitter
+  object SplitterVertical: TSplitter
     Left = 375
     Top = 0
     Width = 5
     Height = 561
     Beveled = True
     ResizeStyle = rsUpdate
-    OnMoved = Splitter1Moved
+    OnMoved = SplitterVerticalMoved
   end
   object LeftPanel: TPanel
     Left = 0
@@ -58,14 +58,14 @@ object MainForm: TMainForm
       OnDrawItem = LBPacketsDrawItem
     end
   end
-  object Panel1: TPanel
+  object DataPanel: TPanel
     Left = 380
     Top = 0
     Width = 704
     Height = 561
     Align = alClient
     BevelOuter = bvNone
-    Caption = 'Panel1'
+    Caption = 'DataPanel'
     Constraints.MinWidth = 200
     TabOrder = 1
     DesignSize = (

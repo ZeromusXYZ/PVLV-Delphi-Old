@@ -627,6 +627,15 @@ Begin
               ' Level:' + IntToStr( ((PD.GetWordAtPos(LOffset) shr 5) and $03FF) ) ,2);
         End Else
 
+        If (LType = 'jobpoints') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 6 ;
+          ColIndex := ColIndex + 1 ;
+          If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,6,DataCol(ColIndex));
+          // Job unlock flags
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' CP   ' + IntToStr(PD.GetWordAtPos(LOffset+2)) + ' JP   ' + IntToStr(PD.GetWordAtPos(LOffset+4)) + ' Spent JP',6);
+        End Else
+
         Begin
           // this is a what now ?
           If (LOffset >= LastPos) Then LastPos := LOffset + 0 ;

@@ -92,11 +92,10 @@
         <DCC_DebugInformation>false</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>16</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.2.1.16;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Build>17</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.2.1.17;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -114,19 +113,12 @@
         <DCCReference Include="Source\filterdialog.pas">
             <Form>DlgFilter</Form>
         </DCCReference>
-        <None Include="Parse\out-0x015.txt"/>
-        <None Include="Parse\in-0x00d.txt"/>
         <None Include="Parse\parserinfo.txt"/>
         <None Include="lookup\zones.txt"/>
         <None Include="lookup\in.txt"/>
         <None Include="lookup\out.txt"/>
         <None Include="lookup\equipslot.txt"/>
         <None Include="lookup\containers.txt"/>
-        <None Include="parse\in-0x050.txt"/>
-        <None Include="parse\in-0x00a.txt"/>
-        <None Include="parse\in-0x00b.txt"/>
-        <None Include="parse\in-0x00e.txt"/>
-        <None Include="parse\in-0x017.txt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

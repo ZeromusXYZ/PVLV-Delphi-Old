@@ -16,7 +16,7 @@
 15;SMN;Summoner
 16;BLU;Blue Mage
 17;COR;Corsair
-18;PUP;Pupet Master
+18;PUP;Puppet Master
 19;DNC;Dancer
 20;SCH;Scholar
 21;GEO;Geomancer
