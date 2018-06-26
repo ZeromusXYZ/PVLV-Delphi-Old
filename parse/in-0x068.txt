@@ -1,4 +1,4 @@
-file;in-0x06;Pet Status;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate
+file;in-0x068;Pet Status;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate
 
 bits;$04:0-6;Message Type
 bits;$04:6-10;Message Length

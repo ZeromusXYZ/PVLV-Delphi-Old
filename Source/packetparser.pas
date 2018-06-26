@@ -470,6 +470,28 @@ Begin
           End;
         End Else
 
+        If (LType = 'guildshopitems') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset ;
+
+          For C := 0 to 29 Do
+          Begin
+            N := LOffset + (C * 8);
+
+            ColIndex := ColIndex + 1 ;
+            If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,8,DataCol(ColIndex));
+
+            AddSGRow(SG,N,LName,
+              '#'+IntToStr(C+1)+ ': ' +
+              'Item: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ ' - ' +
+              ItemNames.GetVal(PD.GetWordAtPos(N)) +
+              ' => Price: '+IntToStr(PD.GetUInt32AtPos(N+4)) +
+              ' - Stock: '+IntToStr(PD.GetByteAtPos(N+2)) + ' / ' + IntToStr(PD.GetWordAtPos(N+3)) ,8);
+
+            If (N+8 >= LastPos) Then LastPos := N + 8 ;
+          End;
+        End Else
+
         If ((LType = 'item') or (LType = 'itemid')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
