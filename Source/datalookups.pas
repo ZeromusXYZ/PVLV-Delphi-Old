@@ -35,6 +35,7 @@ VAR
   MusicNames : TDataLookup ;
   JobNames : TDataLookup ;
   WeatherNames : TDataLookup ;
+  MeritNames : TDataLookup ;
 
 implementation
 
@@ -145,6 +146,7 @@ ItemModelNames := TDataLookup.Create('lookup\itemmodels.txt'); ;
 MusicNames := TDataLookup.Create('lookup\music.txt'); ;
 JobNames := TDataLookup.Create('lookup\jobs.txt'); ;
 WeatherNames := TDataLookup.Create('lookup\weather.txt'); ;
+MeritNames := TDataLookup.Create('lookup\merits.txt'); ;
 
 Finalization
 
@@ -158,5 +160,6 @@ FreeAndNil(ItemModelNames);
 FreeAndNil(MusicNames);
 FreeAndNil(JobNames);
 FreeAndNil(WeatherNames);
+FreeAndNil(MeritNames);
 
 end.

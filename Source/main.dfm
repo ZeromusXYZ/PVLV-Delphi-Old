@@ -68,83 +68,114 @@ object MainForm: TMainForm
     Caption = 'DataPanel'
     Constraints.MinWidth = 200
     TabOrder = 1
-    DesignSize = (
-      704
-      561)
-    object LInfo: TLabel
-      Left = 6
-      Top = 18
-      Width = 28
-      Height = 15
-      Caption = 'Info'
+    object SplitterHorizontal: TSplitter
+      Left = 0
+      Top = 369
+      Width = 704
+      Height = 3
+      Cursor = crVSplit
+      Align = alBottom
+      ExplicitTop = 321
+      ExplicitWidth = 71
     end
-    object LShowBlock: TLabel
-      Left = 428
-      Top = 18
-      Width = 126
-      Height = 15
-      Alignment = taRightJustify
-      Anchors = [akTop, akRight]
-      Caption = 'view other info =>'
-      Enabled = False
-      Visible = False
-    end
-    object SG: TStringGrid
-      Left = 6
-      Top = 39
-      Width = 684
-      Height = 322
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      ColCount = 4
-      FixedColor = clGray
-      RowCount = 2
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goFixedColClick, goFixedRowClick]
+    object InfoPanel: TPanel
+      Left = 0
+      Top = 0
+      Width = 704
+      Height = 369
+      Align = alClient
+      Caption = ' '
       TabOrder = 0
-      OnDrawCell = SGDrawCell
-      OnFixedCellClick = SGFixedCellClick
-      RowHeights = (
-        24
-        24)
+      DesignSize = (
+        704
+        369)
+      object LInfo: TLabel
+        Left = 6
+        Top = 18
+        Width = 28
+        Height = 15
+        Caption = 'Info'
+      end
+      object LShowBlock: TLabel
+        Left = 435
+        Top = 18
+        Width = 126
+        Height = 15
+        Alignment = taRightJustify
+        Anchors = [akTop, akRight]
+        Caption = 'view other info =>'
+        Enabled = False
+        Visible = False
+      end
+      object SG: TStringGrid
+        Left = 5
+        Top = 39
+        Width = 692
+        Height = 322
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        ColCount = 4
+        FixedColor = clGray
+        RowCount = 2
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goFixedColClick, goFixedRowClick]
+        TabOrder = 0
+        OnDrawCell = SGDrawCell
+        OnFixedCellClick = SGFixedCellClick
+        RowHeights = (
+          24
+          24)
+      end
+      object CBShowBlock: TComboBox
+        Left = 567
+        Top = 10
+        Width = 129
+        Height = 23
+        AutoDropDown = True
+        AutoCloseUp = True
+        Style = csDropDownList
+        Anchors = [akTop, akRight]
+        TabOrder = 1
+        Visible = False
+        OnClick = CBShowBlockClick
+      end
     end
-    object CBOriginalData: TCheckBox
-      Left = 6
-      Top = 533
-      Width = 177
-      Height = 17
-      Anchors = [akLeft, akBottom]
-      Caption = 'Show Original Data'
+    object PanelData: TPanel
+      Left = 0
+      Top = 372
+      Width = 704
+      Height = 189
+      Align = alBottom
+      Caption = ' '
       TabOrder = 1
-      OnClick = CBOriginalDataClick
-    end
-    object CBShowBlock: TComboBox
-      Left = 560
-      Top = 10
-      Width = 129
-      Height = 23
-      AutoDropDown = True
-      AutoCloseUp = True
-      Style = csDropDownList
-      Anchors = [akTop, akRight]
-      TabOrder = 2
-      Visible = False
-      OnClick = CBShowBlockClick
-    end
-    object MInfo: TRichEdit
-      Left = 6
-      Top = 367
-      Width = 683
-      Height = 160
-      Anchors = [akLeft, akRight, akBottom]
-      Lines.Strings = (
-        'Click File -> Open to start'
-        ''
-        
-          'To adjust packet info please check parserinfo.txt in the parse f' +
-          'older'
-        '"lookup" folder is used to create some custom value names'
-        '"filters" folder containts custom filters')
-      ScrollBars = ssBoth
-      TabOrder = 3
+      DesignSize = (
+        704
+        189)
+      object MInfo: TRichEdit
+        Left = 6
+        Top = 8
+        Width = 691
+        Height = 156
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        Lines.Strings = (
+          'Click File -> Open to start'
+          ''
+          
+            'To adjust packet info please check parserinfo.txt in the parse f' +
+            'older'
+          '"lookup" folder is used to create some custom value names'
+          '"filters" folder containts custom filters')
+        ScrollBars = ssBoth
+        TabOrder = 0
+      end
+      object CBOriginalData: TCheckBox
+        Left = 6
+        Top = 170
+        Width = 177
+        Height = 17
+        Anchors = [akLeft, akBottom]
+        Caption = 'Show Original Data'
+        TabOrder = 1
+        OnClick = CBOriginalDataClick
+      end
     end
   end
   object OpenDialogLogFiles: TOpenDialog

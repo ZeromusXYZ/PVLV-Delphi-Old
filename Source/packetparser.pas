@@ -89,6 +89,255 @@ begin
   RE.SelLength := 0 ;
 end;
 
+Function ActionCategoryToStr(Cat : Byte):String;
+Begin
+  Case Cat Of
+    0 : Result := 'None' ;
+    1 : Result := 'Melee Attack' ;
+    2 : Result := 'Ranged Attack Finish' ;
+    3 : Result := 'Weapon Skill Finish' ;
+    4 : Result := 'Magic Finish' ;
+    5 : Result := 'Item Finish' ;
+    6 : Result := 'Job Ability Finish' ;
+    7 : Result := 'Weapon Skill Start' ;
+    8 : Result := 'Magic Start' ;
+    9 : Result := 'Item Start' ;
+    10 : Result := 'Job Ability Start' ;
+    11 : Result := 'NPC Ability Finish' ;
+    12 : Result := 'Ranged Attack Start' ;
+    13 : Result := 'Pet Mob Ability Finish' ;
+    14 : Result := 'Job Ability DNC' ;
+    15 : Result := 'Job Ability RUN' ;
+
+    // DSP stuff (not actually used as max value would be 15 with just 4 bits)
+    29 : Result := 'ACTION_ITEM_INTERRUPT' ;
+    31 : Result := 'ACTION_MAGIC_INTERRUPT' ;
+    32 : Result := 'ACTION_RANGED_INTERRUPT' ;
+    33 : Result := 'ACTION_MOBABILITY_START' ;
+    35 : Result := 'ACTION_MOBABILITY_INTERRUPT' ;
+    37 : Result := 'ACTION_RAISE_MENU_SELECTION' ;
+  Else
+    Result := 'Unknown 0x' + IntToHex(Cat,2);
+  End;
+End;
+
+Function ActionReactionToStr(Reaction : Byte):String;
+Begin
+  Case Reaction Of
+    $00 : Result := 'REACTION_NONE' ;
+    $01 : Result := 'REACTION_MISS' ;
+    $02 : Result := 'REACTION_PARRY' ;
+    $04 : Result := 'REACTION_BLOCK' ;
+    $08 : Result := 'REACTION_HIT' ;
+    $09 : Result := 'REACTION_EVADE' ;
+    $14 : Result := 'REACTION_GUARD' ; // mnk guard (20 dec)
+  Else
+    Result := 'REACTION_UNKNOWN_0x' + IntToHex(Reaction,2);
+  End;
+End;
+
+
+Function AddPacketInfoIn0x028(PD : TPacketData;SG : TStringGrid):Integer; // Returns last used Byte
+VAR
+  pSize : Byte ;
+  pActor : UInt32 ;
+  pTargetCount : UInt16 ;
+  pActionCategory : Byte ;
+  pActionID : UInt16 ;
+  pUnknown1 : UInt16 ;
+  pRecast : UInt32 ;
+  FirstTargetOffset : Integer ;
+  LastBit : Integer ;
+  Offset : Integer ;
+  //
+  pActionTargetID : UInt32 ;
+  pActionTargetIDSize : Byte ;
+  pTargetCountLoopCounter : Integer ;
+  //
+  tReaction : Byte ;
+  tAnimation : UInt16 ;
+  tSpecialEffect : Byte ;
+  tKnockback : Byte ;
+  tParam : Int32 ;
+  tMessageID : UInt16 ;
+  tUnknown : UInt32 ;
+  tTargetEffectLoopCounter : Integer ;
+  //
+  tAdditionalEffect : UInt16 ;
+  tAddEffectParam : Int32 ;
+  tAddEffectMessage : UInt16 ;
+
+
+Begin
+  If (PD.PacketLogType <> pltIn) or (PD.PacketID <> $28) Then
+  Begin
+    AddSGRow(SG,0,'Error','Wrong parser option for this packet type',0);
+    Result := 0 ;
+    Exit;
+  End;
+
+  pSize := PD.GetByteAtPos($04);
+  pActor := PD.GetUInt32AtPos($05);
+  pTargetCount := PD.GetBitsAtPos($09,0,10);
+  // First group contains info about the size instead of actual data ?
+  // The bit offset is a pain to work with however >.>
+  pActionCategory := PD.GetBitsAtPos($0A,2,4);
+  pActionID := PD.GetBitsAtPos($0A,6,16);
+  pUnknown1 := PD.GetBitsAtPos($0C,6,16);
+  pRecast := PD.GetBitsAtPos($0E,6,32);
+
+  AddSGRow(SG,$4,'Info Size',IntToStr(pSize),1);
+  AddSGRow(SG,$5,'Actor','0x'+InttoHex(pActor,8)+' - '+IntToStr(pActor),2);
+  AddSGRow(SG,$9,'Target Count',IntToStr(pTargetCount),2);
+  AddSGRow(SG,$A,'Action Cat',IntToStr(pActionCategory) + ' - ' + ActionCategoryToStr(pActionCategory),1);
+  AddSGRow(SG,$A,'Action ID',IntToStr(pActionID),2);
+  AddSGRow(SG,$C,'Unknown1',IntToStr(pUnknown1),2);
+  AddSGRow(SG,$E,'Recast',IntToStr(pRecast),4);
+
+  FirstTargetOffset := 150 ; // $12:6
+  LastBit := PD.RawSize * 8 ;
+
+  Offset := FirstTargetOffset ;
+  pTargetCountLoopCounter := 0 ;
+
+  While (Offset < LastBit) and (pTargetCountLoopCounter < pTargetCount) Do
+  Begin
+    pTargetCountLoopCounter := pTargetCountLoopCounter + 1 ;
+
+    pActionTargetID := PD.GetBitsAtPos(Offset,32);
+    AddSGRow(SG,(Offset div 8),'#' + IntToStr(pTargetCountLoopCounter)+' : Target ID','0x' + IntToHex(pActionTargetID,8)+' - '+ IntToStr(pActionTargetID),4);
+    Offset := Offset + 32 ;
+
+    pActionTargetIDSize := PD.GetBitsAtPos(Offset,4);
+    AddSGRow(SG,(Offset div 8),'#' + IntToStr(pTargetCountLoopCounter)+' : Count',IntToStr(pActionTargetIDSize),1);
+    Offset := Offset + 4 ;
+
+    tTargetEffectLoopCounter := 0 ;
+    While (Offset < LastBit)and(tTargetEffectLoopCounter < pActionTargetIDSize) Do
+    Begin
+      tTargetEffectLoopCounter := tTargetEffectLoopCounter + 1 ;
+
+      tReaction := PD.GetBitsAtPos(Offset,5);
+      AddSGRow(SG,(Offset div 8), ' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : Reaction',IntToStr(tReaction)+' - '+ActionReactionToStr(tReaction) ,
+        1);
+      Offset := Offset + 5 ;
+
+      tAnimation := PD.GetBitsAtPos(Offset,12);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : Animation','0x' + IntToHex(tAnimation,4) + ' - ' + IntToStr(tAnimation),
+        2);
+      Offset := Offset + 12 ;
+
+      tSpecialEffect := PD.GetBitsAtPos(Offset,7);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : SpecialEffect','0x'+IntToHex(tSpecialEffect,2)+' - '+IntToStr(tSpecialEffect),
+        2);
+      Offset := Offset + 7 ;
+
+      tKnockback := PD.GetBitsAtPos(Offset,3);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : Knockback','0x'+IntToHex(tKnockback,2)+' - '+IntToStr(tKnockback),
+        1);
+      Offset := Offset + 3 ;
+
+      tParam := PD.GetBitsAtPos(Offset,17);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : Param','0x'+IntToHex(tParam,3)+' - '+IntToStr(tParam),
+        3);
+      Offset := Offset + 17 ;
+
+      tMessageID := PD.GetBitsAtPos(Offset,10);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : MessageID','0x'+IntToHex(tMessageID,3)+' - '+IntToStr(tMessageID),
+        2);
+      Offset := Offset + 10 ;
+
+      tUnknown := PD.GetBitsAtPos(Offset,31);
+      AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+        ' : ??? 31bits','0x'+IntToHex(tUnknown,8)+' - '+IntToStr(tUnknown),
+        2);
+      Offset := Offset + 31 ;
+
+      // Has additional effect ?
+      If (PD.GetBitsAtPos(Offset,1) <> 0) Then
+      Begin
+        // Yes
+        Offset := Offset + 1 ;
+
+        tAdditionalEffect := PD.GetBitsAtPos(Offset,10);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Added Effect','0x'+IntToHex(tAdditionalEffect,2)+' - '+IntToStr(tAdditionalEffect),
+          2);
+        Offset := Offset + 10 ;
+
+        tAddEffectParam := PD.GetBitsAtPos(Offset,17);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Effect Param','0x'+IntToHex(tAddEffectParam,5)+' - '+IntToStr(tAddEffectParam),
+          3);
+        Offset := Offset + 17 ;
+
+        tAddEffectMessage := PD.GetBitsAtPos(Offset,10);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Effect Msg','0x'+IntToHex(tAddEffectMessage,2)+' - '+IntToStr(tAddEffectMessage),
+          2);
+        Offset := Offset + 10 ;
+      End Else
+      Begin
+        // No ? Let's just go the next bit
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Added Effect','NO',
+          1);
+        Offset := Offset + 1 ;
+      End;
+
+      // Has spike effect ?
+      If (PD.GetBitsAtPos(Offset,1) <> 0) Then
+      Begin
+        // Yes
+        Offset := Offset + 1 ;
+
+        tAdditionalEffect := PD.GetBitsAtPos(Offset,10);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Spike Effect','0x'+IntToHex(tAdditionalEffect,2)+' - '+IntToStr(tAdditionalEffect),
+          2);
+        Offset := Offset + 10 ;
+
+        tAddEffectParam := PD.GetBitsAtPos(Offset,14);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Spike Param','0x'+IntToHex(tAddEffectParam,4)+' - '+IntToStr(tAddEffectParam),
+          2);
+        Offset := Offset + 14 ;
+
+        tAddEffectMessage := PD.GetBitsAtPos(Offset,10);
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Spike Msg','0x'+IntToHex(tAddEffectMessage,2)+' - '+IntToStr(tAddEffectMessage),
+          2);
+        Offset := Offset + 10 ;
+      End Else
+      Begin
+        // No ? Let's just go the next bit
+        AddSGRow(SG,(Offset div 8),' #' + IntToStr(pTargetCountLoopCounter)+' '+IntToStr(tTargetEffectLoopCounter)+'/'+IntToStr(pActionTargetIDSize) +
+          ' : Spikes Effect','NO',
+          1);
+        Offset := Offset + 1 ;
+      End;
+
+
+
+
+
+
+    End; // tTargetEffectLoopCounter
+
+  End; // pTargetCountLoopCounter
+
+
+
+  If (Offset mod 8) > 0 Then Result := (Offset div 8) + 1 else Result := Offset div 8 ;
+End;
+
+
 Function AddPacketInfoToStringGrid(PD : TPacketData;SG : TStringGrid;BlockName : String):Boolean;
 VAR
   FN : String ;
@@ -443,6 +692,33 @@ Begin
           AddSGRow(SG,LOffset,LName,'ID: 0x'+IntToHex(PD.GetUint32AtPos(LOffset),8) + ' => ' + PD.GetStringAtPos(LOffset+4,16),20);
         End Else
 
+        If (LType = 'meritentries') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset ;
+
+          N := LOffset ;
+          C := 0 ;
+
+          // Subvalue is the adress for the counter to use
+          If LSubOffset > 1 Then LSubOffset := PD.GetByteAtPos(LSubOffset);
+
+          While (N < PD.RawSize-4) and (C < LSubOffset) Do
+          Begin
+            C := C + 1 ;
+
+            ColIndex := ColIndex + 1 ;
+            If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,4,DataCol(ColIndex));
+
+            AddSGRow(SG,N,LName + ' #'+IntToStr(C),
+              'ID: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ '  ' + MeritNames.GetVal(PD.GetWordAtPos(N)) + ' - ' +
+              'Next Cost: '+IntToStr(PD.GetByteAtPos(N+2)) + ' - ' +
+              'Value: '+IntToStr(PD.GetByteAtPos(N+3)) ,4);
+
+            N := N + 4 ;
+            If (N >= LastPos) Then LastPos := N ;
+          End;
+        End Else
+
         If (LType = 'shopitems') Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset ;
@@ -657,6 +933,35 @@ Begin
           // Job unlock flags
           AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' CP   ' + IntToStr(PD.GetWordAtPos(LOffset+2)) + ' JP   ' + IntToStr(PD.GetWordAtPos(LOffset+4)) + ' Spent JP',6);
         End Else
+
+        If (LType = 'packet-in-0x028') Then // Need to build a custom parser for this (atm)
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset ;
+          LastPos := AddPacketInfoIn0x028(PD,SG);
+          {
+          While (N < PD.RawSize-1) Do
+          Begin
+            C := C + 1 ;
+
+            ColIndex := ColIndex + 1 ;
+            If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,$C,DataCol(ColIndex));
+
+
+            AddSGRow(SG,N,LName,
+              '#'+IntToStr(C)+ ': ' +
+              'Slot?: 0x'+IntToHex(PD.GetWordAtPos(N+6),4)+ ' - ' +
+              ItemNames.GetVal(PD.GetWordAtPos(N+4)) +
+              ' => Gil: '+IntToStr(PD.GetUInt32AtPos(N)) +
+              ' Skill: 0x'+IntToHex(PD.GetWordAtPos(N+8),4)+
+              ' Rank: 0x'+IntToHex(PD.GetWordAtPos(N+$A),4) ,14);
+
+            N := N + $C ;
+            If (N >= LastPos) Then LastPos := N ;
+          End;
+          }
+        End Else
+
+
 
         Begin
           // this is a what now ?

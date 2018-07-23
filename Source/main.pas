@@ -29,9 +29,6 @@ type
     LBPackets: TListBox;
     SplitterVertical: TSplitter;
     DataPanel: TPanel;
-    LInfo: TLabel;
-    SG: TStringGrid;
-    CBOriginalData: TCheckBox;
     MM: TMainMenu;
     MMFile: TMenuItem;
     MMFileOpen: TMenuItem;
@@ -54,9 +51,15 @@ type
     MMFilterReset: TMenuItem;
     MMFilterApply: TMenuItem;
     MMFilterApplyN1: TMenuItem;
-    CBShowBlock: TComboBox;
+    InfoPanel: TPanel;
+    SG: TStringGrid;
+    LInfo: TLabel;
     LShowBlock: TLabel;
+    CBShowBlock: TComboBox;
+    PanelData: TPanel;
     MInfo: TRichEdit;
+    CBOriginalData: TCheckBox;
+    SplitterHorizontal: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);

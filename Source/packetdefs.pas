@@ -37,7 +37,8 @@ TYPE
     Function PrintRawBytesAsHex() : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
     Function GetBitAtPos(Pos,BitOffset:Integer):Boolean;
-    Function GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64;
+    Function GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64; Overload ;
+    Function GetBitsAtPos(BitOffset,BitsSize:Integer):Int64; Overload ;
     Function GetWordAtPos(Pos:Integer):Word;
     Function GetInt16AtPos(Pos:Integer):Int16;
     Function GetInt32AtPos(Pos:Integer):Int32;
@@ -635,6 +636,10 @@ Begin
 
 End;
 
+Function TPacketData.GetBitsAtPos(BitOffset,BitsSize:Integer):Int64;
+Begin
+  Result := GetBitsAtPos(BitOffset div 8,BitOffset mod 8,BitsSize);
+End;
 
 Function TPacketData.GetFloatAtPos(Pos:Integer):Single;
 VAR
