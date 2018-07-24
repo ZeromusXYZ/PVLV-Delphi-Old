@@ -9,4 +9,4 @@ rem;bits;$0C:6-16;_unknown
 rem;bits;$0E:6-32;Recast
 
 packet-in-0x028;0;Data;Custom parser because this thing is way too complex ?
-info;0;Unsupported;The current parser can not handle details about this packet yet
+rem;info;0;Unsupported;The current parser can not handle details about this packet yet

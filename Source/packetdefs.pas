@@ -2,7 +2,7 @@
 
 interface
 
-uses Classes, System.Contnrs ;
+uses Classes, System.Contnrs, loadingform ;
 
 CONST
   pltUnknown = 0 ;
@@ -797,7 +797,9 @@ VAR
   PD : TPacketData ;
   S : String ;
   PreferedPacketType : Byte ;
+  StartTime : TDateTime ;
 Begin
+  StartTime := Now ;
 
   PreferedPacketType := 0 ;
   Try
@@ -815,8 +817,21 @@ Begin
     FileData.LoadFromFile(Filename);
     I := 0 ;
     PD := Nil ;
+
+    FormLoading.Show ;
+    FormLoading.BringToFront ;
+    FormLoading.Caption := 'Loading ' + Filename ;
+
     While I < FileData.Count-1 Do
     Begin
+      If FormLoading.Visible and ((I mod 50) = 0) Then
+      Begin
+        FormLoading.Repaint ;
+        FormLoading.PB.Max := FileData.Count ;
+        FormLoading.PB.Min := 0 ;
+        FormLoading.PB.Position := I ;
+      End;
+
       S := FileData.Strings[I];
       If ((S <> '') and (PD = nil)) Then
       Begin
@@ -872,6 +887,7 @@ Begin
   End;
   If Assigned(FileData) Then FreeAndNil(FileData);
   If Assigned(PD) Then FreeAndNil(PD);
+  If Assigned(FormLoading) Then FormLoading.Hide ;
 End;
 
 Function TPacketList.Count : Integer ;

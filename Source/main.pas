@@ -60,6 +60,11 @@ type
     MInfo: TRichEdit;
     CBOriginalData: TCheckBox;
     SplitterHorizontal: TSplitter;
+    ALGridFont1: TAction;
+    ALGridFont2: TAction;
+    MMFont: TMenuItem;
+    ALGridFont11: TMenuItem;
+    ALGridFont21: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -91,6 +96,8 @@ type
     procedure CBOriginalDataClick(Sender: TObject);
     procedure SGDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
       State: TGridDrawState);
+    procedure ALGridFont1Execute(Sender: TObject);
+    procedure ALGridFont2Execute(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -115,7 +122,8 @@ implementation
 
 {$R *.dfm}
 
-uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog;
+uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog,
+  loadingform;
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -174,8 +182,22 @@ Begin
   LBPackets.Cursor := crHourGlass ;
   Application.ProcessMessages ;
   LBPackets.Clear ;
+
+  FormLoading.Show ;
+  FormLoading.BringToFront ;
+  FormLoading.Caption := 'Populating ListBox, please wait ...' ;
+
   For I := 0 to PL.Count-1 Do
   Begin
+
+    If FormLoading.Visible and ((I mod 100) = 0) Then
+    Begin
+      FormLoading.Repaint ;
+      FormLoading.PB.Max := PL.Count ;
+      FormLoading.PB.Min := 0 ;
+      FormLoading.PB.Position := I ;
+    End;
+
     Case PL.GetPacket(I).PacketLogType of
       pltOut : LBPackets.Items.Add('=> '+PL.GetPacket(I).Header);
       pltIn : LBPackets.Items.Add('<= '+PL.GetPacket(I).Header);
@@ -189,6 +211,7 @@ Begin
   End;
   LBPackets.Invalidate;
   LBPackets.Cursor := crDefault ;
+  If Assigned(FormLoading) Then FormLoading.Hide ;
 End;
 
 Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
@@ -454,6 +477,26 @@ begin
       Caption := MyAppName ;
     End;
   End;
+end;
+
+procedure TMainForm.ALGridFont1Execute(Sender: TObject);
+begin
+  SG.Font.Name := 'Consolas' ;
+  SG.Font.Size := 10 ;
+  SG.Font.Style := [] ;
+  SG.Invalidate ;
+  SG.DefaultRowHeight := 24 ;
+  SG.Invalidate ;
+end;
+
+procedure TMainForm.ALGridFont2Execute(Sender: TObject);
+begin
+  SG.Font.Name := 'Consolas' ;
+//  SG.Font.Name := 'Fixedsys' ;
+  SG.Font.Size := 8 ;
+  SG.Font.Style := [] ;
+  SG.DefaultRowHeight := 16 ;
+  SG.Invalidate ;
 end;
 
 procedure TMainForm.ALOpenFileExecute(Sender: TObject);

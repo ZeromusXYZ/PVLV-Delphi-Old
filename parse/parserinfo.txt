@@ -112,6 +112,11 @@ description: 2 byte music number and track name (uses music.txt)
 typename: weather
 description: 2 byte number and weather name (uses weather.txt)
 
+typename: packet-in-0x028
+description: Shows info about incomming packet 0x028 (has no color coding)
+  it needs a special handler because of the way the packet has variable size
+  depending on conditional bit flags (would be too complex to script)
+  Does nothing if it's not used in the correct packet parser
 
 
 If there is unused data left in the packet past the last defined position,

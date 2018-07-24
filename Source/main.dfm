@@ -258,6 +258,14 @@ object MainForm: TMainForm
       Caption = 'About ...'
       OnExecute = ALAboutExecute
     end
+    object ALGridFont1: TAction
+      Caption = 'ALGridFont1'
+      OnExecute = ALGridFont1Execute
+    end
+    object ALGridFont2: TAction
+      Caption = 'ALGridFont2'
+      OnExecute = ALGridFont2Execute
+    end
   end
   object MM: TMainMenu
     Left = 208
@@ -310,6 +318,17 @@ object MainForm: TMainForm
           Caption = '-'
           OnClick = MMFilterApplyN1Click
         end
+      end
+    end
+    object MMFont: TMenuItem
+      Caption = 'Grid Font'
+      object ALGridFont11: TMenuItem
+        Action = ALGridFont1
+        Caption = 'Normal'
+      end
+      object ALGridFont21: TMenuItem
+        Action = ALGridFont2
+        Caption = 'Small'
       end
     end
     object About1: TMenuItem

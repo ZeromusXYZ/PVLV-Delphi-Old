@@ -7,7 +7,8 @@ uses
   packetparser in 'Source\packetparser.pas',
   datalookups in 'Source\datalookups.pas',
   searchdialog in 'Source\searchdialog.pas' {DlgSearch},
-  filterdialog in 'Source\filterdialog.pas' {DlgFilter};
+  filterdialog in 'Source\filterdialog.pas' {DlgFilter},
+  loadingform in 'Source\loadingform.pas' {FormLoading};
 
 {$R *.res}
 
@@ -17,5 +18,6 @@ begin
   Application.CreateForm(TMainForm, MainForm);
   Application.CreateForm(TDlgSearch, DlgSearch);
   Application.CreateForm(TDlgFilter, DlgFilter);
+  Application.CreateForm(TFormLoading, FormLoading);
   Application.Run;
 end.
