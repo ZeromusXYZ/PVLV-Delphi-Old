@@ -112,6 +112,18 @@ description: 2 byte music number and track name (uses music.txt)
 typename: weather
 description: 2 byte number and weather name (uses weather.txt)
 
+typename: bitflaglist
+description: checks X amount of bits if they are set. Displays a line for every bit
+  that is set (with it's bit number). And uses a lookup file to add a name if known.
+  sub-offset must be set to the amount of BITS you want to check (e.g. 1024 for the spells list)
+  the description for this type is used as the lookup name
+  example:
+  bitflaglist;$04:1024;Magic List;spells
+              ^    ^    ^          ^-- base name of lookup, this would be spells.txt
+              |    |    +-- Label prefix to show
+              |    +-- number of BITS to expect (note ":" in front of this, not a ";" )
+              +-- Starting BYTE
+
 typename: packet-in-0x028
 description: Shows info about incomming packet 0x028 (has no color coding)
   it needs a special handler because of the way the packet has variable size

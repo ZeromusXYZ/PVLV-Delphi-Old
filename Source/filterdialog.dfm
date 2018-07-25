@@ -111,8 +111,6 @@ object DlgFilter: TDlgFilter
       ItemHeight = 13
       MultiSelect = True
       TabOrder = 4
-      ExplicitWidth = 169
-      ExplicitHeight = 174
     end
     object CBOut: TComboBox
       Left = 16
@@ -121,7 +119,6 @@ object DlgFilter: TDlgFilter
       Height = 21
       Anchors = [akLeft, akBottom]
       TabOrder = 5
-      ExplicitTop = 319
     end
     object BtnOutAdd: TButton
       Left = 167

@@ -92,7 +92,7 @@ begin
       Exit ;
     End;
 
-    LBIn.Items.Add(VS+' - '+PacketInNames.GetVal(V));
+    LBIn.Items.Add(VS+' - '+NLU(LU_PacketIn).GetVal(V));
   End Else
   Begin
     ShowMessage('Not a valid number');
@@ -135,7 +135,7 @@ begin
       Exit ;
     End;
 
-    LBOut.Items.Add(VS+' - '+PacketOutNames.GetVal(V));
+    LBOut.Items.Add(VS+' - '+NLU(LU_PacketOut).GetVal(V));
   End Else
   Begin
     ShowMessage('Not a valid number');
@@ -160,12 +160,12 @@ begin
   FilterSaveDialog.InitialDir := ExtractFilePath(Application.ExeName)+'filters\' ;
 
   CBOut.Clear ;
-  For I := 0 To PacketOutNames.Count-1 Do
-    CBOut.Items.Add('0x'+IntToHex(PacketOutNames.GetItem(I).ID,3)+' '+PacketOutNames.GetItem(I).Val);
+  For I := 0 To NLU(LU_PacketOut).Count-1 Do
+    CBOut.Items.Add('0x'+IntToHex(NLU(LU_PacketOut).GetItem(I).ID,3)+' '+NLU(LU_PacketOut).GetItem(I).Val);
 
   CBIn.Clear ;
-  For I := 0 To PacketInNames.Count-1 Do
-    CBIn.Items.Add('0x'+IntToHex(PacketInNames.GetItem(I).ID,3)+' '+PacketInNames.GetItem(I).Val);
+  For I := 0 To NLU(LU_PacketIn).Count-1 Do
+    CBIn.Items.Add('0x'+IntToHex(NLU(LU_PacketIn).GetItem(I).ID,3)+' '+NLU(LU_PacketIn).GetItem(I).Val);
   ClearFilters ;
 end;
 
@@ -185,10 +185,10 @@ Begin
   RBInNone.Checked := (PL.FilterInType = ftAllowNone);
 
   For I := 0 To Length(PL.FilterOutList)-1 Do
-    LBOut.Items.Add('0x' + IntToHex(PL.FilterOutList[I],3) +' - '+PacketOutNames.GetVal(PL.FilterOutList[I]));
+    LBOut.Items.Add('0x' + IntToHex(PL.FilterOutList[I],3) +' - '+NLU(LU_PacketOut).GetVal(PL.FilterOutList[I]));
 
   For I := 0 To Length(PL.FilterInList)-1 Do
-    LBIn.Items.Add('0x' + IntToHex(PL.FilterInList[I],3) +' - '+PacketInNames.GetVal(PL.FilterInList[I]));
+    LBIn.Items.Add('0x' + IntToHex(PL.FilterInList[I],3) +' - '+NLU(LU_PacketIn).GetVal(PL.FilterInList[I]));
 
 End;
 
@@ -227,12 +227,12 @@ Begin
       If (Key = 'out') Then
       Begin
         If TryStrToInt(Val,V) Then
-          LBOut.Items.Add('0x'+IntToHex(V,3) +' - '+PacketOutNames.GetVal(V));
+          LBOut.Items.Add('0x'+IntToHex(V,3) +' - '+NLU(LU_PacketOut).GetVal(V));
       End;
       If (Key = 'in') Then
       Begin
         If TryStrToInt(Val,V) Then
-          LBIn.Items.Add('0x'+IntToHex(V,3) +' - '+PacketInNames.GetVal(V));
+          LBIn.Items.Add('0x'+IntToHex(V,3) +' - '+NLU(LU_PacketIn).GetVal(V));
       End;
 
     End;
@@ -267,7 +267,7 @@ Begin
 
       If TryStrToInt(S,V) Then
       Begin
-        SL.Add('out;0x'+IntToHex(V,3)+';'+PacketOutNames.GetVal(V));
+        SL.Add('out;0x'+IntToHex(V,3)+';'+NLU(LU_PacketOut).GetVal(V));
       End;
     End;
 
@@ -284,7 +284,7 @@ Begin
 
       If TryStrToInt(S,V) Then
       Begin
-        SL.Add('in;0x'+IntToHex(V,3)+';'+PacketInNames.GetVal(V));
+        SL.Add('in;0x'+IntToHex(V,3)+';'+NLU(LU_PacketIn).GetVal(V));
       End;
     End;
 

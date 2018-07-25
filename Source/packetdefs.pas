@@ -215,11 +215,11 @@ Begin
   R := '' ;
   If PacketLogType = pltOut Then
   Begin
-    R := PacketOutNames.GetVal(PacketID);
+    R := NLU(LU_PacketOut).GetVal(PacketID);
   End;
   If PacketLogType = pltIn Then
   Begin
-    R := PacketInNames.GetVal(PacketID);
+    R := NLU(LU_PacketIn).GetVal(PacketID);
   End;
   If R = '' Then R := '??? unknown' ;
   Result := R ;
@@ -227,14 +227,14 @@ End;
 
 Function EquipmentSlotName(SlotID:Byte):String;
 Begin
-  Result := EquipmentSlots.GetVal(SlotID);
+  Result := NLU(LU_EquipmentSlots).GetVal(SlotID);
   If (Result = '') Then
     Result := 'SLOT_0x'+IntToHex(SlotID,2);
 End;
 
 Function ContainerName(ContainerID:Byte):String;
 Begin
-  Result := ContainerNames.GetVal(ContainerID);
+  Result := NLU(LU_Container).GetVal(ContainerID);
   If (Result = '') Then
     Result := 'LOC_0x'+IntToHex(ContainerID,2);
 End;
@@ -557,7 +557,7 @@ Begin
       Case BitShiftCount Of
         0 : JobName := 'SubJob' ;
       Else
-        JobName := JobNames.GetVal(BitShiftCount);
+        JobName := NLU(LU_Job).GetVal(BitShiftCount);
         If (JobName = '') Then JobName := '[Bit'+IntToStr(BitShiftCount)+']';
       End;
       Result := Result + JobName + ' ' ;

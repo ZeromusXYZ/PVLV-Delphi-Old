@@ -343,7 +343,7 @@ VAR
   FN : String ;
   SL, Line : TStringList ;
   LastPos, DataSize, P : Integer ;
-  I, N, C, LOffset , LSubOffset, SwitchVal, LSizeOffset : Integer ;
+  I, N, C, FoundCount, LOffset , LSubOffset, SwitchVal, LSizeOffset : Integer ;
   LType, LOffsetStr, LSubOffsetStr, LRangeOffsetStr, LName, LDescription : String ;
   S, CurrentBlock : String ;
   AllowAutoSwitchBlock : Boolean ;
@@ -660,7 +660,7 @@ Begin
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
           // Inventory Bag
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + Zones.GetVal(PD.GetWordAtPos(LOffset)),2);
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + NLU(LU_Zones).GetVal(PD.GetWordAtPos(LOffset)),2);
 
         End Else
 
@@ -670,7 +670,7 @@ Begin
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,1,DataCol(ColIndex));
           // Job
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetByteAtPos(LOffset)) + ' => ' + JobNames.GetVal(PD.GetByteAtPos(LOffset)),1);
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetByteAtPos(LOffset)) + ' => ' + NLU(LU_Job).GetVal(PD.GetByteAtPos(LOffset)),1);
 
         End Else
 
@@ -710,7 +710,7 @@ Begin
             If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,4,DataCol(ColIndex));
 
             AddSGRow(SG,N,LName + ' #'+IntToStr(C),
-              'ID: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ '  ' + MeritNames.GetVal(PD.GetWordAtPos(N)) + ' - ' +
+              'ID: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ '  ' + NLU(LU_Merit).GetVal(PD.GetWordAtPos(N)) + ' - ' +
               'Next Cost: '+IntToStr(PD.GetByteAtPos(N+2)) + ' - ' +
               'Value: '+IntToStr(PD.GetByteAtPos(N+3)) ,4);
 
@@ -718,6 +718,74 @@ Begin
             If (N >= LastPos) Then LastPos := N ;
           End;
         End Else
+
+        If (LType = 'jobpointentries') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset ;
+
+          N := LOffset ;
+          C := 0 ;
+
+          While (N < PD.RawSize-4) Do
+          Begin
+            C := C + 1 ;
+
+            ColIndex := ColIndex + 1 ;
+            If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset+C-1,4,DataCol(ColIndex));
+
+            AddSGRow(SG,N,LName + ' #'+IntToStr(C),
+              'ID: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ '  ' + NLU(LU_JobPoint).GetVal(PD.GetWordAtPos(N)) + ' - ' +
+              'Level: '+IntToStr(PD.GetBitsAtPos(N+3,2)) + ' - ' +
+              '???: '+IntToStr(PD.GetBitsAtPos(N+2,10)) ,1);
+
+            N := N + 4 ;
+            If (N >= LastPos) Then LastPos := N ;
+          End;
+        End Else
+
+        If (LType = 'bitflaglist') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset ;
+
+          // Subvalue amount of bits to use, default to 64, just because
+          If LSubOffset <= 0 Then LSubOffset := 64 ;
+
+          // Description will be the lookup filename for every field
+
+          N := LOffset ;
+          C := -1 ;
+
+          FoundCount := 0 ;
+          While (N < PD.RawSize) and (C < LSubOffset) Do
+          Begin
+            C := C + 1 ;
+
+
+            If PD.GetBitsAtPos(LOffset+(C div 8),C mod 8,1) > 0 Then
+            Begin
+              FoundCount := FoundCount + 1 ;
+
+              ColIndex := ColIndex + 1 ;
+              If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,N,1,DataCol(ColIndex));
+
+              If NLU(LDescription).GetVal(C) <> '' Then
+                AddSGRow(SG,N,LName + ' 0x'+IntToHex(C,4),'Name: ' + NLU(LDescription).GetVal(C) ,1)
+              Else
+                AddSGRow(SG,N,LName + ' 0x'+IntToHex(C,4),'???',1);
+            End;
+
+            If (C mod 8) = 7 Then N := N + 1 ;
+            If (N >= LastPos) Then LastPos := N ;
+          End;
+          If FoundCount <= 0 Then
+          Begin
+            ColIndex := ColIndex + 1 ;
+            If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,LSubOffset div 8,DataCol(ColIndex));
+
+            AddSGRow(SG,LOffset,LName,'No bits set',LSubOffset div 8);
+          End;
+        End Else
+
 
         If (LType = 'shopitems') Then
         Begin
@@ -736,7 +804,7 @@ Begin
             AddSGRow(SG,N,LName,
               '#'+IntToStr(C)+ ': ' +
               'Slot?: 0x'+IntToHex(PD.GetWordAtPos(N+6),4)+ ' - ' +
-              ItemNames.GetVal(PD.GetWordAtPos(N+4)) +
+              NLU(LU_Item).GetVal(PD.GetWordAtPos(N+4)) +
               ' => Gil: '+IntToStr(PD.GetUInt32AtPos(N)) +
               ' Skill: 0x'+IntToHex(PD.GetWordAtPos(N+8),4)+
               ' Rank: 0x'+IntToHex(PD.GetWordAtPos(N+$A),4) ,14);
@@ -760,7 +828,7 @@ Begin
             AddSGRow(SG,N,LName,
               '#'+IntToStr(C+1)+ ': ' +
               'Item: 0x'+IntToHex(PD.GetWordAtPos(N),4)+ ' - ' +
-              ItemNames.GetVal(PD.GetWordAtPos(N)) +
+              NLU(LU_Item).GetVal(PD.GetWordAtPos(N)) +
               ' => Price: '+IntToStr(PD.GetUInt32AtPos(N+4)) +
               ' - Stock: '+IntToStr(PD.GetByteAtPos(N+2)) + ' / ' + IntToStr(PD.GetWordAtPos(N+3)) ,8);
 
@@ -773,7 +841,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + ItemNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Item).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-head') Then
@@ -781,7 +849,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-body') Then
@@ -789,7 +857,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-hands') Then
@@ -797,7 +865,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-legs') Then
@@ -805,7 +873,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-feet') Then
@@ -813,7 +881,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-main') Then
@@ -821,7 +889,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'item-sub') Then
@@ -829,7 +897,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If ((LType = 'item-ranged') or (LType = 'item-range')) Then
@@ -837,7 +905,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' + ItemModelNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' + NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If ((LType = 'music') or (LType = 'bgm')) Then
@@ -845,7 +913,7 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + MusicNames.GetVal(PD.GetWordAtPos(LOffset)) ,2);
+          AddSGRow(SG,LOffset,LName,'0x' + IntToHex(PD.GetWordAtPos(LOffset),4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Music).GetVal(PD.GetWordAtPos(LOffset)) ,2);
         End Else
 
         If (LType = 'weather') Then
@@ -854,7 +922,7 @@ Begin
           ColIndex := ColIndex + 1 ;
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,2,DataCol(ColIndex));
           // Weather
-          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + WeatherNames.GetVal(PD.GetWordAtPos(LOffset)),2);
+          AddSGRow(SG,LOffset,LName,IntToStr(PD.GetWordAtPos(LOffset)) + ' => ' + NLU(LU_Weather).GetVal(PD.GetWordAtPos(LOffset)),2);
 
         End Else
 

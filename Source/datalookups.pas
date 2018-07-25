@@ -4,6 +4,26 @@ interface
 
 Uses System.Classes ;
 
+CONST
+  LU_PacketOut = 'out' ;
+  LU_PacketIn = 'in' ;
+  LU_Zones = 'zones' ;
+  LU_EquipmentSlots = 'equipslot' ;
+  LU_Container = 'containers' ;
+  LU_Item = 'items' ;
+  LU_ItemModel = 'itemmodels' ;
+  LU_Music = 'music';
+  LU_Job = 'jobs' ;
+  LU_Weather = 'weather' ;
+  LU_Merit = 'merits' ;
+  LU_JobPoint = 'jobpoints' ;
+  LU_Spell = 'spells' ;
+  LU_WeaponSkill = 'weaponskill' ;
+  LU_Ability = 'ability' ;
+  LU_PetCommand = 'petcommand' ;
+  LU_Trait = 'trait' ;
+  LU_Mounts = 'mounts' ;
+
 TYPE
   TDataLookupEntry = Class
     ID : Int64 ;
@@ -24,6 +44,10 @@ TYPE
     Function GetItem(Index : Integer):TDataLookupEntry;
   End;
 
+// Name LookUp function
+Function NLU(Source:String):TDataLookup ;
+
+{
 VAR
   Zones : TDataLookup ;
   PacketOutNames  : TDataLookup ;
@@ -36,10 +60,40 @@ VAR
   JobNames : TDataLookup ;
   WeatherNames : TDataLookup ;
   MeritNames : TDataLookup ;
+  JobPointNames : TDataLookup ;
+  SpellNames : TDataLookup ;
+}
 
 implementation
 
 uses Vcl.Forms, System.SysUtils ;
+
+TYPE
+  TDataLookupPair = Class
+  Public
+    Source : String ;
+    DL : TDataLookup ;
+  End;
+
+VAR
+  LookupList : Array of TDataLookupPair ;
+  NullLookup : TDataLookup ;
+
+Function NLU(Source:String):TDataLookup ;
+VAR
+  I : Integer ;
+  S : String ;
+Begin
+  S := LowerCase(Source);
+  For I := 0 to Length(LookupList)-1 Do
+  If LookupList[I].Source = S Then
+  Begin
+    Result := LookupList[I].DL ;
+    Exit ;
+  End;
+  Result := NullLookup ;
+End;
+
 
 procedure Split(Delimiter: Char; Str: string; ListOfStrings: TStrings) ;
 begin
@@ -54,7 +108,8 @@ Constructor TDataLookup.Create(FN : String);
 Begin
   Inherited Create ;
   fList := TList.Create();
-  LoadFromFile(ExtractFilePath(Application.ExeName) + FN);
+  If (FN <> '') Then
+    LoadFromFile({ExtractFilePath(Application.ExeName) + }FN);
 End;
 
 Destructor TDataLookup.Destroy ;
@@ -133,9 +188,37 @@ Begin
   Result := TDataLookupEntry(fList.Items[Index]);
 End;
 
+Procedure LoadLookups ;
+VAR
+  DI : TSearchRec ;
+  Res : Integer ;
+  LUP : TDataLookupPair ;
+  FP : String ;
+  C : Integer ;
+Begin
+  FP := ExtractFilePath(Application.ExeName) + 'lookup\' ;
+  Res := FindFirst(FP + '*.txt',faAnyFile,DI);
+  While Res = 0 Do
+  Begin
+    LUP := TDataLookupPair.Create ;
+    LUP.Source := LowerCase(ChangeFileExt(DI.Name,''));
+    LUP.DL := TDataLookup.Create(FP+DI.Name);
+
+    C := LUP.DL.Count ;
+
+    SetLength(LookupList,Length(LookupList)+1);
+    LookupList[Length(LookupList)-1] := LUP ;
+
+    Res := FindNext(DI);
+  End;
+  FindClose(DI);
+End;
 
 Initialization
 
+NullLookup := TDataLookup.Create('');
+LoadLookups();
+{
 Zones := TDataLookup.Create('lookup\zones.txt');
 PacketOutNames := TDataLookup.Create('lookup\out.txt');
 PacketInNames := TDataLookup.Create('lookup\in.txt');
@@ -147,9 +230,14 @@ MusicNames := TDataLookup.Create('lookup\music.txt'); ;
 JobNames := TDataLookup.Create('lookup\jobs.txt'); ;
 WeatherNames := TDataLookup.Create('lookup\weather.txt'); ;
 MeritNames := TDataLookup.Create('lookup\merits.txt'); ;
+JobPointNames := TDataLookup.Create('lookup\jobpoints.txt');
+SpellNames := TDataLookup.Create('lookup\spells.txt');
+}
 
 Finalization
 
+FreeAndNil(NullLookup);
+{
 FreeAndnil(Zones);
 FreeAndnil(PacketOutNames);
 FreeAndnil(PacketInNames);
@@ -161,5 +249,8 @@ FreeAndNil(MusicNames);
 FreeAndNil(JobNames);
 FreeAndNil(WeatherNames);
 FreeAndNil(MeritNames);
+FreeAndNil(JobPointNames);
+FreeAndNil(SpellNames);
+}
 
 end.
