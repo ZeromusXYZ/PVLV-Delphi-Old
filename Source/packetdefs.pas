@@ -49,7 +49,7 @@ TYPE
     Function GetDataAtPos(Pos,Size:Integer):String;
     Function GetIP4AtPos(Pos:Integer):String;
     Function GetJobflagsAtPos(Pos:Integer):String;
-    Procedure CompileData ;
+    Function CompileData:Boolean;
     Function FindByte(AByte : Byte):Integer;
     Function FindUInt16(AUInt16 : Word):Integer;
     Function FindUInt32(AUInt32 : LongWord):Integer;
@@ -664,11 +664,12 @@ End;
 
 
 
-Procedure TPacketData.CompileData;
+Function TPacketData.CompileData:Boolean;
 VAR
   S, TS : String ;
   P1, P2 : Integer ;
 begin
+  Result := False ;
   If Length(fRawBytes) < 4 then
   Begin
     fPacketID := $FFFF ; // invalid data
@@ -710,6 +711,7 @@ begin
   S := TS + ' : ' + S + '0x' + IntToHex(PacketID,3) + ' - ' ;
 
   fHeaderText := S + PacketTypeToString(PacketLogType,PacketID);
+  Result := True ;
 end;
 
 Function TPacketData.FindByte(AByte : Byte):Integer;
@@ -896,8 +898,10 @@ Begin
       If ((S = '') and Assigned(PD)) Then
       Begin
         // Close this packet and add it to the list
-        PD.CompileData;
-        fPacketDataList.Add(PD);
+        If PD.CompileData Then
+          fPacketDataList.Add(PD)
+        Else
+          FreeAndNil(PD); // Free it if it's invalid
         // null our reference
         PD := nil ;
       End else

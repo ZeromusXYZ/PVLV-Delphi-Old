@@ -473,6 +473,27 @@ Begin
           End;
         End Else
 
+        If ((LType = 'switchbitsblock') or (LType = 'bitsswitchblock')) Then
+        Begin
+          If (AllowAutoSwitchBlock) Then
+          Begin
+            // switchblock;checkpos:bitoffset-bitsize;checkval;blockname
+            // Compares BYTE value at checkpos, if checkval matches, activate blockname as current block
+
+            // enable auto-switching of freashly loaded blocks
+            If (TryStrToInt(LName,SwitchVal) = True) Then
+            Begin
+              // OK switchval seems valid, next compare it
+              If PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset) = SwitchVal Then
+              Begin
+                BlockName := LDescription ;
+                AllowAutoSwitchBlock := False ;
+                Continue;
+              End;
+            End;
+          End;
+        End Else
+
         If ((LType = 'byte') or (LType = 'char') or (LType = 'b') or (LType = 'unsigned char')) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;

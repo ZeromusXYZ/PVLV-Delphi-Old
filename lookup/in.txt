@@ -64,7 +64,7 @@ rem;0x04B;Logout Acknowledge;Acknowledges a logout attempt.
 0x062;Skills Update;Packet that shows your weapon and magic skill stats.
 0x063;Set Update;Frequently sent packet during battle that updates specific types of job information, like currently available/set automaton equipment and currently set BLU spells.
 0x065;Repositioning;Moves your character. Seems to be functionally idential to the Spawn packet
-0x067;Pet Info;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate.
+0x067;Entity Status;Contains various information about the entity. May trigger some animations.
 0x068;Pet Status;Updates information about whether or not you have a pet and the TP, HP, etc. of the pet if appropriate.
 0x06F;Self Synth Result;Results of an attempted synthesis process by yourself.
 0x070;Others Synth Result;Results of an attempted synthesis process by others.

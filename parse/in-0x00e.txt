@@ -7,7 +7,9 @@ bit;$0A:0;  Bit0: Pos,Rot,Walk
 bit;$0A:1;  Bit1: Claimer ID
 bit;$0A:2;  Bit2: HP, Status
 bit;$0A:3;  Bit3: Name
+bit;$0A:4;  Bit4: Look
 bit;$0A:5;  Bit5: Despawn
+bit;$0A:6;  Bit6: Name2?
 dir;$0B;Direction
 pos;$0C;Position
 uint32;$18;Walk Count;Steadily increases until rotation changes. Does not reset while the mob isn't walking. Only goes until 0xFF1F.
