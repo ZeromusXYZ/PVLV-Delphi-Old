@@ -185,7 +185,10 @@ Begin
 
   FormLoading.Show ;
   FormLoading.BringToFront ;
-  FormLoading.Caption := 'Populating ListBox, please wait ...' ;
+  If (Random(100) >= 95) Then
+    FormLoading.Caption := 'Sacrificing Taru-Taru''s, please wait ...'
+  Else
+    FormLoading.Caption := 'Populating ListBox, please wait ...' ;
 
   For I := 0 to PL.Count-1 Do
   Begin
@@ -431,6 +434,7 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  Randomize;
   PLLoaded := TPacketList.Create(True); // NOTE: PLLoaded actually owns all TPacketData
   PL := TPacketList.Create(False); // NOTE: PL just copies reference of TPacketData as needed by the filter
   LBPackets.Clear ;
@@ -581,6 +585,7 @@ VAR
   I : Integer ;
 Begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
+  If Not Assigned(PD) Then Exit ;
   CurrentSync := PD.PacketSync ;
   LInfo.Caption := PD.OriginalHeader ;
   // MInfo.Text := PD.RawText.Text ;

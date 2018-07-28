@@ -180,7 +180,9 @@ object MainForm: TMainForm
   end
   object OpenDialogLogFiles: TOpenDialog
     DefaultExt = '*.log'
-    Filter = 'Log Files|*.log|All Files|*.*'
+    Filter = 
+      'Log files|*.log;*.txt|Packet Viewer Log Files|*.log|Packeteer Lo' +
+      'g Files|*.txt|All Files|*.*'
     Options = [ofReadOnly, ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Open Log file'
     Left = 48

@@ -34,6 +34,7 @@ TYPE
     Constructor Create ;
     Destructor Destroy ; Override ;
     Function AddRawLineAsBytes(S : String):Integer;
+    Function AddRawPacketeerLineAsBytes(S : String):Integer;
     Function PrintRawBytesAsHex() : String ;
     Function GetByteAtPos(Pos:Integer):Byte;
     Function GetBitAtPos(Pos,BitOffset:Integer):Boolean;
@@ -395,6 +396,45 @@ Begin
   Result := C ;
 End;
 
+Function TPacketData.AddRawPacketeerLineAsBytes(S : String):Integer;
+VAR
+  H : String ;
+  I, C , TryInt : Integer ;
+  B : Byte ;
+Begin
+  Result := 0 ;
+  C := 0 ;
+
+  //          1         2         3         4         5         6         7         8         9
+  // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+  // [C->S] Id: 001A | Size: 28
+  //     1A 0E ED 24 D5 10 10 01 D5 00 00 00 00 00 00 00  ..í$Õ...Õ.......
+
+  If Length(S) < 51 Then
+  Begin
+    // Doesn't look like the correct format
+    Exit ;
+  End;
+  For I := 0 to $f Do
+  Begin
+    H := Copy(S,5 + (I*3),2);
+    If (H <> '--')and(H <> '  ')and(H <> ' ') Then
+    Begin
+      // If this fails, we're probably at the end of the packet
+      // Unlike windower, Packeteer doesn't add dashes for the blanks
+      If Not TryStrToInt('$'+H,TryInt) Then Break ;
+      B := TryInt ;
+      // B := StrToInt('$'+H);
+      SetLength(fRawBytes,Length(fRawBytes)+1);
+      fRawBytes[Length(fRawBytes)-1] := B ;
+      C := C + 1 ;
+    End;
+  End;
+
+  Result := C ;
+End;
+
+
 Function TPacketData.PrintRawBytesAsHex() : String ;
 CONST
   ValuesPerRow = 16 ;
@@ -681,26 +721,38 @@ begin
   fPacketDataSize := (fRawBytes[$1] AND $FE) * 2; // basically, all packets are always multiples of 4 bytes
   fPacketSync := fRawBytes[$2] + (fRawBytes[$3] * $100); // packet order number
 
-  // Try to determine timestamp from header
-  fOriginalTimeString := '' ;
-  P1 := Pos('[',fOriginalHeaderText);
-  P2 := Pos(']',fOriginalHeaderText);
-  If (P1 > 0) and (P2 > 0) and (P2 > P1) Then
+
+
+  If (Pos('[c->s]',LowerCase(fOriginalTimeString))>0) or (Pos('[s->c]',LowerCase(fOriginalTimeString))>0) Then
   Begin
-    fOriginalTimeString := Copy(fOriginalHeaderText,P1+1,P2-P1-1);
-    If (Length(fOriginalTimeString) > 0) Then
-    Try
-      fTimeStamp := VarToDateTime(fOriginalTimeString); // <-- seems to work better than anything I'd like to try
-      // fTimeStamp := StrToDateTime(fOriginalTimeString);
-      DateTimeToString(TS,'hh:nn:ss',TimeStamp);
-    Except
-      TS := '' ;
-      fTimeStamp := 0 ;
-      fOriginalTimeString := '0000-00-00 00:00' ;
+    // Packeteer doesn't have time info (yet)
+    TS := '' ;
+    fTimeStamp := 0 ;
+    fOriginalTimeString := '0000-00-00 00:00' ;
+  End Else
+  Begin
+    // Try to determine timestamp from header
+    fOriginalTimeString := '' ;
+    P1 := Pos('[',fOriginalHeaderText);
+    P2 := Pos(']',fOriginalHeaderText);
+    If (P1 > 0) and (P2 > 0) and (P2 > P1) Then
+    Begin
+      fOriginalTimeString := Copy(fOriginalHeaderText,P1+1,P2-P1-1);
+      If (Length(fOriginalTimeString) > 0) Then
+      Try
+        fTimeStamp := VarToDateTime(fOriginalTimeString); // <-- seems to work better than anything I'd like to try
+        // fTimeStamp := StrToDateTime(fOriginalTimeString);
+        DateTimeToString(TS,'hh:nn:ss',TimeStamp);
+      Except
+        TS := '' ;
+        fTimeStamp := 0 ;
+        fOriginalTimeString := '0000-00-00 00:00' ;
+      End;
     End;
   End;
 
-  If (fTimeStamp = 0) Then TS := '??:??:??' ;
+  If (fTimeStamp = 0) Then TS := '' ;
+//  If (fTimeStamp = 0) Then TS := '??:??:??' ;
 
   Case PacketLogType Of
     1 : S := 'OUT ' ;
@@ -805,13 +857,17 @@ VAR
   PreferedPacketType : Byte ;
   StartTime : TDateTime ;
   IsUndefined, AskForType  : Boolean ;
+  LogFileType : Byte ; // 0 unknown ; 1 Windower PacketViewer ; 2 Ashita Packeteer
 Begin
   StartTime := Now ;
 
   IsUndefined := True ;
   AskForType := True ;
   PreferedPacketType := 0 ;
+  LogFileType := 0 ;
   Try
+    if (LowerCase(ExtractFileExt(FileName)) = '.log') Then LogFileType := 1 ;
+    if (LowerCase(ExtractFileExt(FileName)) = '.txt') Then LogFileType := 2 ;
 
     if (Pos('outgoing',LowerCase(Filename)) > 0) Then
     Begin
@@ -852,17 +908,38 @@ Begin
         Begin
           PD.fPacketLogType := pltOut ;
           IsUndefined := False ;
+          LogFileType := 1 ; // Looks like a packetviewer log
         End Else
         if (Pos('incoming',LowerCase(S)) > 0) Then
         Begin
           PD.fPacketLogType := pltIn ;
           IsUndefined := False ;
+          LogFileType := 1 ; // Looks like a packetviewer log
+        End else
+        if (Pos('[c->s]',LowerCase(S)) > 0) Then
+        Begin
+          PD.fPacketLogType := pltOut ;
+          IsUndefined := False ;
+          AskForType := False ;
+          LogFileType := 2 ; // This is a Packeteer file for sure
+        End Else
+        if (Pos('[s->c]',LowerCase(S)) > 0) Then
+        Begin
+          PD.fPacketLogType := pltIn ;
+          IsUndefined := False ;
+          AskForType := False ;
+          LogFileType := 2 ; // This is a Packeteer file for sure
         End else
         Begin
           PD.fPacketLogType := PreferedPacketType ;
         End;
 
-        If (IsUndefined and AskForType and (PD.fPacketLogType = 0)) Then
+        If (
+          (Copy(S,1,2) <> '--') and // Ignore comment lines
+          (S <> '')) and // Ignore blank lines
+          (IsUndefined and AskForType and (PD.fPacketLogType = 0) and // Only if we didn't define yet
+          (LogFileType <> 2) // And not using packeteer files
+          ) Then
         Begin
           AskForType := False ;
           Case MessageDlg( 'Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined',mtConfirmation,[mbYes,mbOK,mbCancel],-1) Of
@@ -885,16 +962,28 @@ Begin
         PD.fOriginalHeaderText := S ;
 
       End else
-      If ((S <> '') and Assigned(PD)) Then
+      If ((S <> '') and Assigned(PD) and (LogFileType <> 2)) Then
       Begin
         // Add line of data
         PD.fRawText.Add(S);
-        If (PD.fRawText.Count > 3) Then // Actual packet data starts at the 3rd line
+        If (PD.fRawText.Count > 3) Then // Actual packet data starts at the 3rd line after the header
         Begin
           PD.AddRawLineAsBytes(S);
 
         End;
       End else
+
+      If ((S <> '') and Assigned(PD) and (LogFileType = 2)) Then
+      Begin
+        // Add line of data
+        PD.fRawText.Add(S);
+        If (PD.fRawText.Count > 1) Then // Actual packet data starts at the 1st line after the header
+        Begin
+          PD.AddRawPacketeerLineAsBytes(S);
+
+        End;
+      End else
+
       If ((S = '') and Assigned(PD)) Then
       Begin
         // Close this packet and add it to the list
@@ -908,6 +997,10 @@ Begin
       If ((S = '') and (Not Assigned(PD)) ) Then
       Begin
         // Blank line, do nothing
+      End else
+      If ((Copy(S,1,2) = '--') and (Not Assigned(PD)) ) Then
+      Begin
+        // comment-line, do nothing (for packateer)
       End else
       begin
         // ERROR, unexpected entry, but let's just ignore it
