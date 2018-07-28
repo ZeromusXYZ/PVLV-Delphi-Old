@@ -20,9 +20,11 @@ CONST
   LU_Spell = 'spells' ;
   LU_WeaponSkill = 'weaponskill' ;
   LU_Ability = 'ability' ;
+  LU_ARecast = 'abilityrecast' ;
   LU_PetCommand = 'petcommand' ;
   LU_Trait = 'trait' ;
   LU_Mounts = 'mounts' ;
+  LU_RoE = 'roe' ;
 
 TYPE
   TDataLookupEntry = Class
@@ -39,6 +41,7 @@ TYPE
     Destructor Destroy ; Override ;
     Procedure LoadFromFile(FN : String);
     Function GetVal(ID : Int64):String;
+    Function GetExtra(ID : Int64):String;
     Procedure AddEntry(ID : Int64 ; Val , Extra : String);
     Function Count : Integer ;
     Function GetItem(Index : Integer):TDataLookupEntry;
@@ -164,6 +167,18 @@ Begin
   If TDataLookupEntry(fList.Items[I]).ID = ID Then
   Begin
     Result := TDataLookupEntry(fList.Items[I]).Val ;
+  End;
+End;
+
+Function TDataLookup.GetExtra(ID : Int64):String;
+VAR
+  I : Integer ;
+Begin
+  Result := '' ;
+  For I := 0 To fList.Count-1 Do
+  If TDataLookupEntry(fList.Items[I]).ID = ID Then
+  Begin
+    Result := TDataLookupEntry(fList.Items[I]).Extra ;
   End;
 End;
 

@@ -1,4 +1,4 @@
-file;out-0x00a;Client Connect;(unencrypted/uncompressed) First packet sent when connecting to new zone.
+file;in-0x00a;Client Connect;(unencrypted/uncompressed) First packet sent when connecting to new zone.
 
 uint32;$4;Player ID
 uint16;$8;Player Index

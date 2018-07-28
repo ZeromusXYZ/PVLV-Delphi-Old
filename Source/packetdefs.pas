@@ -100,7 +100,7 @@ Function ToBitStr(var V):String;
 
 implementation
 
-Uses System.SysUtils, DateUtils , System.Variants, datalookups;
+Uses System.SysUtils, DateUtils , System.Variants, datalookups, Vcl.Dialogs, System.UITypes  ;
 
 CONST
   CompasDirectionNames : Array[0..15] of String = ('E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N', 'NNE', 'NE', 'ENE');
@@ -229,14 +229,18 @@ Function EquipmentSlotName(SlotID:Byte):String;
 Begin
   Result := NLU(LU_EquipmentSlots).GetVal(SlotID);
   If (Result = '') Then
-    Result := 'SLOT_0x'+IntToHex(SlotID,2);
+    Result := 'SLOT_0x'+IntToHex(SlotID,2)
+  Else
+    Result := '0x'+IntToHex(SlotID,2)+' => ' + Result ;
 End;
 
 Function ContainerName(ContainerID:Byte):String;
 Begin
   Result := NLU(LU_Container).GetVal(ContainerID);
   If (Result = '') Then
-    Result := 'LOC_0x'+IntToHex(ContainerID,2);
+    Result := 'LOC_0x'+IntToHex(ContainerID,2)
+  Else
+    Result := '0x'+IntToHex(ContainerID,2)+' => ' + Result ;
 End;
 
 Function ByteToBit(B : Byte):String;
@@ -265,7 +269,7 @@ Begin
     6 : Result := 'Lightsday' ;
     7 : Result := 'Darksday' ;
   Else
-    Result := '???' ;
+    Result := '???_0x'+IntToHex(DoW,2);
   End;
 End;
 
@@ -798,19 +802,24 @@ VAR
   S : String ;
   PreferedPacketType : Byte ;
   StartTime : TDateTime ;
+  IsUndefined, AskForType  : Boolean ;
 Begin
   StartTime := Now ;
 
+  IsUndefined := True ;
+  AskForType := True ;
   PreferedPacketType := 0 ;
   Try
 
     if (Pos('outgoing',LowerCase(Filename)) > 0) Then
     Begin
       PreferedPacketType := 1 ;
+      IsUndefined := False ;
     End Else
     if (Pos('incoming',LowerCase(Filename)) > 0) Then
     Begin
       PreferedPacketType := 2 ;
+      IsUndefined := False ;
     End;
 
     FileData := TStringList.Create ;
@@ -840,14 +849,35 @@ Begin
         if (Pos('outgoing',LowerCase(S)) > 0) Then
         Begin
           PD.fPacketLogType := pltOut ;
+          IsUndefined := False ;
         End Else
         if (Pos('incoming',LowerCase(S)) > 0) Then
         Begin
           PD.fPacketLogType := pltIn ;
+          IsUndefined := False ;
         End else
         Begin
           PD.fPacketLogType := PreferedPacketType ;
         End;
+
+        If (IsUndefined and AskForType and (PD.fPacketLogType = 0)) Then
+        Begin
+          AskForType := False ;
+          Case MessageDlg( 'Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined',mtConfirmation,[mbYes,mbOK,mbCancel],-1) Of
+            mrOK : Begin
+                PreferedPacketType := pltIn ;
+                IsUndefined := False ;
+                PD.fPacketLogType := PreferedPacketType ;
+              End;
+            mrYes : Begin
+                PreferedPacketType := pltOut ;
+                IsUndefined := False ;
+                PD.fPacketLogType := PreferedPacketType ;
+              End;
+          End;
+        End;
+
+
         PD.fRawText.Add(S);
         PD.fHeaderText := S ;
         PD.fOriginalHeaderText := S ;

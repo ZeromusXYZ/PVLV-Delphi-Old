@@ -1,0 +1,15 @@
+file;in-0x0E2;Char Info;Sends name, HP, HP%, etc
+
+uint32;$04;ID
+uint32;$08;HP
+uint32;$0C;MP
+uint32;$10;TP
+uint32;$14;Unknown?
+uint16;$18;Index
+data3;$1A;Unknown?
+byte;$1D;HP%
+byte;$1E;MP%
+byte;$1F;Unknown?
+byte;$20;Unknown?
+byte;$21;Unknown?
+string;$22;Name

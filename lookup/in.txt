@@ -1,3 +1,4 @@
+0x008;Zones Visited;List of visited zones?
 0x009;Standard Message;A standardized message send from FFXI.
 0x00A;Zone In;Info about character and zone around it.
 0x00B;Zone Out;Packet contains IP and port of next zone to connect to.
@@ -87,28 +88,32 @@ rem;0x04B;Logout Acknowledge;Acknowledges a logout attempt.
 0x0B5;Help Desk Open;Sent when you open the Help Desk submenu.
 0x0BF;Reservation Response;Sent to inform the client about the status of entry to an instanced area.
 0x0C8;Party Struct Update;Updates all party member info in one struct. No player vital data (HP/MP/TP) or names are sent here.
-0x0C9;Show Equip;Shows another player your equipment after using the Check command.
+0x0C9;Player Check Response;Shows another player your equipment after using the Check command.
 0x0CA;Bazaar Message;Shows another players bazaar message after using the Check command or sets your own on zoning.
 0x0CC;Linkshell Message;/lsmes text and headers.
 0x0D2;Found Item;This command shows an item found on defeated mob or from a Treasure Chest.
 0x0D3;Lot/drop item;Sent when someone casts a lot on an item or when the item drops to someone.
 0x0DC;Party Invite;Party Invite packet.
 0x0DD;Party Member Update;Alliance/party member info - zone, HP%, HP% etc.
+0x0DD;Party Member Update;Alliance/party member info - zone, HP%, HP% etc.
+0x0DE;Mog House Related?;Related to opening/closing mog house ?
 0x0DF;Char Update;A packet sent from server which updates character HP, MP and TP.
 0x0E0;Linkshell Equip;Updates your linkshell menu with the current linkshell.
 0x0E1;Party Member List;Sent when you look at the party member list.
 0x0E2;Char Info;Sends name, HP, HP%, etc.
+0x0E8;Toggle Heal;Toggle Heal info ?
 0x0F4;Widescan Mob;Displays one monster.
 0x0F5;Widescan Track;Updates information when tracking a monster.
-0x0F6;Widescan Mark;Marks the start and ending of a widescan list.
+0x0F6;Widescan List Mark;Marks the start and ending of a widescan list.
 0x0F9;Reraise Activation;Reassigns targetable status on reraise activation?
 0x0FA;Furniture Interact;Confirms furniture manipulation.
-0x105;Data Download 4;The data that is sent to the client when it is "Downloading data...".
+0x105;Bazaar Item Listing;The data that is sent to the client when it is "Downloading data...".
 0x106;Bazaar Seller Info;Information on the purchase sent to the buyer when they attempt to buy something.
 0x107;Bazaar closed;Tells you when a bazaar you are currently in has closed.
-0x108;Data Download 5;The data that is sent to the client when it is "Downloading data...".
-0x109;Bazaar Purch. Info;Information on the purchase sent to the buyer when the purchase is successful.
+0x108;Bazaar visitor;The data that is sent to the client when it is "Downloading data...".
+0x109;Bazaar Purchase Info;Information on the purchase sent to the buyer when the purchase is successful.
 0x10A;Bazaar Buyer Info;Information on the purchase sent to the seller when a sale is successful.
+0x10B;Bazaar Open Packet;Packet sent when you open your bazaar
 0x110;Sparks Update;Occurs when you sparks increase and generates the related message.
 0x111;Eminence Update;Causes Records of Eminence messages.
 0x112;RoE Quest Log;Updates your RoE quest log on zone and when appropriate.

@@ -1,4 +1,4 @@
-file;out-0x00b;Zone Out;Packet contains IP and port of next zone to connect to.
+file;in-0x00b;Zone Out;Packet contains IP and port of next zone to connect to.
 
 uint32;$04;Type
 ip4;$08;IP
