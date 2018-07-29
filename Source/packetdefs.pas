@@ -94,6 +94,7 @@ Function EquipmentSlotName(SlotID:Byte):String;
 Function ContainerName(ContainerID:Byte):String;
 Function ByteToRotation(B : Byte):String;
 Function MSToStr(T : UInt32):String;
+Function FFXITimeStampToStr(T : UInt32):String;
 Function FramesToStr(T : UInt32):String;
 Function DWordToVanaTime(V : UInt32):String;
 
@@ -148,29 +149,58 @@ Begin
 
 End;
 
+Function FFXITimeStampToStr(T : UInt32):String;
+VAR
+  DT : TDateTime ;
+  Offset : TDateTime ;
+Begin
+  If T = $7FFFFFFF Then
+    Result := 'Infinite'
+  Else
+  Begin
+    Result := FramesToStr(T);
+    // CVanaTime::getInstance()->getVanaTime() + 1009810800
+
+    // Example unix 1532866711 -> 2018-07-29 12:18:31 +01:00
+    // Example game 1318151468 -> 2018-07-29 12:18:31 +01:00
+    // Difference =  214715243 ?
+
+
+    {
+    Offset := EncodeDateTime(2001,12,31,15,0,0,0);
+
+    DT := FileDateToDateTime(T + 214715243);
+    Result := DateTimeToStr(DT);
+    }
+  End;
+End;
+
 Function FramesToStr(T : UInt32):String;
 VAR
   R, V : UInt32 ;
 Begin
   R := T div 60 ;
   V := T mod 60 ;
-  Result := Format('%.2d',[V]) + 'frame';
+  Result := Format('%.2d',[V]) + 'f';
 
   If (R > 0) Then
   Begin
     V := R mod 60 ;
     R := R div 60 ;
-    Result := Format('%.2d',[V]) + 's ' + Result ;
+//    Result := Format('%.2d',[V]) + 's ' + Result ;
+    Result := Format('%.2d',[V]) + ' / ' + Result ;
     If (R > 0) Then
     Begin
       V := R mod 60 ;
       R := R div 60 ;
-      Result := Format('%.2d',[V]) + 'm ' + Result ;
+//      Result := Format('%.2d',[V]) + 'm ' + Result ;
+      Result := Format('%.2d',[V]) + '.' + Result ;
       If (R > 0) Then
       Begin
         V := R mod 24 ;
         R := R div 24 ;
-        Result := Format('%.2d',[V]) + 'h ' + Result ;
+//        Result := Format('%.2d',[V]) + 'h ' + Result ;
+        Result := Format('%.2d',[V]) + ':' + Result ;
         If (R > 0) Then
         Begin
           Result := Format('%d',[R]) + 'd ' + Result ;

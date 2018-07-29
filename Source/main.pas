@@ -65,6 +65,8 @@ type
     MMFont: TMenuItem;
     ALGridFont11: TMenuItem;
     ALGridFont21: TMenuItem;
+    PMPacketListN4: TMenuItem;
+    PMPacketListEditParser: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -98,6 +100,7 @@ type
       State: TGridDrawState);
     procedure ALGridFont1Execute(Sender: TObject);
     procedure ALGridFont2Execute(Sender: TObject);
+    procedure PMPacketListEditParserClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -655,14 +658,15 @@ Begin
     CBShowBlock.Enabled := False ;
   End;
 
+  CBShowBlock.Visible := AvailableBlocks.Count > 0;
+  LShowBlock.Visible := CBShowBlock.Visible ;
+
   For I := CBShowBlock.Items.Count-1 DownTo 0  Do
   If CBShowBlock.Items[I] = ShowBlock Then
   Begin
     CBShowBlock.ItemIndex := I ;
     Break ;
   End;
-  CBShowBlock.Visible := AvailableBlocks.Count > 0;
-  LShowBlock.Visible := CBShowBlock.Visible ;
 
   UpdateActiveRE := nil ;
 End;
@@ -754,6 +758,48 @@ begin
     End;
 
   End;
+end;
+
+procedure TMainForm.PMPacketListEditParserClick(Sender: TObject);
+VAR
+  FN , FullFileName : String ;
+  PD : TPacketData ;
+  SL : TStringList ;
+begin
+  PD := PL.GetPacket(LBPackets.ItemIndex);
+
+  If Assigned(PD) and (PD.PacketLogType <> pltUnknown) Then
+  Begin
+    FN := 'parse\' ;
+    If (PD.PacketLogType = pltIn) Then FN := FN + 'in-' ;
+    If (PD.PacketLogType = pltOut) Then FN := FN + 'out-' ;
+    FN := FN + '0x' + IntToHex(PD.PacketID,3) + '.txt' ;
+    FullFileName := ExtractFilePath(Application.ExeName) + FN ;
+
+    If Not FileExists(FullFileName) Then
+      If MessageDlg('No parser file for '+FN+#10#13'Do you want to create one ?',TMsgDlgType.mtConfirmation,[mbYes,mbNo],-1) = mrYes Then
+      Begin
+        SL := TStringList.Create ;
+        SL.Add('file;in-0x'+IntToHex(PD.PacketID,3)+';Unknown;Newly created parser.');
+        SL.Add('');
+        SL.Add('rem;Add your parser lines here');
+        Try
+          SL.SaveToFile(FullFileName);
+        Except
+          On E: Exception Do
+            ShowMessage('Error: ' + E.Message);
+        End;
+        FreeAndNil(SL);
+      End;
+
+
+    If FileExists(FullFileName) Then
+      ShellExecute(Handle, 'open',PChar(FullFileName),nil,nil, SW_SHOWNORMAL)
+    Else
+      ShowMessage('File not found to edit');
+  End;
+
+
 end;
 
 procedure TMainForm.PMPacketListHideThisClick(Sender: TObject);
@@ -886,10 +932,22 @@ begin
       PMPacketListShow.Visible := True ;
       PMPacketListShow.Caption := 'Packet 0x' + IntToHex(PD.PacketID,4);
       Case PD.PacketLogType Of
-        pltOut : PMPacketListShow.Caption := 'Outgoing 0x' + IntToHex(PD.PacketID,4);
-        pltIn  : PMPacketListShow.Caption := 'Incomming 0x' + IntToHex(PD.PacketID,4);
+        pltOut : Begin
+          PMPacketListShow.Caption := 'Outgoing 0x' + IntToHex(PD.PacketID,3);
+          PMPacketListEditParser.Caption := 'Edit  parse\out-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
+          PMPacketListEditParser.Enabled := True ;
+        End;
+        pltIn  : Begin
+          PMPacketListShow.Caption := 'Incomming 0x' + IntToHex(PD.PacketID,3);
+          PMPacketListEditParser.Caption := 'Edit  parse\in-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
+          PMPacketListEditParser.Enabled := True ;
+        End
       Else
-        PMPacketListShow.Caption := 'Unknown Packet Type 0x' + IntToHex(PD.PacketID,4);
+        Begin
+          PMPacketListShow.Caption := 'Unknown Packet Type 0x' + IntToHex(PD.PacketID,3);
+          PMPacketListEditParser.Caption := 'Edit not supported';
+          PMPacketListEditParser.Enabled := False ;
+        End;
       End;
 
       PMPacketListOnlyShow.Visible := (PD.PacketLogType = pltOut) or (PD.PacketLogType = pltIn);

@@ -97,13 +97,13 @@ object MainForm: TMainForm
         Caption = 'Info'
       end
       object LShowBlock: TLabel
-        Left = 435
+        Left = 414
         Top = 18
-        Width = 126
+        Width = 147
         Height = 15
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
-        Caption = 'view other info =>'
+        Caption = 'view as other info =>'
         Enabled = False
         Visible = False
       end
@@ -227,6 +227,13 @@ object MainForm: TMainForm
     object PMPacketListReset: TMenuItem
       Caption = 'Reset all filters'
       OnClick = PMPacketListResetClick
+    end
+    object PMPacketListN4: TMenuItem
+      Caption = '-'
+    end
+    object PMPacketListEditParser: TMenuItem
+      Caption = 'Edit parser for this packet'
+      OnClick = PMPacketListEditParserClick
     end
   end
   object AL: TActionList

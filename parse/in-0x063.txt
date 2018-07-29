@@ -2,6 +2,7 @@ file;in-0x063;Set Update;Frequently sent packet during battle that updates speci
 
 rem;$04;Seems to say what type of info this packet contains to update
 byte;$04;Update Type
+uint16;$06;Variable Data Size
 
 rem;I added some dummy blocks for values I encountered but don't know what they do yet
 switchblock;$04;$02;MeritPoints
@@ -15,7 +16,7 @@ switchblock;$04;$09;Status Effects
 
 [[MeritPoints]]
 info;$04;Update Type;Merit Points
-uint16;$06;_flag?;DSP sets this, not sure what it does
+rem;uint16;$06;_flag?;DSP sets this, not sure what it does
 uint16;$08;Limit Points
 byte;$0A;Merit Points
 byteflag;$0B;Flags
@@ -27,7 +28,7 @@ byte;$0C;Max Merit Points
 
 [[Monipulator 1]]
 info;$04;Update Type;Monipulator 1
-uint16;$06;_flag?;-- 06   Consistently D8 for me
+rem;uint16;$06;_flag?;-- 06   Consistently D8 for me
 uint16;$08;_species?;-- 08   Vary when I change species
 uint16;$0A;_flag?;-- 0A   Consistent across species
 byte;$0C;Monipulator Rank;-- 0C   00 = Mon, 01 = NM, 02 = HNM
@@ -44,7 +45,7 @@ data128;$5C;Monster Level Fields;-- 5C   Mapped onto the item ID for these creat
 
 [[Monipulator 2]]
 info;$04;Update Type;Monipulator 2
-uint16;$06;_unknown?;-- 06   B0 00
+rem;uint16;$06;_unknown?;-- 06   B0 00
 data126;$08;_unknown?;-- 08   FF-ing has no effect.
 byte;$86;Slime Level
 byte;$87;Spriggan Level
@@ -55,7 +56,7 @@ data32;$94;Variants Bitfields;-- 94   Does not show normal monsters, only varian
 
 [[JobPoints]]
 info;$04;Update Type;Job Points
-uint16;$06;_unknown?;-- 06 const=0x0098?
+rem;uint16;$06;_unknown?;-- 06 const=0x0098?
 uint16;$08;_unknown?;-- 08   Lowest bit of this might indicate JP availability
 uint16;$0A;_unknown?;-- 0A
 
@@ -95,7 +96,8 @@ info;$04;Update Type;???
 
 [[Status Effects]]
 info;$04;Update Type;Status Effects
-uint16;$06;_0x00C4?
-data64;$08;Buffs
-data128;$48;Buff Times;time
+rem;uint16;$06;BuffDataByteSize
+buffs;$08:$48-32;Buff
+rem;bufficons;$08:32;Buff
+rem;bufftimers;$48:32;Buff Times;time
 [[]]
