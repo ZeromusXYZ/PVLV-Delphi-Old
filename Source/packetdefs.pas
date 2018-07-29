@@ -4,10 +4,30 @@ interface
 
 uses Classes, System.Contnrs, loadingform ;
 
+TYPE
+  TEncoded6BitStringKey = Array [0..63] of Char ;
+
 CONST
   pltUnknown = 0 ;
   pltOut     = 1 ;
   pltIn      = 2 ;
+
+  EncodeItemStr : TEncoded6BitStringKey = (
+    #0 ,'0','1','2','3','4','5','6',  '7','9','8','A','B','C','D','E', // $00
+    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $10
+    'V','W','X','Y','Z','a','b','c',  'd','e','f','g','h','i','j','k', // $20
+    'l','m','n','o','p','q','r','s',  't','u','v','w','x','y','z',#0   // $30
+  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+    );
+
+  EncodeLinkshellStr : TEncoded6BitStringKey = (
+    #0 ,'a','b','c','d','e','f','g',  'h','i','j','k','l','m','n','o', // $00
+    'p','q','r','s','t','u','v','w',  'x','y','z','A','B','C','D','E', // $10
+    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $20
+    'V','W','X','Y','Z',' ',' ',' ',  ' ',' ',' ',' ',' ',' ',' ', #0  // $30
+  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+    );
+
 
 TYPE
   TFilterType = (
@@ -48,6 +68,7 @@ TYPE
     Function GetTimeStampAtPos(Pos:Integer):String;
     Function GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
     Function GetDataAtPos(Pos,Size:Integer):String;
+    Function GetPackedString16AtPos(Pos:Integer;EncodeKey: TEncoded6BitStringKey):String;
     Function GetIP4AtPos(Pos:Integer):String;
     Function GetJobflagsAtPos(Pos:Integer):String;
     Function CompileData:Boolean;
@@ -604,6 +625,70 @@ Begin
   End;
 End;
 
+Function TPacketData.GetPackedString16AtPos(Pos:Integer;EncodeKey: TEncoded6BitStringKey):String;
+VAR
+  I, N : Integer ;
+  B , ByteVal : Byte ;
+  Offset : Integer ;
+  Mask : Byte ;
+  LastChar : Char ;
+  Bit : Boolean ;
+Begin
+  Result := '' ;
+
+  // Hex: B8 81 68 24  72 14 4F 10  54 0C 8F 00  00 00 00 00
+  // Bit: 101110 00
+  //      1000 0001
+  //      01 101000
+  //      001001 00
+  //      0111 0010
+  //      00 010100
+  //      010011 11
+  //      0001 0000
+  //      01 010100
+  //      000011 00
+  //      1000 1111
+  //      00 000000
+
+  // PackedString: TheNightsWatch (with no spaces)
+  // PackedNum: 2E 08 05 ...
+  //      101110  T
+  //      001000  h
+  //      000101  e
+  //
+
+  //A_  6F F0    011011 11-1111 0000  =>  1B 3F 00  =>  A
+  //B_  73 F0    011100 11-1111 0000  =>  1C 3F 00  =>  B
+  //F_  83 F0    100000 11-1111 0000  =>  20 3F 00  =>  F
+
+//  EncodeLSStr : Array [0..63] of Char = (
+//    #0 ,'a','b','c','d','e','f','g',  'h','i','j','k','l','m','n','o', // $00
+//    'p','q','r','s','t','u','v','w',  'x','y','z','A','B','C','D','E', // $10
+//    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $20
+//    'V','W','X','Y','Z',' ',' ',' ',  ' ',' ',' ',' ',' ',' ',' ', #0  // $30
+//  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+//    );
+
+  LastChar := #255 ;
+  Offset := 0 ;
+  Bit := False ;
+  While (LastChar <> #0)and( (Offset div 8) < 16) Do
+  Begin
+    B := $00 ;
+    For N := 0 to 5 Do
+    Begin
+      B := B shl 1 ;
+      Bit := GetBitAtPos(Pos + (Offset div 8), 7 - (Offset mod 8));
+      If Bit Then B := B + 1 ;
+      Offset := Offset + 1 ;
+    End;
+    LastChar := EncodeKey[B];
+    Result := Result + LastChar ;
+
+  End;
+
+End;
+
 Function TPacketData.GetIP4AtPos(Pos:Integer):String;
 VAR
   I : Integer ;
@@ -709,6 +794,7 @@ Begin
   End;
 
 End;
+
 
 Function TPacketData.GetBitsAtPos(BitOffset,BitsSize:Integer):Int64;
 Begin

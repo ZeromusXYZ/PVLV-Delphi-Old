@@ -637,17 +637,31 @@ Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
 
         End Else
-        {
-        If (LType = 'string') Then
+
+
+        If (LType = 'linkshellstring') Then
         Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 16 ;
+
           // Zero terminated String
           ColIndex := ColIndex + 1 ;
-          If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,0,DataCol(ColIndex));
-          AddSGRow(SG,LOffset,LName,PD.GetStringAtPos(LOffset));
-          If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE,LOffset,16,DataCol(ColIndex));
 
+          AddSGRow(SG,LOffset,LName,PD.GetPackedString16AtPos(LOffset,EncodeLinkshellStr), 16);
         End Else
-        }
+
+        If (LType = 'inscribestring') Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 16 ;
+
+          // Zero terminated String
+          ColIndex := ColIndex + 1 ;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE,LOffset,16,DataCol(ColIndex));
+
+          AddSGRow(SG,LOffset,LName,PD.GetPackedString16AtPos(LOffset,EncodeItemStr), 16);
+        End Else
 
         If (Copy(LType,1,4) = 'data') Then
         Begin

@@ -18,7 +18,7 @@ bits;$11:0-4;Linkshell Blue
 bits;$11:4-4;Junk bits?
 job;$12;Main Job
 job;$13;Sub Job
-string16;$14;Linkshell Name
+linkshellstring;$14;Linkshell Name
 byte;$24;Main Job Level
 byte;$25;Sub Job Level
 rem;data42;$26;_unknown?;-- 26   At least the first two bytes and the last twelve bytes are junk, possibly more

@@ -1,8 +1,27 @@
 file;in-0x048;Linkshell Concierge;
 
-info;0;Remark;Doesn't seem to actually contain the linkshell data
-info;0;;Maybe it's loaded in a simular way to player search ?
-rem;-- Unknown 0x048 incoming :: Sent when loading linkshell information from the Linkshell Concierge
-rem;-- One per entry, 128 bytes long, mostly empty, does not contain name as far as I can see.
-rem;-- Likely contributes to that information.
+byte;$04;Slot Offset
+
+switchblock;$04;$FE;Begining of List
+switchblock;$04;$FF;End of List
+
+[[Begining of List]]
+Info;0;Info;Start of Linkshell Concierge List
+[[]]
+[[End of List]]
+Info;0;Info;End of Linkshell Concierge List or No Entries ?
+Info;0;Info;Seems to be send twice, but slightly different data
+[[]]
+
+data12;$05;_unknown?
+data8;$11;_slot1_Info?
+linkshellstring;$19;LS Slot 1
+data8;$29;_slot2_Info?
+linkshellstring;$31;LS Slot 2
+data8;$41;_slot3_Info?
+linkshellstring;$49;LS Slot 3
+data8;$59;_slot4_Info?
+linkshellstring;$61;LS Slot 4
+data8;$71;_unknown?
+data7;$79;_junk?
 
