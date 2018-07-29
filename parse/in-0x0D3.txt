@@ -11,4 +11,4 @@ byte;$14;Item Index
 byte;$15;Drop Type;-- 15   0 if no drop, 1 if dropped to player, 3 if floored
 string16;$16;Highest Lotter Name
 string16;$26;Current Lotter Name
-data6;$36;Junk?
+data6;$36;_junk?

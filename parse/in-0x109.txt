@@ -5,4 +5,4 @@ uint32;$08;Quantity
 uint16;$0C;Buyer Index
 uint16;$0E;Bazaar Index
 string16;$10;Buyer Name
-uint32;$20;Unknown?;-- 20   Was 05 00 02 00 for me
+uint32;$20;_unknown?;-- 20   Was 05 00 02 00 for me

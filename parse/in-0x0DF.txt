@@ -7,8 +7,8 @@ uint32;$10;TP
 uint16;$14;Index
 byte;$16;HP%
 byte;$17;MP%
-uint32;$18;Unknown?
-uint32;$1C;Unknown?
+uint32;$18;_unknown?
+uint32;$1C;_unknown?
 job;$20;Main Job
 byte;$21;Main Job Level
 job;$22;Sub Job
