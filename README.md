@@ -1,6 +1,7 @@
 # PacketViewerLogViewer
 
 This program is meant to be used with .log files made with the Windower4 Packetviewer addon.
+It is also able to read Ashita Packeteer .txt log files.
 
 The program should be pretty straight forward to use for anybody for who it would be usefull.
 
