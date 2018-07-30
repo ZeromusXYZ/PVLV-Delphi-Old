@@ -235,6 +235,10 @@ object MainForm: TMainForm
       Caption = 'Edit parser for this packet'
       OnClick = PMPacketListEditParserClick
     end
+    object PMPacketListSavePacket: TMenuItem
+      Caption = 'Export packet ...'
+      OnClick = PMPacketListSavePacketClick
+    end
   end
   object AL: TActionList
     Left = 272
@@ -349,5 +353,12 @@ object MainForm: TMainForm
         Action = ALAbout
       end
     end
+  end
+  object SaveDialogRawPacket: TSaveDialog
+    Filter = 'All Files|*.*'
+    Options = [ofOverwritePrompt, ofNoChangeDir, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
+    Title = 'Save Packet as RAW data'
+    Left = 48
+    Top = 152
   end
 end

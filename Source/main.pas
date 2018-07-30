@@ -67,6 +67,8 @@ type
     ALGridFont21: TMenuItem;
     PMPacketListN4: TMenuItem;
     PMPacketListEditParser: TMenuItem;
+    SaveDialogRawPacket: TSaveDialog;
+    PMPacketListSavePacket: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -101,6 +103,7 @@ type
     procedure ALGridFont1Execute(Sender: TObject);
     procedure ALGridFont2Execute(Sender: TObject);
     procedure PMPacketListEditParserClick(Sender: TObject);
+    procedure PMPacketListSavePacketClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -922,6 +925,8 @@ begin
     PMPacketListReset.Visible := False ;
     PMPacketListOnlyOut.Visible := False ;
     PMPacketListOnlyIn.Visible := False ;
+    PMPacketListEditParser.Visible := False ;
+    PMPacketListSavePacket.Visible := False ;
   End Else
   Begin
     PMPacketListOpenFile.Visible := False ;
@@ -931,21 +936,25 @@ begin
     Begin
       PMPacketListShow.Visible := True ;
       PMPacketListShow.Caption := 'Packet 0x' + IntToHex(PD.PacketID,4);
+      PMPacketListSavePacket.Visible := True ;
       Case PD.PacketLogType Of
         pltOut : Begin
           PMPacketListShow.Caption := 'Outgoing 0x' + IntToHex(PD.PacketID,3);
           PMPacketListEditParser.Caption := 'Edit  parse\out-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
+          PMPacketListEditParser.Visible := True ;
           PMPacketListEditParser.Enabled := True ;
         End;
         pltIn  : Begin
           PMPacketListShow.Caption := 'Incomming 0x' + IntToHex(PD.PacketID,3);
           PMPacketListEditParser.Caption := 'Edit  parse\in-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
+          PMPacketListEditParser.Visible := True ;
           PMPacketListEditParser.Enabled := True ;
         End
       Else
         Begin
           PMPacketListShow.Caption := 'Unknown Packet Type 0x' + IntToHex(PD.PacketID,3);
           PMPacketListEditParser.Caption := 'Edit not supported';
+          PMPacketListEditParser.Visible := True ;
           PMPacketListEditParser.Enabled := False ;
         End;
       End;
@@ -987,6 +996,41 @@ begin
   PL.CopyFrom(PLLoaded);
   FillListBox;
   MoveToSync;
+end;
+
+procedure TMainForm.PMPacketListSavePacketClick(Sender: TObject);
+VAR
+  PD : TPacketData ;
+  BS : TBinaryWriter  ;
+  I : Integer ;
+  DefName : String ;
+begin
+  PD := PL.GetPacket(LBPackets.ItemIndex);
+
+  DefName := ExtractFileName(SaveDialogRawPacket.FileName);
+  If PD.PacketLogType = pltOut Then
+    DefName := 'o'+IntToHex(PD.PacketID,3)
+  Else If PD.PacketLogType = pltIn Then
+    DefName := 'i'+IntToHex(PD.PacketID,3)
+  Else
+    DefName := 'u'+IntToHex(PD.PacketID,3);
+  SaveDialogRawPacket.FileName := DefName ;
+
+
+  If Assigned(PD) and SaveDialogRawPacket.Execute() Then
+  Begin
+    Try
+      BS := TBinaryWriter.Create(SaveDialogRawPacket.FileName,False);
+      For I := 0 To PD.RawSize-1 Do
+        BS.Write(PD.GetByteAtPos(I));
+      BS.Close ;
+    Except
+      On E: Exception Do
+        ShowMessage('ERROR: '+E.Message);
+    End;
+    If Assigned(BS) Then FreeAndNil(BS);
+  End;
+
 end;
 
 Procedure TMainForm.SearchNext ;
