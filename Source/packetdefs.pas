@@ -672,7 +672,7 @@ Begin
   LastChar := #255 ;
   Offset := 0 ;
   Bit := False ;
-  While (LastChar <> #0)and( (Offset div 8) < 16) Do
+  While (LastChar <> #0)and( (Offset div 8) < 15) Do
   Begin
     B := $00 ;
     For N := 0 to 5 Do

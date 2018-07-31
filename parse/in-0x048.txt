@@ -1,6 +1,11 @@
-file;in-0x048;Linkshell Concierge;
+file;in-0x048;Linkshell Concierge;Linkshell Concierge linkshell list response 
 
-byte;$04;Slot Offset
+info;0;Info;This is send 5 times in total in response to 5 queries by the client
+info;0;Info;First one seems to intialize and sets "slot offset" to 0xFE
+info;0;Info;Next 4 packets contain LS info if the offset isn't set to 0xFF
+info;0;Info;Requires a acompanying 0x05C (dialog info) to be valid
+
+byte;$04;Slot Offset?
 
 switchblock;$04;$FE;Begining of List
 switchblock;$04;$FF;End of List
@@ -14,14 +19,23 @@ Info;0;Info;Seems to be send twice, but slightly different data
 [[]]
 
 data12;$05;_unknown?
-data8;$11;_slot1_Info?
-linkshellstring;$19;LS Slot 1
-data8;$29;_slot2_Info?
-linkshellstring;$31;LS Slot 2
-data8;$41;_slot3_Info?
-linkshellstring;$49;LS Slot 3
-data8;$59;_slot4_Info?
-linkshellstring;$61;LS Slot 4
+
+uint16;$10;LS Slot 1 ID
+data7;$12;  _slot1_Info?
+linkshellstring;$19;  LS 1 Name
+
+uint16;$28;LS Slot 2 ID
+data7;$2A;  _slot2_Info?
+linkshellstring;$31;  LS 2 Name
+
+uint16;$40;LS Slot 3 ID
+data7;$42;  _slot3_Info?
+linkshellstring;$49;  LS 3 Name
+
+uint16;$58;LS Slot 4 ID
+data7;$5A;  _slot4_Info?
+linkshellstring;$61;  LS 4 Name
+
 data8;$71;_unknown?
 data7;$79;_junk?
 
