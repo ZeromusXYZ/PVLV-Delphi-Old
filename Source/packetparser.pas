@@ -523,6 +523,14 @@ Begin
           If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,(LSizeOffset div 8)+1,DataCol(ColIndex));
           AddSGRow(SG,LOffset,LName, '0x' + IntToHex( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset),2 ) + ' - ' + IntToStr( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset) ) , (LSizeOffset div 8)+1 );
         End Else
+        If ((LType = 'bitslookup') or (LType = 'bitrangelookup')) Then
+        Begin
+          If (LOffset >= LastPos) Then LastPos := LOffset + 1 ;
+          If (LSizeOffset <= 0) Then LSizeOffset := 1 ;
+          ColIndex := ColIndex + 1 ;
+          If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,(LSizeOffset div 8)+1,DataCol(ColIndex));
+          AddSGRow(SG,LOffset,LName, '0x' + IntToHex( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset),2 ) + ' - ' + IntToStr( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset) ) + ' - ' + NLU(LDescription).GetVal( PD.GetBitsAtPos(LOffset,LSubOffset,LSizeOffset) ) , (LSizeOffset div 8)+1 );
+        End Else
         If ((LType = 'word') or (LType = 'uint16') or (LType = 'ushort') or (LType = 'w') or (LType = 'unsigned short') ) Then
         Begin
           If (LOffset >= LastPos) Then LastPos := LOffset + 2 ;

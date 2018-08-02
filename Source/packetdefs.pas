@@ -998,6 +998,8 @@ Begin
 
     FileData := TStringList.Create ;
     FileData.LoadFromFile(Filename);
+    FileData.Add(''); // Add dummy blank lines to fix a bug of ignoring last packet if isn't finished by a blank line
+    FileData.Add('');
     I := 0 ;
     PD := Nil ;
 
