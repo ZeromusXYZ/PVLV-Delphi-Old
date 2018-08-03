@@ -42,7 +42,7 @@ bits;$1B:5-3;Bit5-7?
 data9;$1C;Unknown?
 byte;$25;Main Job Level
 byte;$26;Unknown?
-byte;$26;Unknown?
+byte;$27;Unknown?
 [[]]
 
 [[NPC-Mode]]

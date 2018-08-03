@@ -731,7 +731,7 @@ VAR
 Begin
   Result := 0 ;
   Try
-    If (Pos > length(fRawBytes)-2) Then Exit ;
+    If (Pos > length(fRawBytes)-1) Then Exit ;
     V := @fRawBytes[Pos] ;
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
     Result := V^ ;
