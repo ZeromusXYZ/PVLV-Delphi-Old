@@ -88,8 +88,8 @@ bit;$70:5;  Bit5: Language ???
 bits;$70:6-4;  Bit6-9: Pearl Count
 bitslookup;$71:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$71:6-2;  Bit14-15: Time Zone;ls_timezone
-bitslookup;$72:0-2;  Bit16-18: Time of Day;ls_timeslot
-bits;$72:2-13;  Bit19-31: _junk?
+bitslookup;$72:0-3;  Bit16-18: Time of Day;ls_timeslot
+bits;$72:3-12;  Bit19-31: _junk?
 
 uint32;$74;Slot 2 Parameters =>
 bit;$74:0;  Bit0: _active?
@@ -101,8 +101,8 @@ bit;$74:5;  Bit5: Language ???
 bits;$74:6-4;  Bit6-9: Pearl Count
 bitslookup;$75:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$75:6-2;  Bit14-15: Time Zone;ls_timezone
-bitslookup;$76:0-2;  Bit16-18: Time of Day;ls_timeslot
-bits;$76:2-13;  Bit19-31: _junk?
+bitslookup;$76:0-3;  Bit16-18: Time of Day;ls_timeslot
+bits;$76:3-12;  Bit19-31: _junk?
 
 uint32;$78;Slot 3 Parameters =>
 bit;$78:0;  Bit0: _active?
@@ -114,8 +114,8 @@ bit;$78:5;  Bit5: Language ???
 bits;$78:6-4;  Bit6-9: Pearl Count
 bitslookup;$78:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$78:6-2;  Bit14-15: Time Zone;ls_timezone
-bitslookup;$79:0-2;  Bit16-18: Time of Day;ls_timeslot
-bits;$79:2-13;  Bit19-31: _junk?
+bitslookup;$79:0-3;  Bit16-18: Time of Day;ls_timeslot
+bits;$79:3-12;  Bit19-31: _junk?
 
 uint32;$7C;Slot 4 Parameters =>
 bit;$7C:0;  Bit0: _active?
@@ -127,6 +127,6 @@ bit;$7C:5;  Bit5: Language ???
 bits;$7C:6-4;  Bit6-9: Pearl Count
 bitslookup;$7D:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$7D:6-2;  Bit14-15: Time Zone;ls_timezone
-bitslookup;$7E:0-2;  Bit16-18: Time of Day;ls_timeslot
-bits;$7E:2-13;  Bit19-31: _junk?
+bitslookup;$7E:0-3;  Bit16-18: Time of Day;ls_timeslot
+bits;$7E:3-12;  Bit19-31: _junk?
 [[]]
