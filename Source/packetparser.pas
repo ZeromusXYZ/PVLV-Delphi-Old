@@ -638,11 +638,15 @@ Begin
           // Zero terminated String
           ColIndex := ColIndex + 1 ;
           DataSize := StrToIntDef(Copy(LType,7,Length(LType)),-1);
+
+          C := DataSize ;
+          If C <= 0 Then C := Length(PD.GetStringAtPos(LOffset))+1 ;
+
           If Assigned(UpdateActiveRE) Then
             MarkREBytes(UpdateActiveRE,LOffset,Length(PD.GetStringAtPos(LOffset,DataSize))+1,DataCol(ColIndex));
 
-          AddSGRow(SG,LOffset,LName,PD.GetStringAtPos(LOffset,DataSize),Length(PD.GetStringAtPos(LOffset,DataSize))+1);
-          If (LOffset >= LastPos) Then LastPos := LOffset + Length(PD.GetStringAtPos(LOffset))+1 ;
+          AddSGRow(SG,LOffset,LName,PD.GetStringAtPos(LOffset,DataSize),C);
+          If (LOffset >= LastPos) Then LastPos := LOffset + C ;
 
         End Else
 

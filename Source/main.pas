@@ -783,7 +783,7 @@ begin
       If MessageDlg('No parser file for '+FN+#10#13'Do you want to create one ?',TMsgDlgType.mtConfirmation,[mbYes,mbNo],-1) = mrYes Then
       Begin
         SL := TStringList.Create ;
-        SL.Add('file;in-0x'+IntToHex(PD.PacketID,3)+';Unknown;Newly created parser.');
+        SL.Add('file;'+ChangeFileExt(ExtractFileName(FN),'') +';Unknown;Newly created parser.');
         SL.Add('');
         SL.Add('rem;Add your parser lines here');
         Try
