@@ -99,7 +99,7 @@ TYPE
     Destructor Destroy ; Override ;
     Procedure Clear ;
     Procedure ClearFilters;
-    Function LoadFromFile(Filename : String):Boolean;
+    Function LoadFromFile(Filename : String;AddedStringData:String):Boolean;
     Function Count : Integer ;
     Function GetPacket(ID : Integer):TPacketData;
     Function CopyFrom(Original: TPacketList):Integer;
@@ -964,7 +964,7 @@ Begin
   FilterInType := ftFilterOff ;
 End;
 
-Function TPacketList.LoadFromFile(Filename : String):Boolean;
+Function TPacketList.LoadFromFile(Filename : String;AddedStringData:String):Boolean;
 VAR
   FileData : TStringList;
   I : Integer ;
@@ -983,7 +983,7 @@ Begin
   LogFileType := 0 ;
   Try
     if (LowerCase(ExtractFileExt(FileName)) = '.log') Then LogFileType := 1 ;
-    if (LowerCase(ExtractFileExt(FileName)) = '.txt') Then LogFileType := 2 ;
+    // if (LowerCase(ExtractFileExt(FileName)) = '.txt') Then LogFileType := 2 ;
 
     if (Pos('outgoing',LowerCase(Filename)) > 0) Then
     Begin
@@ -997,7 +997,11 @@ Begin
     End;
 
     FileData := TStringList.Create ;
-    FileData.LoadFromFile(Filename);
+    If (FileName <> '') and (FileExists(Filename)) Then
+      FileData.LoadFromFile(Filename);
+    FileData.Add('');
+    If (AddedStringData <> '') Then
+      FileData.Text := FileData.Text + AddedStringData ;
     FileData.Add(''); // Add dummy blank lines to fix a bug of ignoring last packet if isn't finished by a blank line
     FileData.Add('');
     I := 0 ;
@@ -1060,7 +1064,7 @@ Begin
           ) Then
         Begin
           AskForType := False ;
-          Case MessageDlg( 'Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined',mtConfirmation,[mbYes,mbOK,mbCancel],-1) Of
+          Case MessageDlg( 'Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined'#10#13#10#13'LineData:'#10#13'  '+Copy(S,1,100)+' ...' ,mtConfirmation,[mbYes,mbOK,mbCancel],-1) Of
             mrOK : Begin
                 PreferedPacketType := pltIn ;
                 IsUndefined := False ;
@@ -1131,6 +1135,8 @@ Begin
     Result := False ;
   End;
   If Assigned(FileData) Then FreeAndNil(FileData);
+
+
   If Assigned(PD) Then FreeAndNil(PD);
   If Assigned(FormLoading) Then FormLoading.Hide ;
 End;

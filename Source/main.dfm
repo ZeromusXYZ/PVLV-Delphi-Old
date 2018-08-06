@@ -279,6 +279,10 @@ object MainForm: TMainForm
       Caption = 'ALGridFont2'
       OnExecute = ALGridFont2Execute
     end
+    object ALAppendClipboard: TAction
+      Caption = 'ALAppendClipboard'
+      OnExecute = ALAppendClipboardExecute
+    end
   end
   object MM: TMainMenu
     Left = 208
@@ -292,6 +296,10 @@ object MainForm: TMainForm
       object MMFileAppend: TMenuItem
         Action = ALAppendFile
         Enabled = False
+      end
+      object MMFileAddClipboard: TMenuItem
+        Action = ALAppendClipboard
+        Caption = 'Add from Clipboard'
       end
       object MMFileN1: TMenuItem
         Caption = '-'
@@ -360,5 +368,11 @@ object MainForm: TMainForm
     Title = 'Save Packet as RAW data'
     Left = 48
     Top = 152
+  end
+  object AutoExecTimer: TTimer
+    Interval = 50
+    OnTimer = AutoExecTimerTimer
+    Left = 136
+    Top = 216
   end
 end

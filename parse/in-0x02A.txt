@@ -7,4 +7,6 @@ uint32;$10;Param 3
 uint32;$14;Param 4
 uint16;$16;Player Index
 uint16;$18;Message ID;-- 1A   The high bit is occasionally set, though the reason for it is unclear.
-uint32;$1C;_unknown?;-- 1C   Possibly flags, 0x06000000 and 0x02000000 observed
+uint16;$1C;Target Index;
+uint16;$1E;_flags?;
+string;$20;Target Name

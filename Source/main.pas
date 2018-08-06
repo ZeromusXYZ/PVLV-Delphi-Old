@@ -69,6 +69,9 @@ type
     PMPacketListEditParser: TMenuItem;
     SaveDialogRawPacket: TSaveDialog;
     PMPacketListSavePacket: TMenuItem;
+    ALAppendClipboard: TAction;
+    MMFileAddClipboard: TMenuItem;
+    AutoExecTimer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -104,6 +107,8 @@ type
     procedure ALGridFont2Execute(Sender: TObject);
     procedure PMPacketListEditParserClick(Sender: TObject);
     procedure PMPacketListSavePacketClick(Sender: TObject);
+    procedure ALAppendClipboardExecute(Sender: TObject);
+    procedure AutoExecTimerTimer(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -128,8 +133,8 @@ implementation
 
 {$R *.dfm}
 
-uses System.UITypes, System.Types, System.StrUtils, shellapi, packetparser, searchdialog, filterdialog,
-  loadingform;
+uses System.UITypes, System.Types, System.StrUtils, shellapi, Vcl.Clipbrd,
+  packetparser, searchdialog, filterdialog, loadingform;
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -292,6 +297,7 @@ End;
 procedure TMainForm.MMFileClick(Sender: TObject);
 begin
   MMFileAppend.Enabled := PLLoaded.Count > 0 ;
+  MMFileAddClipboard.Enabled := (Clipboard.AsText <> '');
 end;
 
 procedure TMainForm.MMFileExitClick(Sender: TObject);
@@ -420,6 +426,42 @@ Begin
   MoveToSync;
 end;
 
+procedure TMainForm.AutoExecTimerTimer(Sender: TObject);
+VAR
+  I : Integer ;
+  FN : String ;
+  Stuffloaded : Boolean ;
+begin
+  AutoExecTimer.Enabled := False ;
+
+  Caption := MyAppName ;
+  StuffLoaded := False ;
+  For I := 1 to ParamCount do
+  Begin
+    FN := ParamStr(I);
+    If (FN <> '') and FileExists(FN) Then
+    Begin
+      If PLLoaded.LoadFromFile(FN,'') Then
+      Begin
+        StuffLoaded := True ;
+        Caption := Caption + ' <= ' + FN ;
+      End;
+    End;
+
+  End;
+
+  If Stuffloaded Then
+  Begin
+    LBPackets.Clear ;
+    PL.Clear ;
+    PL.ClearFilters ;
+    PL.CopyFrom(PLLoaded);
+
+    FillListBox ;
+  End;
+
+end;
+
 procedure TMainForm.CBOriginalDataClick(Sender: TObject);
 begin
   LBPacketsClick(nil);
@@ -471,7 +513,7 @@ begin
   If OpenDialogLogFiles.Execute() Then
   Begin
     LBPackets.Clear ;
-    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName) Then
+    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName,'') Then
     Begin
       // Fill listbox
       PL.ClearFilters;
@@ -517,7 +559,7 @@ begin
     PL.Clear ;
     PL.ClearFilters ;
     PLLoaded.Clear ;
-    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName) Then
+    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName,'') Then
     Begin
       // Fill listbox
       PL.ClearFilters;
@@ -573,6 +615,47 @@ begin
   Begin
     ALSearchNew.Execute ;
   End;
+end;
+
+procedure TMainForm.ALAppendClipboardExecute(Sender: TObject);
+VAR
+  LastCount : Integer ;
+  ClipStr : String ;
+begin
+  LastCount := PLLoaded.Count ;
+
+  If (not Clipboard.HasFormat(CF_TEXT)) or (Clipboard.AsText = '') Then Exit ;
+
+  ClipStr := Clipboard.AsText ;
+  // Some messings around so copy/paste from various sources/os work
+  ClipStr := ReplaceStr(ClipStr,#10#13,#13);
+  ClipStr := ReplaceStr(ClipStr,#13#10,#13);
+  ClipStr := ReplaceStr(ClipStr,#13,#13#10);
+
+  If PLLoaded.LoadFromFile('',ClipStr) Then
+  Begin
+    If PLLoaded.Count <= LastCount Then
+    Begin
+      ShowMessage('Clipboard did not seem to contain any valid packet data ...'#10#13+ClipStr);
+      Caption := MyAppName ;
+      Exit ;
+    End;
+
+    LBPackets.Clear ;
+    // Fill listbox
+    PL.ClearFilters;
+    PL.CopyFrom(PLLoaded);
+
+    FillListBox ;
+
+    Caption := MyAppName + ' - clipboard data loaded' ;
+  End else
+  Begin
+    // Clear Listbox
+    LBPackets.Items.Add('Failed Loading Data');
+    Caption := MyAppName ;
+  End;
+  //
 end;
 
 Procedure TMainForm.AddSGRow(Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);

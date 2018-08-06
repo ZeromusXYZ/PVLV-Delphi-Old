@@ -50,10 +50,10 @@ byteflag;$34;_flags + PetIndex
 rem;$34:0;  Bit0: No obvious effect
 rem;$34:1;  Bit1: No obvious effect
 bit;$34:2;  Bit2: Autoinvite icon
-byteflag;$35;PetIndex part
-byteflag;$36;PetIndex + _flags
+bits;$34:3-16;  Pet Index
 bit;$36:3;  Bit3: Terror flag
-rem;$36:4;  Bit4: No obvious effect
+rem;bit;$36:4;  Bit4: No obvious effect
+
 
 byteflag;$37;_flags
 byteflag;$38;_flags
