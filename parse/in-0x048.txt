@@ -82,9 +82,9 @@ uint32;$70;Slot 1 Parameters =>
 bit;$70:0;  Bit0: _active?
 bit;$70:1;  Bit1: Language Japanese
 bit;$70:2;  Bit2: Language English
-bit;$70:3;  Bit3: Language Other
-bit;$70:4;  Bit4: _unused?
-bit;$70:5;  Bit5: Language ???
+bit;$70:3;  Bit3: Unused French?
+bit;$70:4;  Bit4: Unused German?
+bit;$70:5;  Bit5: Language Other
 bits;$70:6-4;  Bit6-9: Pearl Count
 bitslookup;$71:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$71:6-2;  Bit14-15: Time Zone;ls_timezone
@@ -95,9 +95,9 @@ uint32;$74;Slot 2 Parameters =>
 bit;$74:0;  Bit0: _active?
 bit;$74:1;  Bit1: Language Japanese
 bit;$74:2;  Bit2: Language English
-bit;$74:3;  Bit3: Language Other
-bit;$74:4;  Bit4: _unused?
-bit;$74:5;  Bit5: Language ???
+bit;$74:3;  Bit3: Unused French?
+bit;$74:4;  Bit4: Unused German?
+bit;$74:5;  Bit5: Language Other
 bits;$74:6-4;  Bit6-9: Pearl Count
 bitslookup;$75:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$75:6-2;  Bit14-15: Time Zone;ls_timezone
@@ -108,9 +108,9 @@ uint32;$78;Slot 3 Parameters =>
 bit;$78:0;  Bit0: _active?
 bit;$78:1;  Bit1: Language Japanese
 bit;$78:2;  Bit2: Language English
-bit;$78:3;  Bit3: Language Other
-bit;$78:4;  Bit4: _unused?
-bit;$78:5;  Bit5: Language ???
+bit;$78:3;  Bit3: Unused French?
+bit;$78:4;  Bit4: Unused German?
+bit;$78:5;  Bit5: Language Other
 bits;$78:6-4;  Bit6-9: Pearl Count
 bitslookup;$78:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$78:6-2;  Bit14-15: Time Zone;ls_timezone
@@ -121,9 +121,9 @@ uint32;$7C;Slot 4 Parameters =>
 bit;$7C:0;  Bit0: _active?
 bit;$7C:1;  Bit1: Language Japanese
 bit;$7C:2;  Bit2: Language English
-bit;$7C:3;  Bit3: Language Other
-bit;$7C:4;  Bit4: _unused?
-bit;$7C:5;  Bit5: Language ???
+bit;$7C:3;  Bit3: Unused French?
+bit;$7C:4;  Bit4: Unused German?
+bit;$7C:5;  Bit5: Language Other
 bits;$7C:6-4;  Bit6-9: Pearl Count
 bitslookup;$7D:2-4;  Bit10-13: Active Days;ls_playdays
 bitslookup;$7D:6-2;  Bit14-15: Time Zone;ls_timezone
