@@ -61,7 +61,7 @@
 60;Into Lands Primeval;Yahse Hunting Grounds/Ceizak Battlegrounds/Foret de Hennetiel/Morimar Basalt Fields/Marjami Ravine
 61;Water's Umbral Knell;Rala Waterways/Yorcia Weald
 62;Keepers of the Wild;Wildkeeper Reive, Seekers instances
-63;The Sacred City of Adoulin  Eastern Adoulin/Celennia Memorial Library
+63;The Sacred City of Adoulin;Eastern Adoulin/Celennia Memorial Library
 64;Breaking Ground;Colonization Reive
 65;Hades;CS
 66;Arciela;CS
