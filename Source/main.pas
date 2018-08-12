@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, packetdefs, Vcl.CheckLst,
   Vcl.Tabs, Vcl.Menus, Vcl.Grids, Vcl.ComCtrls, System.Actions, Vcl.ActnList,
-  Vcl.ExtCtrls;
+  Vcl.ExtCtrls, videoform;
 
 type
   TMainForm = class(TForm)
@@ -72,6 +72,11 @@ type
     ALAppendClipboard: TAction;
     MMFileAddClipboard: TMenuItem;
     AutoExecTimer: TTimer;
+    ALVideoLink: TAction;
+    MMVideo: TMenuItem;
+    MMOpenVideoLink: TMenuItem;
+    ALVideoLinkSave: TAction;
+    MMVideoLinkSave: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -109,6 +114,9 @@ type
     procedure PMPacketListSavePacketClick(Sender: TObject);
     procedure ALAppendClipboardExecute(Sender: TObject);
     procedure AutoExecTimerTimer(Sender: TObject);
+    procedure ALVideoLinkExecute(Sender: TObject);
+    procedure MMVideoLinkSaveClick(Sender: TObject);
+    procedure MMVideoClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -124,6 +132,9 @@ type
     { Public declarations }
     PL, PLLoaded : TPacketList ;
     CurrentSync : Word ;
+    CurrentDateTimeOffset : TDateTime ;
+
+    Procedure MoveToOffset(Offset : Int64);
   end;
 
 var
@@ -185,6 +196,29 @@ Begin
     Exit ;
   End;
 End;
+
+Procedure TMainForm.MoveToOffset(Offset : Int64);
+VAR
+  I :Integer ;
+  FindTime : TDateTime ;
+Begin
+  If PLLoaded.Count <= 0 Then Exit ;
+  FindTime := PLLoaded.GetPacket(0).TimeStamp + (Offset / 24 / 60 / 60 / 1000);
+
+  For I := 0 to PL.Count-1 Do
+  If PL.GetPacket(I).TimeStamp >= FindTime Then
+  Begin
+    If (LBPackets.ItemIndex <> I) Then
+    Begin
+      LBPackets.ItemIndex := I ;
+      LBPackets.Invalidate ;
+    End;
+    UpdatePacketDetails('-');
+    Exit ;
+  End;
+End;
+
+
 
 procedure TMainForm.FillListBox ;
 VAR
@@ -480,6 +514,19 @@ begin
   MoveToSync;
 end;
 
+procedure TMainForm.MMVideoClick(Sender: TObject);
+begin
+  MMVideoLinkSave.Enabled := (VideoLink.LinkFile <> '')
+end;
+
+procedure TMainForm.MMVideoLinkSaveClick(Sender: TObject);
+begin
+  If (Not VideoLink.IsAvailable) or (VideoLink.CurrentPos < 0) Then Exit ;
+
+  If FileExists(VideoLink.LinkFile) Then
+    VideoLink.SaveVideoLink(VideoLink.LinkSourceFile);
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Randomize;
@@ -522,6 +569,7 @@ begin
       FillListBox ;
 
       Caption := MyAppName + ' - multiple files loaded' ;
+      VideoLink.LinkSourceFile := '' ; // disable link file
     End else
     Begin
       // Clear Listbox
@@ -568,6 +616,8 @@ begin
       FillListBox ;
 
       Caption := MyAppName + ' - ' + OpenDialogLogFiles.FileName ;
+      If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,'.pvlvvl')) Then
+        VideoLink.ShowVideoForm ;
     End else
     Begin
       // Clear Listbox
@@ -617,6 +667,12 @@ begin
   End;
 end;
 
+procedure TMainForm.ALVideoLinkExecute(Sender: TObject);
+begin
+  If VideoLink.IsAvailable Then
+    VideoLink.ShowVideoForm ;
+end;
+
 procedure TMainForm.ALAppendClipboardExecute(Sender: TObject);
 VAR
   LastCount : Integer ;
@@ -649,6 +705,7 @@ begin
     FillListBox ;
 
     Caption := MyAppName + ' - clipboard data loaded' ;
+    VideoLink.LinkSourceFile := '' ; // disable link file
   End else
   Begin
     // Clear Listbox
@@ -765,6 +822,9 @@ begin
   End else
   Begin
     UpdatePacketDetails('-');
+    CurrentDateTimeOffset := PL.GetPacket(LBPackets.ItemIndex).TimeStamp - PLLoaded.GetPacket(0).TimeStamp ;
+    If VideoLink.IsAvailable Then
+      VideoLink.MoveToTimePacketOffset(CurrentDateTimeOffset) ;
   End;
   LBPackets.Invalidate;
 end;

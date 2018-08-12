@@ -283,6 +283,13 @@ object MainForm: TMainForm
       Caption = 'ALAppendClipboard'
       OnExecute = ALAppendClipboardExecute
     end
+    object ALVideoLink: TAction
+      Caption = 'ALVideoLink'
+      OnExecute = ALVideoLinkExecute
+    end
+    object ALVideoLinkSave: TAction
+      Caption = 'ALVideoLinkSave'
+    end
   end
   object MM: TMainMenu
     Left = 208
@@ -350,6 +357,20 @@ object MainForm: TMainForm
       object ALGridFont21: TMenuItem
         Action = ALGridFont2
         Caption = 'Small'
+      end
+    end
+    object MMVideo: TMenuItem
+      Caption = 'Video'
+      Enabled = False
+      OnClick = MMVideoClick
+      object MMOpenVideoLink: TMenuItem
+        Action = ALVideoLink
+        Caption = 'Open Video Link ...'
+      end
+      object MMVideoLinkSave: TMenuItem
+        Action = ALVideoLinkSave
+        Caption = 'Save Video Link Data'
+        OnClick = MMVideoLinkSaveClick
       end
     end
     object About1: TMenuItem

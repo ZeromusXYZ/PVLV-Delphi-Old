@@ -1,5 +1,7 @@
 program pvlv;
 
+
+
 uses
   Vcl.Forms,
   main in 'Source\main.pas' {MainForm},
@@ -8,7 +10,8 @@ uses
   datalookups in 'Source\datalookups.pas',
   searchdialog in 'Source\searchdialog.pas' {DlgSearch},
   filterdialog in 'Source\filterdialog.pas' {DlgFilter},
-  loadingform in 'Source\loadingform.pas' {FormLoading};
+  loadingform in 'Source\loadingform.pas' {FormLoading},
+  videoform in 'Source\videoform.pas' {VideoLink};
 
 {$R *.res}
 
@@ -19,5 +22,6 @@ begin
   Application.CreateForm(TDlgSearch, DlgSearch);
   Application.CreateForm(TDlgFilter, DlgFilter);
   Application.CreateForm(TFormLoading, FormLoading);
+  Application.CreateForm(TVideoLink, VideoLink);
   Application.Run;
 end.
