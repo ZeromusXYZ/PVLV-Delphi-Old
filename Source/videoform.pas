@@ -66,7 +66,7 @@ var
 
 implementation
 
-Uses Main;
+Uses Main, Registry ;
 
 {$R *.dfm}
 
@@ -111,21 +111,36 @@ var
   RegType: Integer;
   DataSize: Cardinal;
   Key: PWideChar;
+  Res : Integer ;
+  Reg : TRegistry ;
 begin
   Result := '';
   Key := 'Software\VideoLAN\VLC';
-  if RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, 0, KEY_READ, Handle) = ERROR_SUCCESS then
-  begin
-    if RegQueryValueEx(Handle, 'InstallDir', nil, @RegType, nil, @DataSize) = ERROR_SUCCESS then
-    begin
-      SetLength(Result, DataSize);
-      RegQueryValueEx(Handle, 'InstallDir', nil, @RegType, PByte(@Result[1]), @DataSize);
-      Result[DataSize] := '\';
-    end
-    else Showmessage('Error on reading registry');
-    RegCloseKey(Handle);
-    Result := String(PChar(Result));
-  end;
+  Reg := TRegistry.Create(STANDARD_RIGHTS_READ or
+                          KEY_QUERY_VALUE
+                          or KEY_WOW64_32KEY
+                          );
+  Try
+    Reg.RootKey := HKEY_LOCAL_MACHINE ;
+    If Reg.OpenKey(Key,False) Then
+    Begin
+      Result := Reg.ReadString('InstallDir');
+    End Else
+    Begin
+      // ShowMessage('Can''t open '+Key);
+      Result := '' ;
+    End;
+  Finally
+    FreeAndNil(Reg);
+  End;
+{
+  If Result = '' then
+  Begin
+    // Little fallback in case registry fails
+    if FileExists('C:\Program Files\VideoLAN\VLC\libvlccore.dll') then
+      Result := 'C:\Program Files\VideoLAN\VLC' ;
+  End;
+}
 end;
 
 // -----------------------------------------------------------------------------

@@ -165,6 +165,7 @@ object MainForm: TMainForm
           '"filters" folder containts custom filters')
         ScrollBars = ssBoth
         TabOrder = 0
+        Zoom = 100
       end
       object CBOriginalData: TCheckBox
         Left = 6
@@ -185,13 +186,13 @@ object MainForm: TMainForm
       'g Files|*.txt|All Files|*.*'
     Options = [ofReadOnly, ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Open Log file'
-    Left = 48
-    Top = 72
+    Left = 64
+    Top = 24
   end
   object PMPacketList: TPopupMenu
     OnPopup = PMPacketListPopup
-    Left = 136
-    Top = 72
+    Left = 296
+    Top = 24
     object PMPacketListOpenFile: TMenuItem
       Caption = 'Open File'
       OnClick = PMPacketListOpenFileClick
@@ -241,8 +242,8 @@ object MainForm: TMainForm
     end
   end
   object AL: TActionList
-    Left = 272
-    Top = 72
+    Left = 176
+    Top = 24
     object ALSearchNext: TAction
       Caption = 'Search next'
       ShortCut = 114
@@ -292,8 +293,8 @@ object MainForm: TMainForm
     end
   end
   object MM: TMainMenu
-    Left = 208
-    Top = 72
+    Left = 224
+    Top = 24
     object MMFile: TMenuItem
       Caption = '&File'
       OnClick = MMFileClick
@@ -378,7 +379,14 @@ object MainForm: TMainForm
       object OpenonGitHub1: TMenuItem
         Action = ALOpenSource
       end
-      object About2: TMenuItem
+      object MMAboutVideoLAN: TMenuItem
+        Caption = 'Visit VideoLAN VLC site'
+        OnClick = MMAboutVideoLANClick
+      end
+      object MMAboutN1: TMenuItem
+        Caption = '-'
+      end
+      object MMAboutAbout: TMenuItem
         Action = ALAbout
       end
     end
@@ -387,13 +395,13 @@ object MainForm: TMainForm
     Filter = 'All Files|*.*'
     Options = [ofOverwritePrompt, ofNoChangeDir, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Save Packet as RAW data'
-    Left = 48
-    Top = 152
+    Left = 64
+    Top = 80
   end
   object AutoExecTimer: TTimer
     Interval = 50
     OnTimer = AutoExecTimerTimer
-    Left = 136
-    Top = 216
+    Left = 176
+    Top = 80
   end
 end

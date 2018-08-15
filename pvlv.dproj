@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{16F122A0-2C7D-40A5-B55A-181B778B515C}</ProjectGuid>
-        <ProjectVersion>14.3</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>pvlv.dpr</MainSource>
         <Base>True</Base>
@@ -60,16 +60,20 @@
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
+        <SanitizedProjectName>pvlv</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>23</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.0.23;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.0.23;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <DCC_UsePackage>bindcompvcl;vclie;vcltouch;bindcompfmx;vclribbon;VclSmp;fmx;dsnap;rtl;dbrtl;fmxase;vcl;IndyCore;bindcomp;IndySystem;fmxobj;vclx;svnui;xmlrtl;svn;vclimg;fmxdae;IndyProtocols;MetropolisUILiveTile;vclactnband;bindengine;vcldb;vcldsnap;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -83,24 +87,27 @@
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>23</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.0.23;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.0.23;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_DebugInformation>false</DCC_DebugInformation>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
         <VerInfo_Build>28</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.1.28;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.3.1.28;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -186,6 +193,10 @@
                     <VersionInfoKeys Name="CFBundleAllowMixedLocalizations"/>
                     <VersionInfoKeys Name="CFBundleExecutable"/>
                 </VersionInfoKeys>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

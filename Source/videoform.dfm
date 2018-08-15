@@ -2,8 +2,8 @@ object VideoLink: TVideoLink
   Left = 0
   Top = 0
   Caption = 'VideoLink'
-  ClientHeight = 361
-  ClientWidth = 520
+  ClientHeight = 370
+  ClientWidth = 510
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,18 +14,19 @@ object VideoLink: TVideoLink
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignSize = (
-    520
-    361)
+    510
+    370)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 16
-    Top = 315
+    Top = 312
     Width = 22
     Height = 13
     Anchors = [akLeft, akBottom]
     Caption = 'Time'
     OnClick = Label1Click
+    ExplicitTop = 315
   end
   object BtnPlay: TButton
     Left = 176
@@ -73,7 +74,7 @@ object VideoLink: TVideoLink
     OnClick = BtnCloseClick
   end
   object BtnPause: TButton
-    Left = 352
+    Left = 348
     Top = 8
     Width = 75
     Height = 25
@@ -83,18 +84,17 @@ object VideoLink: TVideoLink
   end
   object TrackBar1: TTrackBar
     Left = 8
-    Top = 333
+    Top = 332
     Width = 488
-    Height = 20
+    Height = 30
     Anchors = [akLeft, akRight, akBottom]
     TabOrder = 6
     ThumbLength = 10
-    TickMarks = tmTopLeft
+    TickMarks = tmBoth
     OnChange = TrackBar1Change
-    ExplicitTop = 347
   end
   object BtnSetSync: TButton
-    Left = 433
+    Left = 428
     Top = 8
     Width = 75
     Height = 25
@@ -104,7 +104,7 @@ object VideoLink: TVideoLink
   end
   object CBFollow: TCheckBox
     Left = 399
-    Top = 310
+    Top = 309
     Width = 97
     Height = 17
     Alignment = taLeftJustify

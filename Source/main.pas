@@ -40,7 +40,7 @@ type
     MMSearchFindNext: TMenuItem;
     About1: TMenuItem;
     OpenonGitHub1: TMenuItem;
-    About2: TMenuItem;
+    MMAboutAbout: TMenuItem;
     ALOpenFile: TAction;
     ALAppendFile: TAction;
     ALOpenSource: TAction;
@@ -77,6 +77,8 @@ type
     MMOpenVideoLink: TMenuItem;
     ALVideoLinkSave: TAction;
     MMVideoLinkSave: TMenuItem;
+    MMAboutN1: TMenuItem;
+    MMAboutVideoLAN: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -117,6 +119,7 @@ type
     procedure ALVideoLinkExecute(Sender: TObject);
     procedure MMVideoLinkSaveClick(Sender: TObject);
     procedure MMVideoClick(Sender: TObject);
+    procedure MMAboutVideoLANClick(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -327,6 +330,13 @@ Begin
   End;
 End;
 
+
+procedure TMainForm.MMAboutVideoLANClick(Sender: TObject);
+begin
+  if Not MMVideo.Enabled then
+    ShowMessage('This viewer requires the 32bits version of VLC to be installed');
+  ShellExecute(Handle, 'open','https://www.videolan.org/',nil,nil, SW_SHOWNORMAL) ;
+end;
 
 procedure TMainForm.MMFileClick(Sender: TObject);
 begin
