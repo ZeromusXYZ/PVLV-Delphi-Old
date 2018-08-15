@@ -474,12 +474,12 @@ procedure TMainForm.AutoExecTimerTimer(Sender: TObject);
 VAR
   I : Integer ;
   FN : String ;
-  Stuffloaded : Boolean ;
+  Stuffloaded : Integer ;
 begin
   AutoExecTimer.Enabled := False ;
 
   Caption := MyAppName ;
-  StuffLoaded := False ;
+  StuffLoaded := 0 ;
   For I := 1 to ParamCount do
   Begin
     FN := ParamStr(I);
@@ -487,14 +487,21 @@ begin
     Begin
       If PLLoaded.LoadFromFile(FN,'') Then
       Begin
-        StuffLoaded := True ;
         Caption := Caption + ' <= ' + FN ;
+        if (VideoLink.LinkFile = '')and(Stuffloaded < 0) then
+        Begin
+          OpenDialogLogFiles.FileName := FN ;
+        End else
+        Begin
+          OpenDialogLogFiles.FileName := '' ;
+        End;
+        StuffLoaded := Stuffloaded + 1 ;
       End;
     End;
 
   End;
 
-  If Stuffloaded Then
+  If Stuffloaded > 0 Then
   Begin
     LBPackets.Clear ;
     PL.Clear ;
@@ -503,6 +510,18 @@ begin
 
     FillListBox ;
   End;
+
+  if (OpenDialogLogFiles.FileName <> '')and(Stuffloaded = 1) then
+  Begin
+    If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,'.pvlvvl')) Then
+      VideoLink.ShowVideoForm ;
+  End else
+  Begin
+    // Don't link once we load more than one file
+    VideoLink.LinkOffset := 0 ;
+    VideoLink.LinkFile := '' ;
+  End;
+
 
 end;
 
