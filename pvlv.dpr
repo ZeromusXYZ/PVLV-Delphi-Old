@@ -11,7 +11,8 @@ uses
   searchdialog in 'Source\searchdialog.pas' {DlgSearch},
   filterdialog in 'Source\filterdialog.pas' {DlgFilter},
   loadingform in 'Source\loadingform.pas' {FormLoading},
-  videoform in 'Source\videoform.pas' {VideoLink};
+  videoform in 'Source\videoform.pas' {VideoLink},
+  settingsdialog in 'Source\settingsdialog.pas' {DlgSettings};
 
 {$R *.res}
 
@@ -19,9 +20,10 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
+  Application.CreateForm(TDlgSettings, DlgSettings);
+  Application.CreateForm(TFormLoading, FormLoading);
   Application.CreateForm(TDlgSearch, DlgSearch);
   Application.CreateForm(TDlgFilter, DlgFilter);
-  Application.CreateForm(TFormLoading, FormLoading);
   Application.CreateForm(TVideoLink, VideoLink);
   Application.Run;
 end.

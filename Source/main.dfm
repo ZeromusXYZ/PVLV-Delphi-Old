@@ -272,14 +272,6 @@ object MainForm: TMainForm
       Caption = 'About ...'
       OnExecute = ALAboutExecute
     end
-    object ALGridFont1: TAction
-      Caption = 'ALGridFont1'
-      OnExecute = ALGridFont1Execute
-    end
-    object ALGridFont2: TAction
-      Caption = 'ALGridFont2'
-      OnExecute = ALGridFont2Execute
-    end
     object ALAppendClipboard: TAction
       Caption = 'ALAppendClipboard'
       OnExecute = ALAppendClipboardExecute
@@ -290,6 +282,10 @@ object MainForm: TMainForm
     end
     object ALVideoLinkSave: TAction
       Caption = 'ALVideoLinkSave'
+    end
+    object ALOpenSettings: TAction
+      Caption = 'ALOpenSettings'
+      OnExecute = ALOpenSettingsExecute
     end
   end
   object MM: TMainMenu
@@ -312,8 +308,16 @@ object MainForm: TMainForm
       object MMFileN1: TMenuItem
         Caption = '-'
       end
+      object MMFileSettings: TMenuItem
+        Action = ALOpenSettings
+        Caption = 'Settings ...'
+      end
+      object MMFileN2: TMenuItem
+        Caption = '-'
+      end
       object MMFileExit: TMenuItem
         Caption = 'E&xit'
+        ShortCut = 16471
         OnClick = MMFileExitClick
       end
     end
@@ -347,17 +351,6 @@ object MainForm: TMainForm
           Caption = '-'
           OnClick = MMFilterApplyN1Click
         end
-      end
-    end
-    object MMFont: TMenuItem
-      Caption = 'Grid Font'
-      object ALGridFont11: TMenuItem
-        Action = ALGridFont1
-        Caption = 'Normal'
-      end
-      object ALGridFont21: TMenuItem
-        Action = ALGridFont2
-        Caption = 'Small'
       end
     end
     object MMVideo: TMenuItem

@@ -66,7 +66,7 @@ var
 
 implementation
 
-Uses Main, Registry ;
+Uses Main, Registry , settingsdialog;
 
 {$R *.dfm}
 
@@ -297,6 +297,8 @@ begin
   IsAvailable := False ;
   fCurrentPos := -1 ;
   fCurrentSize := 0 ;
+  if Not DlgSettings.UseLibVLC then Exit ;
+
   // load vlc library
   vlclib := LoadVLCLibrary(GetVLCLibPath());
   if vlclib = 0 then begin

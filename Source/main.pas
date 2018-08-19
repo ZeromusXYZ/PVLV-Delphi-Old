@@ -60,11 +60,6 @@ type
     MInfo: TRichEdit;
     CBOriginalData: TCheckBox;
     SplitterHorizontal: TSplitter;
-    ALGridFont1: TAction;
-    ALGridFont2: TAction;
-    MMFont: TMenuItem;
-    ALGridFont11: TMenuItem;
-    ALGridFont21: TMenuItem;
     PMPacketListN4: TMenuItem;
     PMPacketListEditParser: TMenuItem;
     SaveDialogRawPacket: TSaveDialog;
@@ -79,6 +74,9 @@ type
     MMVideoLinkSave: TMenuItem;
     MMAboutN1: TMenuItem;
     MMAboutVideoLAN: TMenuItem;
+    ALOpenSettings: TAction;
+    MMFileSettings: TMenuItem;
+    MMFileN2: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LBPacketsClick(Sender: TObject);
@@ -120,6 +118,7 @@ type
     procedure MMVideoLinkSaveClick(Sender: TObject);
     procedure MMVideoClick(Sender: TObject);
     procedure MMAboutVideoLANClick(Sender: TObject);
+    procedure ALOpenSettingsExecute(Sender: TObject);
   private
     { Private declarations }
     MyAppName : String ;
@@ -138,6 +137,7 @@ type
     CurrentDateTimeOffset : TDateTime ;
 
     Procedure MoveToOffset(Offset : Int64);
+    procedure ApplySettings;
   end;
 
 var
@@ -148,7 +148,7 @@ implementation
 {$R *.dfm}
 
 uses System.UITypes, System.Types, System.StrUtils, shellapi, Vcl.Clipbrd,
-  packetparser, searchdialog, filterdialog, loadingform;
+  packetparser, searchdialog, filterdialog, loadingform, settingsdialog;
 
 procedure GetBuildInfo(var V1, V2, V3, V4: word);
 var
@@ -477,6 +477,8 @@ VAR
   Stuffloaded : Integer ;
 begin
   AutoExecTimer.Enabled := False ;
+  ApplySettings ;
+  MMVideo.Visible := DlgSettings.UseLibVLC ; // this is not in ApplySettings, as it can be disabled with the form still open
 
   Caption := MyAppName ;
   StuffLoaded := 0 ;
@@ -654,6 +656,35 @@ begin
       Caption := MyAppName ;
     End;
   End;
+end;
+
+procedure TMainForm.ALOpenSettingsExecute(Sender: TObject);
+begin
+  DlgSettings.ShowModal ;
+  ApplySettings ;
+End;
+
+procedure TMainForm.ApplySettings;
+Begin
+  if (DlgSettings.GridFontType = 0) then
+  Begin
+    SG.Font.Name := 'Consolas' ;
+    SG.Font.Size := 10 ;
+    SG.Font.Style := [] ;
+    SG.Invalidate ;
+    SG.DefaultRowHeight := 24 ;
+    SG.Invalidate ;
+  End;
+  if (DlgSettings.GridFontType = 1) then
+  Begin
+    SG.Font.Name := 'Consolas' ;
+    // SG.Font.Name := 'Fixedsys' ;
+    SG.Font.Size := 8 ;
+    SG.Font.Style := [] ;
+    SG.DefaultRowHeight := 16 ;
+    SG.Invalidate ;
+  End;
+
 end;
 
 procedure TMainForm.ALOpenSourceExecute(Sender: TObject);
