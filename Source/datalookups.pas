@@ -209,7 +209,6 @@ VAR
   Res : Integer ;
   LUP : TDataLookupPair ;
   FP : String ;
-  C : Integer ;
 Begin
   FP := ExtractFilePath(Application.ExeName) + 'lookup\' ;
   Res := FindFirst(FP + '*.txt',faAnyFile,DI);
@@ -218,8 +217,6 @@ Begin
     LUP := TDataLookupPair.Create ;
     LUP.Source := LowerCase(ChangeFileExt(DI.Name,''));
     LUP.DL := TDataLookup.Create(FP+DI.Name);
-
-    C := LUP.DL.Count ;
 
     SetLength(LookupList,Length(LookupList)+1);
     LookupList[Length(LookupList)-1] := LUP ;

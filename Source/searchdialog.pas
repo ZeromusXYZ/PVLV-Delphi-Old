@@ -173,7 +173,7 @@ Begin
       fUInt16FilterOn := True ;
       HasData := True ;
     End Else
-    If (I >= $10000) and (I <= $FFFFFFFF) Then
+    If (I >= $10000) {and (I <= $FFFFFFFF)} Then
     Begin
       fUInt32Filter := I ;
       fUInt32FilterOn := True ;

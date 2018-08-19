@@ -14,7 +14,7 @@ object DlgFilter: TDlgFilter
     517
     371)
   PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 14
   object OKBtn: TButton
     Left = 434
     Top = 8
@@ -159,8 +159,8 @@ object DlgFilter: TDlgFilter
     object Label2: TLabel
       Left = 16
       Top = 120
-      Width = 45
-      Height = 13
+      Width = 50
+      Height = 14
       Caption = 'Filter ID'#39's'
     end
     object RBInOff: TRadioButton

@@ -282,16 +282,16 @@ Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
   End;
 
 VAR
-  Result , S : String ;
-  I , L , Line : Integer ;
+  S : String ;
+  I , L : Integer ;
   B : Byte ;
-  NCol : Integer ;
+  // NCol : Integer ;
   C : TColor ;
 Begin
   RE.Clear ;
   RE.Brush.Color := clWhite ;
   RE.Font.Color := clBlack ;
-  NCol := 0 ;
+  // NCol := 0 ;
 
   W(RawDataHeader1,clBlack);
   W(RawDataHeader2);
@@ -314,7 +314,7 @@ Begin
     If (I mod 4) = 3 Then
     Begin
       W(' ',clBlack,False); // Result := Result + ' ' ; // extra spacing every 4 bytes
-      NCol := NCol + 1 ;
+      // NCol := NCol + 1 ;
     End;
 
     If (I mod ValuesPerRow) = ValuesPerRow-1 Then

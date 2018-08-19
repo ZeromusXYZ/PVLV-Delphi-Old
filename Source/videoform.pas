@@ -60,6 +60,16 @@ type
   plibvlc_media_t           = type Pointer;
   libvlc_time_t_ptr = ^libvlc_time_t;
   libvlc_time_t = Int64;
+  libvlc_state_t = (
+      libvlc_NothingSpecial,
+      libvlc_Opening,
+      libvlc_Buffering,
+      libvlc_Playing,
+      libvlc_Paused,
+      libvlc_Stopped,
+      libvlc_Ended,
+      libvlc_Error
+      ) ;
 
 var
   VideoLink: TVideoLink;
@@ -78,6 +88,7 @@ var
   libvlc_media_player_play           : procedure(p_media_player : Plibvlc_media_player_t); cdecl;
   libvlc_media_player_stop           : procedure(p_media_player : Plibvlc_media_player_t); cdecl;
   libvlc_media_player_pause          : procedure(p_media_player : Plibvlc_media_player_t); cdecl;
+  libvlc_media_player_set_pause      : procedure(p_media_player : Plibvlc_media_player_t; do_pause:integer); cdecl;
   libvlc_media_player_release        : procedure(p_media_player : Plibvlc_media_player_t); cdecl;
   libvlc_media_player_is_playing     : function(p_media_player : Plibvlc_media_player_t) : Integer; cdecl;
   libvlc_media_release               : procedure(p_media : Plibvlc_media_t); cdecl;
@@ -88,6 +99,7 @@ var
   libvlc_media_player_get_length     : function(p_media : Plibvlc_media_t) : libvlc_time_t ; cdecl;
   libvlc_media_player_set_time       : procedure(p_media : Plibvlc_media_t; i_time:libvlc_time_t) ; cdecl;
   libvlc_media_player_next_frame     : procedure(p_instance : Plibvlc_instance_t); cdecl;
+  libvlc_media_player_get_state      : function(p_media : Plibvlc_media_t) : libvlc_state_t ; cdecl;
 
   vlcLib: integer;
   vlcInstance: plibvlc_instance_t;
@@ -107,11 +119,11 @@ end;
 // -----------------------------------------------------------------------------
 function GetVLCLibPath: String;
 var
-  Handle: HKEY;
-  RegType: Integer;
-  DataSize: Cardinal;
+  // Handle: HKEY;
+  // RegType: Integer;
+  // DataSize: Cardinal;
   Key: PWideChar;
-  Res : Integer ;
+  // Res : Integer ;
   Reg : TRegistry ;
 begin
   Result := '';
@@ -148,7 +160,7 @@ end;
 // -----------------------------------------------------------------------------
 function LoadVLCLibrary(APath: string): integer;
 begin
-  Result := LoadLibrary(PWideChar(APath + '\libvlccore.dll'));
+  {Result := }LoadLibrary(PWideChar(APath + '\libvlccore.dll'));
   Result := LoadLibrary(PWideChar(APath + '\libvlc.dll'));
 end;
 
@@ -176,6 +188,7 @@ begin
   GetAProcAddress(vlcHandle, @libvlc_media_player_play, 'libvlc_media_player_play', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_stop, 'libvlc_media_player_stop', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_pause, 'libvlc_media_player_pause', failedList);
+  GetAProcAddress(vlcHandle, @libvlc_media_player_set_pause, 'libvlc_media_player_set_pause', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_release, 'libvlc_media_player_release', failedList);
   GetAProcAddress(vlcHandle, @libvlc_release, 'libvlc_release', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_is_playing, 'libvlc_media_player_is_playing', failedList);
@@ -185,6 +198,7 @@ begin
   GetAProcAddress(vlcHandle, @libvlc_media_player_get_length, 'libvlc_media_player_get_length', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_set_time, 'libvlc_media_player_set_time', failedList);
   GetAProcAddress(vlcHandle, @libvlc_media_player_next_frame, 'libvlc_media_player_next_frame', failedList);
+  GetAProcAddress(vlcHandle, @libvlc_media_player_get_state, 'libvlc_media_player_get_state', failedList);
   // if all functions loaded, result is an empty list, otherwise result is a list of functions failed
   Result := failedList.Count = 0;
 end;
@@ -278,6 +292,7 @@ begin
   End;
   LinkFile := '' ;
   LinkOffset := 0 ;
+  Close ;
 end;
 
 procedure TVideoLink.BtnPauseClick(Sender: TObject);
@@ -286,7 +301,8 @@ begin
     Showmessage('Not playing');
     Exit;
   end;
-  // stop vlc media player
+  // pause vlc media player
+
   libvlc_media_player_pause(vlcMediaPlayer);
 end;
 
@@ -334,19 +350,23 @@ end;
 procedure TVideoLink.PosUpdateTimerTimer(Sender: TObject);
 VAR
   Pos : Double ;
+  State : libvlc_state_t ;
+  T : String ;
 begin
+  T := 'Media Not Loaded' ;
   If Assigned(vlcMediaPlayer) Then
   Begin
-    Pos := libvlc_media_player_get_position(vlcMediaPlayer) ;
+    State := libvlc_media_player_get_state(vlcMediaPlayer);
+    Pos := libvlc_media_player_get_position(vlcMediaPlayer);
     If (Pos < 0) Then
     Begin
-      Label1.Caption := 'Not started' ;
+      T := 'Not started' ;
     End Else
     Begin
       fCurrentPos := libvlc_media_player_get_time(vlcMediaPlayer);
       fCurrentSize := libvlc_media_player_get_length(vlcMediaPlayer);
       //Label1.Caption := 'Pos: '+ FloatToStr(Round(Pos * 100.0))+'%' ;
-      Label1.Caption := 'Pos: '+ FloatToStr(Round(Pos * 100.0))+'% - ' + IntToStr(fCurrentPos)+' / ' + IntToStr(fCurrentSize) ;
+      T := 'Pos: '+ FloatToStr(Round(Pos * 100.0))+'% - ' + IntToStr(fCurrentPos)+' / ' + IntToStr(fCurrentSize) ;
 
       TrackBar1.Tag := 1 ; // using this as update flag
       TrackBar1.Frequency := 15 ;
@@ -359,10 +379,18 @@ begin
         MainForm.MoveToOffset(CurrentPos+LinkOffset);
 
     End;
-  End Else
-  Begin
-    Label1.Caption := 'Media Not Loaded' ;
+    case State of
+      libvlc_NothingSpecial: ;
+      libvlc_Opening: T := T + ' - Opening' ;
+      libvlc_Buffering: T := T + ' - Buffering'  ;
+      libvlc_Playing: T := T + ' - Playing'  ;
+      libvlc_Paused: T := T + ' - Paused'  ;
+      libvlc_Stopped: T := T + ' - Stopped'  ;
+      libvlc_Ended: T := T + ' - Ended'  ;
+      libvlc_Error: T := T + ' - ERROR'  ;
+    end;
   End;
+  Label1.Caption := T;
 end;
 
 procedure TVideoLink.TrackBar1Change(Sender: TObject);
@@ -377,7 +405,6 @@ Function TVideoLink.TryOpenVideoLink(FN : String):Boolean;
 VAR
   SL, Line : TStringList ;
   I : Integer ;
-  N : Int64 ;
 Begin
   Result := False ;
   LinkOffset := 0 ;

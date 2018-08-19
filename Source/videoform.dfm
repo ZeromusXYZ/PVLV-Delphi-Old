@@ -20,30 +20,30 @@ object VideoLink: TVideoLink
   TextHeight = 13
   object Label1: TLabel
     Left = 16
-    Top = 312
+    Top = 315
     Width = 22
     Height = 13
     Anchors = [akLeft, akBottom]
     Caption = 'Time'
     OnClick = Label1Click
-    ExplicitTop = 315
   end
   object BtnPlay: TButton
     Left = 176
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'Play'
+    Caption = 'Play ||>'
     TabOrder = 0
     OnClick = BtnPlayClick
   end
   object BtnStop: TButton
-    Left = 257
+    Left = 347
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'Stop'
+    Caption = 'Stop [ ]'
     TabOrder = 1
+    Visible = False
     OnClick = BtnStopClick
   end
   object BtnOpen: TButton
@@ -51,7 +51,7 @@ object VideoLink: TVideoLink
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'Open'
+    Caption = 'Open Video'
     TabOrder = 2
     OnClick = BtnOpenClick
   end
@@ -74,11 +74,11 @@ object VideoLink: TVideoLink
     OnClick = BtnCloseClick
   end
   object BtnPause: TButton
-    Left = 348
+    Left = 257
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'Pause'
+    Caption = 'Pause ||'
     TabOrder = 5
     OnClick = BtnPauseClick
   end
@@ -103,13 +103,13 @@ object VideoLink: TVideoLink
     OnClick = BtnSetSyncClick
   end
   object CBFollow: TCheckBox
-    Left = 399
-    Top = 309
-    Width = 97
+    Left = 328
+    Top = 315
+    Width = 168
     Height = 17
     Alignment = taLeftJustify
     Anchors = [akRight, akBottom]
-    Caption = 'Follow packets'
+    Caption = 'Packetview follows playback'
     TabOrder = 8
   end
   object OpenVideoDialog: TOpenDialog

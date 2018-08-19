@@ -2,8 +2,9 @@ unit filterdialog;
 
 interface
 
-uses Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Forms,
-  Vcl.Controls, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Vcl.Dialogs, packetdefs;
+uses Winapi.Windows, System.SysUtils, System.Classes, System.UITypes,
+  Vcl.Graphics, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.Buttons,
+  Vcl.ExtCtrls, Vcl.Dialogs, packetdefs;
 
 type
   TDlgFilter = class(TForm)
@@ -195,8 +196,8 @@ End;
 Procedure TDlgFilter.LoadFromFile(FN : String);
 VAR
   SL , Line : TStringList ;
-  I , P , V : Integer ;
-  S , Key , Val : String ;
+  I , V : Integer ;
+  Key , Val : String ;
 Begin
   SL := TStringList.Create ;
   Line := TStringList.Create ;
@@ -297,8 +298,6 @@ Begin
 End;
 
 procedure TDlgFilter.ClearFilters ;
-VAR
-  I : Integer ;
 begin
   RBOutOff.Checked := True ;
   RBOutHide.Checked := False ;

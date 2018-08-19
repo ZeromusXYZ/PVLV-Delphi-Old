@@ -738,7 +738,7 @@ Begin
 
         If (LType = 'abilityrecastlist') Then
         Begin
-          If (LOffset >= LastPos) Then LastPos := LOffset + 8 ;
+          // If (LOffset >= LastPos) Then LastPos := LOffset + 8 ;
 
           If (LSubOffset <= 0) then LSubOffset := 0 ;
 
@@ -969,7 +969,7 @@ Begin
 
         If (LType = 'buffs') Then
         Begin
-          If (LOffset >= LastPos) Then LastPos := LOffset ;
+          // If (LOffset >= LastPos) Then LastPos := LOffset ;
 
           // Subvalue is count to use
           If LSubOffset <= 1 Then LSubOffset := 1 ;
@@ -1298,7 +1298,7 @@ Begin
 
         If (LType = 'packet-in-0x028') Then // Need to build a custom parser for this (atm)
         Begin
-          If (LOffset >= LastPos) Then LastPos := LOffset ;
+          // If (LOffset >= LastPos) Then LastPos := LOffset ;
           LastPos := AddPacketInfoIn0x028(PD,SG);
           {
           While (N < PD.RawSize-1) Do

@@ -171,9 +171,9 @@ Begin
 End;
 
 Function FFXITimeStampToStr(T : UInt32):String;
-VAR
-  DT : TDateTime ;
-  Offset : TDateTime ;
+//VAR
+//  DT : TDateTime ;
+//  Offset : TDateTime ;
 Begin
   If T = $7FFFFFFF Then
     Result := 'Infinite'
@@ -627,10 +627,9 @@ End;
 
 Function TPacketData.GetPackedString16AtPos(Pos:Integer;EncodeKey: TEncoded6BitStringKey):String;
 VAR
-  I, N : Integer ;
-  B , ByteVal : Byte ;
+  N : Integer ;
+  B : Byte ;
   Offset : Integer ;
-  Mask : Byte ;
   LastChar : Char ;
   Bit : Boolean ;
 Begin
@@ -671,7 +670,7 @@ Begin
 
   LastChar := #255 ;
   Offset := 0 ;
-  Bit := False ;
+  // Bit := False ;
   While (LastChar <> #0)and( (Offset div 8) < 15) Do
   Begin
     B := $00 ;
@@ -690,8 +689,6 @@ Begin
 End;
 
 Function TPacketData.GetIP4AtPos(Pos:Integer):String;
-VAR
-  I : Integer ;
 Begin
   Result := '' ;
   If (Pos >= Length(fRawBytes)-4) Then Exit ;
@@ -701,7 +698,6 @@ End;
 
 Function TPacketData.GetJobflagsAtPos(Pos:Integer):String;
 VAR
-  I : Integer ;
   Flags : UInt32 ;
   BitShiftCount : Integer ;
   JobName : String ;
@@ -971,11 +967,11 @@ VAR
   PD : TPacketData ;
   S : String ;
   PreferedPacketType : Byte ;
-  StartTime : TDateTime ;
+  // StartTime : TDateTime ;
   IsUndefined, AskForType  : Boolean ;
   LogFileType : Byte ; // 0 unknown ; 1 Windower PacketViewer ; 2 Ashita Packeteer
 Begin
-  StartTime := Now ;
+  // StartTime := Now ;
 
   IsUndefined := True ;
   AskForType := True ;
