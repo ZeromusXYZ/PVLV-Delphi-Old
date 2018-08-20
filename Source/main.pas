@@ -3,7 +3,8 @@ unit main;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, packetdefs, Vcl.CheckLst,
   Vcl.Tabs, Vcl.Menus, Vcl.Grids, Vcl.ComCtrls, System.Actions, Vcl.ActnList,
   Vcl.ExtCtrls, videoform;
@@ -121,22 +122,23 @@ type
     procedure ALOpenSettingsExecute(Sender: TObject);
   private
     { Private declarations }
-    MyAppName : String ;
-    FilterList : TStringList ;
+    MyAppName: String;
+    FilterList: TStringList;
     Procedure MoveToSync;
-    procedure FillListBox ;
-    Procedure AddSGRow(Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);
-    Procedure SearchNext ;
+    procedure FillListBox;
+    Procedure AddSGRow(Pos: Integer; VarName: String; Val: String;
+      DataSize: Integer = 1);
+    Procedure SearchNext;
     Procedure ApplyFromDialog;
-    Procedure UpdatePacketDetails(ShowBlock:String);
-    Procedure PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
+    Procedure UpdatePacketDetails(ShowBlock: String);
+    Procedure PrintRawBytesAsHexRE(PD: TPacketData; RE: TRichEdit);
   public
     { Public declarations }
-    PL, PLLoaded : TPacketList ;
-    CurrentSync : Word ;
-    CurrentDateTimeOffset : TDateTime ;
+    PL, PLLoaded: TPacketList;
+    CurrentSync: Word;
+    CurrentDateTimeOffset: TDateTime;
 
-    Procedure MoveToOffset(Offset : Int64);
+    Procedure MoveToOffset(Offset: Int64);
     procedure ApplySettings;
   end;
 
@@ -150,7 +152,7 @@ implementation
 uses System.UITypes, System.Types, System.StrUtils, shellapi, Vcl.Clipbrd,
   packetparser, searchdialog, filterdialog, loadingform, settingsdialog;
 
-procedure GetBuildInfo(var V1, V2, V3, V4: word);
+procedure GetBuildInfo(var V1, V2, V3, V4: Word);
 var
   VerInfoSize, VerValueSize, Dummy: DWORD;
   VerInfo: Pointer;
@@ -159,208 +161,250 @@ begin
   VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
   if VerInfoSize > 0 then
   begin
-      GetMem(VerInfo, VerInfoSize);
-      try
-        if GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo) then
+    GetMem(VerInfo, VerInfoSize);
+    try
+      if GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo) then
+      begin
+        VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
+        with VerValue^ do
         begin
-          VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
-          with VerValue^ do
-          begin
-            V1 := dwFileVersionMS shr 16;
-            V2 := dwFileVersionMS and $FFFF;
-            V3 := dwFileVersionLS shr 16;
-            V4 := dwFileVersionLS and $FFFF;
-          end;
+          V1 := dwFileVersionMS shr 16;
+          V2 := dwFileVersionMS and $FFFF;
+          V3 := dwFileVersionLS shr 16;
+          V4 := dwFileVersionLS and $FFFF;
         end;
-      finally
-        FreeMem(VerInfo, VerInfoSize);
       end;
+    finally
+      FreeMem(VerInfo, VerInfoSize);
+    end;
   end;
 end;
 
 function GetBuildInfoAsString: string;
 var
-  V1, V2, V3, V4: word;
+  V1, V2, V3, V4: Word;
 begin
   GetBuildInfo(V1, V2, V3, V4);
-  Result := IntToStr(V1) + '.' + IntToStr(V2) + '.' +
-    IntToStr(V3) + '.' + IntToStr(V4);
+  Result := IntToStr(V1) + '.' + IntToStr(V2) + '.' + IntToStr(V3) + '.' +
+    IntToStr(V4);
 end;
 
 Procedure TMainForm.MoveToSync;
 VAR
-  I :Integer ;
+  I: Integer;
 Begin
-  For I := 0 to PL.Count-1 Do
-  If PL.GetPacket(I).PacketSync = CurrentSync Then
-  Begin
-    LBPackets.ItemIndex := I ;
-    LBPackets.Invalidate ;
-    Exit ;
-  End;
-End;
-
-Procedure TMainForm.MoveToOffset(Offset : Int64);
-VAR
-  I :Integer ;
-  FindTime : TDateTime ;
-Begin
-  If PLLoaded.Count <= 0 Then Exit ;
-  FindTime := PLLoaded.GetPacket(0).TimeStamp + (Offset / 24 / 60 / 60 / 1000);
-
-  For I := 0 to PL.Count-1 Do
-  If PL.GetPacket(I).TimeStamp >= FindTime Then
-  Begin
-    If (LBPackets.ItemIndex <> I) Then
+  For I := 0 to PL.Count - 1 Do
+    If PL.GetPacket(I).PacketSync = CurrentSync Then
     Begin
-      LBPackets.ItemIndex := I ;
-      LBPackets.Invalidate ;
+      LBPackets.ItemIndex := I;
+      LBPackets.Invalidate;
+      Exit;
     End;
-    UpdatePacketDetails('-');
-    Exit ;
-  End;
 End;
 
-
-
-procedure TMainForm.FillListBox ;
+Procedure TMainForm.MoveToOffset(Offset: Int64);
 VAR
-  I : Integer ;
+  I: Integer;
+  FindTime, OffsetAsTime : TDateTime;
+  CurrentPos, LBCenterPos: Integer;
 Begin
-  LBPackets.Cursor := crHourGlass ;
-  Application.ProcessMessages ;
-  LBPackets.Clear ;
+  If PLLoaded.Count <= 0 Then
+    Exit;
+  OffsetAsTime := (1.0 / 24.0 / 60.0 / 60.0 / 1000.0 * Offset);
+  FindTime := PLLoaded.GetPacket(0).VirtualTimeStamp + OffsetAsTime ;
+  CurrentPos := LBPackets.ItemIndex;
 
-  FormLoading.Show ;
-  FormLoading.BringToFront ;
+  LBCenterPos := (LBPackets.Height div LBPackets.ItemHeight) div 2 ;
+
+
+  // Start loop from current pos, likely to find it faster
+  For I := CurrentPos to PL.Count - 1 Do
+    If PL.GetPacket(I).VirtualTimeStamp >= FindTime Then
+    Begin
+      if (I <> CurrentPos) then
+      Begin
+        // Only update if we're on the a different packet as the current selection
+        If (LBPackets.ItemIndex <> I) Then
+        Begin
+          if I > LBCenterPos then // make it easier on the eyes to follow
+            LBPackets.TopIndex := I - LBCenterPos;
+          LBPackets.ItemIndex := I;
+          LBPackets.Invalidate;
+        End;
+        UpdatePacketDetails('-');
+      End;
+      Exit;
+    End;
+
+  For I := 0 to CurrentPos - 1 Do
+    If PL.GetPacket(I).VirtualTimeStamp >= FindTime Then
+    Begin
+      if (I <> CurrentPos) then
+      Begin
+        // Only update if we're on the a different packet as the current selection
+        If (LBPackets.ItemIndex <> I) Then
+        Begin
+          if I > LBCenterPos then // make it easier on the eyes to follow
+            LBPackets.TopIndex := I - LBCenterPos;
+          LBPackets.ItemIndex := I;
+          LBPackets.Invalidate;
+        End;
+        UpdatePacketDetails('-');
+      End;
+      Exit;
+    End;
+
+
+End;
+
+procedure TMainForm.FillListBox;
+VAR
+  I: Integer;
+Begin
+  LBPackets.Cursor := crHourGlass;
+  Application.ProcessMessages;
+  LBPackets.Clear;
+
+  FormLoading.Show;
+  FormLoading.BringToFront;
   If (Random(100) >= 95) Then
     FormLoading.Caption := 'Sacrificing Taru-Taru''s, please wait ...'
   Else
-    FormLoading.Caption := 'Populating ListBox, please wait ...' ;
+    FormLoading.Caption := 'Populating ListBox, please wait ...';
 
-  For I := 0 to PL.Count-1 Do
+  For I := 0 to PL.Count - 1 Do
   Begin
 
     If FormLoading.Visible and ((I mod 100) = 0) Then
     Begin
-      FormLoading.Repaint ;
-      FormLoading.PB.Max := PL.Count ;
-      FormLoading.PB.Min := 0 ;
-      FormLoading.PB.Position := I ;
+      FormLoading.Repaint;
+      FormLoading.PB.Max := PL.Count;
+      FormLoading.PB.Min := 0;
+      FormLoading.PB.Position := I;
     End;
 
     Case PL.GetPacket(I).PacketLogType of
-      pltOut : LBPackets.Items.Add('=> '+PL.GetPacket(I).Header);
-      pltIn : LBPackets.Items.Add('<= '+PL.GetPacket(I).Header);
+      pltOut:
+        LBPackets.Items.Add('=> ' + PL.GetPacket(I).Header);
+      pltIn:
+        LBPackets.Items.Add('<= ' + PL.GetPacket(I).Header);
     Else
-      LBPackets.Items.Add('?? '+PL.GetPacket(I).Header);
+      LBPackets.Items.Add('?? ' + PL.GetPacket(I).Header);
     End;
   End;
   If LBPackets.Count > 0 Then
   Begin
-    LBPackets.ItemIndex := 0 ;
+    LBPackets.ItemIndex := 0;
   End;
   LBPackets.Invalidate;
-  LBPackets.Cursor := crDefault ;
-  If Assigned(FormLoading) Then FormLoading.Hide ;
+  LBPackets.Cursor := crDefault;
+  If Assigned(FormLoading) Then
+    FormLoading.Hide;
 End;
 
-Procedure TMainForm.PrintRawBytesAsHexRE(PD : TPacketData ; RE : TRichedit);
+Procedure TMainForm.PrintRawBytesAsHexRE(PD: TPacketData; RE: TRichEdit);
 
-  Procedure W(Txt : String;Col : TColor = -1;EoL:Boolean=True);
+  Procedure W(Txt: String; Col: TColor = -1; EoL: Boolean = True);
   Begin
     RE.SelStart := Length(RE.Text);
-    RE.SelLength := 0 ;
+    RE.SelLength := 0;
     If Col <> -1 Then
-      RE.SelAttributes.Color := Col ;
+      RE.SelAttributes.Color := Col;
     If EoL Then
       RE.SelText := Txt + CR
     Else
-      RE.SelText := Txt ;
+      RE.SelText := Txt;
     RE.SelStart := Length(RE.Text);
-    RE.SelLength := 0 ;
+    RE.SelLength := 0;
   End;
 
 VAR
-  S : String ;
-  I , L : Integer ;
-  B : Byte ;
+  S: String;
+  I, L: Integer;
+  B: Byte;
   // NCol : Integer ;
-  C : TColor ;
+  C: TColor;
 Begin
-  RE.Clear ;
-  RE.Brush.Color := clWhite ;
-  RE.Font.Color := clBlack ;
+  RE.Clear;
+  RE.Brush.Color := clWhite;
+  RE.Font.Color := clBlack;
   // NCol := 0 ;
 
-  W(RawDataHeader1,clBlack);
+  W(RawDataHeader1, clBlack);
   W(RawDataHeader2);
-  L := 0 ;
-  For I := 0 To PD.RawSize-1 Do
+  L := 0;
+  For I := 0 To PD.RawSize - 1 Do
   Begin
     // C := DataCol(NCol);
-    C := RGB($CC,$CC,$CC);
+    C := RGB($CC, $CC, $CC);
 
     If ((I mod ValuesPerRow) = 0) Then
     Begin
-      W(IntToHex(L,2) + ' | ',clBlack,False);
+      W(IntToHex(L, 2) + ' | ', clBlack, False);
     End;
 
     B := PD.GetByteAtPos(I);
-    S := IntToHex(B,2);
-    W(S,C,False);
+    S := IntToHex(B, 2);
+    W(S, C, False);
     // Result := Result + S ;
 
     If (I mod 4) = 3 Then
     Begin
-      W(' ',clBlack,False); // Result := Result + ' ' ; // extra spacing every 4 bytes
+      W(' ', clBlack, False);
+      // Result := Result + ' ' ; // extra spacing every 4 bytes
       // NCol := NCol + 1 ;
     End;
 
-    If (I mod ValuesPerRow) = ValuesPerRow-1 Then
+    If (I mod ValuesPerRow) = ValuesPerRow - 1 Then
     Begin
       W(' ');
       // Result := Result + #13#10 ;
-      L := L + 1 ;
-    End Else
+      L := L + 1;
+    End
+    Else
     Begin
-      W(' ',clBlack,False);
+      W(' ', clBlack, False);
       // Result := Result + ' ' ;
     End;
   End;
 End;
 
-
 procedure TMainForm.MMAboutVideoLANClick(Sender: TObject);
 begin
   if Not MMVideo.Enabled then
-    ShowMessage('This viewer requires the 32bits version of VLC to be installed');
-  ShellExecute(Handle, 'open','https://www.videolan.org/',nil,nil, SW_SHOWNORMAL) ;
+    ShowMessage
+      ('This viewer requires the 32bits version of VLC to be installed');
+  ShellExecute(Handle, 'open', 'https://www.videolan.org/', nil, nil,
+    SW_SHOWNORMAL);
 end;
 
 procedure TMainForm.MMFileClick(Sender: TObject);
 begin
-  MMFileAppend.Enabled := PLLoaded.Count > 0 ;
+  MMFileAppend.Enabled := PLLoaded.Count > 0;
   MMFileAddClipboard.Enabled := (Clipboard.AsText <> '');
 end;
 
 procedure TMainForm.MMFileExitClick(Sender: TObject);
 begin
-  Close ;
+  Close;
 end;
 
 procedure TMainForm.MMFilterApplyN1Click(Sender: TObject);
 Var
-  MI : TMenuItem ;
+  MI: TMenuItem;
 begin
   // Apply filter
-  If (Sender is TMenuItem) Then MI := (Sender as TMenuItem) else MI := nil ;
+  If (Sender is TMenuItem) Then
+    MI := (Sender as TMenuItem)
+  else
+    MI := nil;
 
   If Assigned(MI) and (MI.Tag >= 0) Then
   Begin
     Try
-      DlgFilter.LoadFromFile(ExtractFilePath(Application.ExeName)+'filters\'+FilterList[MI.Tag]);
-      ApplyFromDialog ;
+      DlgFilter.LoadFromFile(ExtractFilePath(Application.ExeName) + 'filters\' +
+        FilterList[MI.Tag]);
+      ApplyFromDialog;
       // ShowMessage('Apply -> ' + FilterList[MI.Tag]);
     Except
 
@@ -370,33 +414,35 @@ end;
 
 procedure TMainForm.MMFilterClick(Sender: TObject);
 Var
-  DI : TSearchRec ;
-  I , Res : Integer ;
-  MI : TMenuItem ;
+  DI: TSearchRec;
+  I, Res: Integer;
+  MI: TMenuItem;
 begin
   // Populate filter menu items
-  MMFilterReset.Enabled := (PL.FilterOutType <> ftFilterOff) or (PL.FilterInType <> ftFilterOff);
-  MMFilterApply.Enabled := PLLoaded.Count > 0 ;
+  MMFilterReset.Enabled := (PL.FilterOutType <> ftFilterOff) or
+    (PL.FilterInType <> ftFilterOff);
+  MMFilterApply.Enabled := PLLoaded.Count > 0;
   Try
     // Clear menu items
-    For I := MMFilterApply.Count-1 DownTo 0 Do
-    If (MMFilterApply.Items[I].Tag >= 0) Then
-    Begin
-      MMFilterApply.Items[I].Free ;
-      //MMFilterApply.Delete(I);
-    End;
-    FilterList.Clear ;
+    For I := MMFilterApply.Count - 1 DownTo 0 Do
+      If (MMFilterApply.Items[I].Tag >= 0) Then
+      Begin
+        MMFilterApply.Items[I].Free;
+        // MMFilterApply.Delete(I);
+      End;
+    FilterList.Clear;
 
-    Res := FindFirst(ExtractFilePath(Application.ExeName)+'filters\*.pfl',faAnyFile,DI);
+    Res := FindFirst(ExtractFilePath(Application.ExeName) + 'filters\*.pfl',
+      faAnyFile, DI);
     While (Res = 0) Do
     Begin
       If ((DI.Attr and faDirectory) = 0) Then
       Begin
         FilterList.Add(DI.Name);
         MI := TMenuItem.Create(MMFilterApply);
-        MI.Caption := ChangeFileExt(DI.Name,'');
-        MI.Tag := FilterList.Count-1 ; // list offset
-        MI.OnClick := MMFilterApplyN1Click ;
+        MI.Caption := ChangeFileExt(DI.Name, '');
+        MI.Tag := FilterList.Count - 1; // list offset
+        MI.OnClick := MMFilterApplyN1Click;
         MMFilterApply.Add(MI);
       End;
 
@@ -416,52 +462,63 @@ end;
 procedure TMainForm.MMFilterEditClick(Sender: TObject);
 begin
   DlgFilter.CopySettingsFromPacketList(PL);
-  If DlgFilter.ShowModal <> mrOk Then Exit ;
+  If DlgFilter.ShowModal <> mrOk Then
+    Exit;
   // Copy settings from form
 
-  ApplyFromDialog ;
+  ApplyFromDialog;
 End;
 
 Procedure TMainForm.ApplyFromDialog;
 VAR
-  I, V, P : Integer ;
-  S : String ;
+  I, V, P: Integer;
+  S: String;
 Begin
-  If (DlgFilter.RBOutOff.Checked) Then PL.FilterOutType := ftFilterOff ;
-  If (DlgFilter.RBOutHide.Checked) Then PL.FilterOutType := ftHidePackets ;
-  If (DlgFilter.RBOutShow.Checked) Then PL.FilterOutType := ftShowPackets ;
-  If (DlgFilter.RBOutNone.Checked) Then PL.FilterOutType := ftAllowNone ;
+  If (DlgFilter.RBOutOff.Checked) Then
+    PL.FilterOutType := ftFilterOff;
+  If (DlgFilter.RBOutHide.Checked) Then
+    PL.FilterOutType := ftHidePackets;
+  If (DlgFilter.RBOutShow.Checked) Then
+    PL.FilterOutType := ftShowPackets;
+  If (DlgFilter.RBOutNone.Checked) Then
+    PL.FilterOutType := ftAllowNone;
 
-  If (DlgFilter.RBInOff.Checked) Then PL.FilterInType := ftFilterOff ;
-  If (DlgFilter.RBInHide.Checked) Then PL.FilterInType := ftHidePackets ;
-  If (DlgFilter.RBInShow.Checked) Then PL.FilterInType := ftShowPackets ;
-  If (DlgFilter.RBInNone.Checked) Then PL.FilterInType := ftAllowNone ;
+  If (DlgFilter.RBInOff.Checked) Then
+    PL.FilterInType := ftFilterOff;
+  If (DlgFilter.RBInHide.Checked) Then
+    PL.FilterInType := ftHidePackets;
+  If (DlgFilter.RBInShow.Checked) Then
+    PL.FilterInType := ftShowPackets;
+  If (DlgFilter.RBInNone.Checked) Then
+    PL.FilterInType := ftAllowNone;
 
-  SetLength(PL.FilterOutList,0);
-  For I := 0 To DlgFilter.LBOut.Count-1 Do
+  SetLength(PL.FilterOutList, 0);
+  For I := 0 To DlgFilter.LBOut.Count - 1 Do
   Begin
     S := DlgFilter.LBOut.Items[I];
-    P := Pos(' ',S);
-    If (P > 0) Then S := Copy(S,1,P-1);
+    P := Pos(' ', S);
+    If (P > 0) Then
+      S := Copy(S, 1, P - 1);
 
-    If TryStrToInt(S,V) Then
+    If TryStrToInt(S, V) Then
     Begin
-      SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
-      PL.FilterOutList[Length(PL.FilterOutList)-1] := V ;
+      SetLength(PL.FilterOutList, Length(PL.FilterOutList) + 1);
+      PL.FilterOutList[Length(PL.FilterOutList) - 1] := V;
     End;
   End;
 
-  SetLength(PL.FilterInList,0);
-  For I := 0 To DlgFilter.LBIn.Count-1 Do
+  SetLength(PL.FilterInList, 0);
+  For I := 0 To DlgFilter.LBIn.Count - 1 Do
   Begin
     S := DlgFilter.LBIn.Items[I];
-    P := Pos(' ',S);
-    If (P > 0) Then S := Copy(S,1,P-1);
+    P := Pos(' ', S);
+    If (P > 0) Then
+      S := Copy(S, 1, P - 1);
 
-    If TryStrToInt(S,V) Then
+    If TryStrToInt(S, V) Then
     Begin
-      SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
-      PL.FilterInList[Length(PL.FilterInList)-1] := V ;
+      SetLength(PL.FilterInList, Length(PL.FilterInList) + 1);
+      PL.FilterInList[Length(PL.FilterInList) - 1] := V;
     End;
   End;
 
@@ -472,32 +529,34 @@ end;
 
 procedure TMainForm.AutoExecTimerTimer(Sender: TObject);
 VAR
-  I : Integer ;
-  FN : String ;
-  Stuffloaded : Integer ;
+  I: Integer;
+  FN: String;
+  Stuffloaded: Integer;
 begin
-  AutoExecTimer.Enabled := False ;
-  ApplySettings ;
-  MMVideo.Visible := DlgSettings.UseLibVLC ; // this is not in ApplySettings, as it can be disabled with the form still open
+  AutoExecTimer.Enabled := False;
+  ApplySettings;
+  MMVideo.Visible := DlgSettings.UseLibVLC;
+  // this is not in ApplySettings, as it can be disabled with the form still open
 
-  Caption := MyAppName ;
-  StuffLoaded := 0 ;
+  Caption := MyAppName;
+  Stuffloaded := 0;
   For I := 1 to ParamCount do
   Begin
     FN := ParamStr(I);
     If (FN <> '') and FileExists(FN) Then
     Begin
-      If PLLoaded.LoadFromFile(FN,'') Then
+      If PLLoaded.LoadFromFile(FN, '') Then
       Begin
-        Caption := Caption + ' <= ' + FN ;
-        if (VideoLink.LinkFile = '')and(Stuffloaded < 0) then
+        Caption := Caption + ' <= ' + FN;
+        if (VideoLink.LinkFile = '') and (Stuffloaded < 0) then
         Begin
-          OpenDialogLogFiles.FileName := FN ;
-        End else
+          OpenDialogLogFiles.FileName := FN;
+        End
+        else
         Begin
-          OpenDialogLogFiles.FileName := '' ;
+          OpenDialogLogFiles.FileName := '';
         End;
-        StuffLoaded := Stuffloaded + 1 ;
+        Stuffloaded := Stuffloaded + 1;
       End;
     End;
 
@@ -505,25 +564,27 @@ begin
 
   If Stuffloaded > 0 Then
   Begin
-    LBPackets.Clear ;
-    PL.Clear ;
-    PL.ClearFilters ;
+    If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
+    LBPackets.Clear;
+    PL.Clear;
+    PL.ClearFilters;
     PL.CopyFrom(PLLoaded);
 
-    FillListBox ;
+    FillListBox;
   End;
 
-  if (OpenDialogLogFiles.FileName <> '')and(Stuffloaded = 1) then
+  if (OpenDialogLogFiles.FileName <> '') and (Stuffloaded = 1) then
   Begin
-    If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,'.pvlvvl')) Then
-      VideoLink.ShowVideoForm ;
-  End else
+    If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,
+      '.pvlvvl')) Then
+      VideoLink.ShowVideoForm;
+  End
+  else
   Begin
     // Don't link once we load more than one file
-    VideoLink.LinkOffset := 0 ;
-    VideoLink.LinkFile := '' ;
+    VideoLink.LinkOffset := 0;
+    VideoLink.LinkFile := '';
   End;
-
 
 end;
 
@@ -539,7 +600,7 @@ end;
 
 procedure TMainForm.MMFilterResetClick(Sender: TObject);
 begin
-  PL.ClearFilters ;
+  PL.ClearFilters;
   PL.CopyFrom(PLLoaded);
   FillListBox;
   MoveToSync;
@@ -552,7 +613,8 @@ end;
 
 procedure TMainForm.MMVideoLinkSaveClick(Sender: TObject);
 begin
-  If (Not VideoLink.IsAvailable) or (VideoLink.CurrentPos < 0) Then Exit ;
+  If (Not VideoLink.IsAvailable) or (VideoLink.CurrentPos < 0) Then
+    Exit;
 
   If FileExists(VideoLink.LinkFile) Then
     VideoLink.SaveVideoLink(VideoLink.LinkSourceFile);
@@ -561,12 +623,14 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Randomize;
-  PLLoaded := TPacketList.Create(True); // NOTE: PLLoaded actually owns all TPacketData
-  PL := TPacketList.Create(False); // NOTE: PL just copies reference of TPacketData as needed by the filter
-  LBPackets.Clear ;
-  MyAppName := Caption ;
-  CurrentSync := $FFFF ;
-  FilterList := TStringList.Create ;
+  PLLoaded := TPacketList.Create(True);
+  // NOTE: PLLoaded actually owns all TPacketData
+  PL := TPacketList.Create(False);
+  // NOTE: PL just copies reference of TPacketData as needed by the filter
+  LBPackets.Clear;
+  MyAppName := Caption;
+  CurrentSync := $FFFF;
+  FilterList := TStringList.Create;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -576,120 +640,131 @@ begin
   FreeAndNil(PLLoaded);
 end;
 
-
-
 procedure TMainForm.ALAboutExecute(Sender: TObject);
 begin
   // If you contribute to the code, please add your nickname here
-  MessageDlg('Made by ZeromusXYZ'+
-    #10#13+
-    'Version ' + GetBuildInfoAsString,mtInformation,[mbClose],-1);
+  MessageDlg('Made by ZeromusXYZ' + #10#13 + 'Version ' + GetBuildInfoAsString,
+    mtInformation, [mbClose], -1);
 end;
 
 procedure TMainForm.ALAppendFileExecute(Sender: TObject);
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
-    LBPackets.Clear ;
-    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName,'') Then
+    if Assigned(VideoLink) then VideoLink.FullClose;
+
+    LBPackets.Clear;
+    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName, '') Then
     Begin
+      If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
       // Fill listbox
       PL.ClearFilters;
       PL.CopyFrom(PLLoaded);
 
-      FillListBox ;
+      FillListBox;
 
-      Caption := MyAppName + ' - multiple files loaded' ;
-      VideoLink.LinkSourceFile := '' ; // disable link file
-    End else
+      Caption := MyAppName + ' - multiple files loaded';
+      VideoLink.LinkSourceFile := ''; // disable link file
+    End
+    else
     Begin
       // Clear Listbox
       LBPackets.Items.Add('Failed Loading Data');
-      Caption := MyAppName ;
+      Caption := MyAppName;
     End;
   End;
 end;
 
 procedure TMainForm.ALGridFont1Execute(Sender: TObject);
 begin
-  SG.Font.Name := 'Consolas' ;
-  SG.Font.Size := 10 ;
-  SG.Font.Style := [] ;
-  SG.Invalidate ;
-  SG.DefaultRowHeight := 24 ;
-  SG.Invalidate ;
+  SG.Font.Name := 'Consolas';
+  SG.Font.Size := 10;
+  SG.Font.Style := [];
+  SG.Invalidate;
+  SG.DefaultRowHeight := 24;
+  SG.Invalidate;
 end;
 
 procedure TMainForm.ALGridFont2Execute(Sender: TObject);
 begin
-  SG.Font.Name := 'Consolas' ;
-//  SG.Font.Name := 'Fixedsys' ;
-  SG.Font.Size := 8 ;
-  SG.Font.Style := [] ;
-  SG.DefaultRowHeight := 16 ;
-  SG.Invalidate ;
+  SG.Font.Name := 'Consolas';
+  // SG.Font.Name := 'Fixedsys' ;
+  SG.Font.Size := 8;
+  SG.Font.Style := [];
+  SG.DefaultRowHeight := 16;
+  SG.Invalidate;
 end;
 
 procedure TMainForm.ALOpenFileExecute(Sender: TObject);
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
-    LBPackets.Clear ;
-    PL.Clear ;
-    PL.ClearFilters ;
-    PLLoaded.Clear ;
-    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName,'') Then
+    if Assigned(VideoLink) then VideoLink.FullClose;
+    
+    LBPackets.Clear;
+    PL.Clear;
+    PL.ClearFilters;
+    PLLoaded.Clear;
+    If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName, '') Then
     Begin
+      If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
       // Fill listbox
       PL.ClearFilters;
       PL.CopyFrom(PLLoaded);
 
-      FillListBox ;
+      FillListBox;
 
-      Caption := MyAppName + ' - ' + OpenDialogLogFiles.FileName ;
-      If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,'.pvlvvl')) Then
-        VideoLink.ShowVideoForm ;
-    End else
+      Caption := MyAppName + ' - ' + OpenDialogLogFiles.FileName;
+      If VideoLink.TryOpenVideoLink(ChangeFileExt(OpenDialogLogFiles.FileName,
+        '.pvlvvl')) Then
+      Begin
+        VideoLink.ShowVideoForm;
+        MMVideoLinkSave.Enabled := False ;
+      End;
+    End
+    else
     Begin
       // Clear Listbox
       LBPackets.Items.Add('Failed Loading Data');
-      Caption := MyAppName ;
+      Caption := MyAppName;
     End;
   End;
 end;
 
 procedure TMainForm.ALOpenSettingsExecute(Sender: TObject);
 begin
-  DlgSettings.ShowModal ;
-  ApplySettings ;
+  DlgSettings.ShowModal;
+  ApplySettings;
 End;
 
 procedure TMainForm.ApplySettings;
 Begin
   if (DlgSettings.GridFontType = 0) then
   Begin
-    SG.Font.Name := 'Consolas' ;
-    SG.Font.Size := 10 ;
-    SG.Font.Style := [] ;
-    SG.Invalidate ;
-    SG.DefaultRowHeight := 24 ;
-    SG.Invalidate ;
+    SG.Font.Name := 'Consolas';
+    SG.Font.Size := 10;
+    SG.Font.Style := [];
+    SG.Invalidate;
+    SG.DefaultRowHeight := 24;
+    SG.Invalidate;
   End;
   if (DlgSettings.GridFontType = 1) then
   Begin
-    SG.Font.Name := 'Consolas' ;
+    SG.Font.Name := 'Consolas';
     // SG.Font.Name := 'Fixedsys' ;
-    SG.Font.Size := 8 ;
-    SG.Font.Style := [] ;
-    SG.DefaultRowHeight := 16 ;
-    SG.Invalidate ;
+    SG.Font.Size := 8;
+    SG.Font.Style := [];
+    SG.DefaultRowHeight := 16;
+    SG.Invalidate;
   End;
 
 end;
 
 procedure TMainForm.ALOpenSourceExecute(Sender: TObject);
 begin
-  ShellExecute(Handle, 'open','https://github.com/ZeromusXYZ/PacketViewerLogViewer',nil,nil, SW_SHOWNORMAL) ;
+  ShellExecute(Handle, 'open',
+    'https://github.com/ZeromusXYZ/PacketViewerLogViewer', nil, nil,
+    SW_SHOWNORMAL);
 end;
 
 procedure TMainForm.ALSearchNewExecute(Sender: TObject);
@@ -702,189 +777,209 @@ begin
   // Still nothing loaded ?
   If PLLoaded.Count <= 0 Then
   Begin
-    ShowMessage('Doesn''t seem like we have anything in the current file to find');
-    Exit ;
+    ShowMessage
+      ('Doesn''t seem like we have anything in the current file to find');
+    Exit;
   End;
 
   // Show search Dialog
   If DlgSearch.ShowModal = mrOk Then
   Begin
     // Let's see if we can find it
-    SearchNext ;
+    SearchNext;
     LBPackets.SetFocus;
   End;
 end;
 
 procedure TMainForm.ALSearchNextExecute(Sender: TObject);
 begin
-  If ((DlgSearch.FormValid) and (DlgSearch.CBShowMatchesOnly.Checked = False)) Then
+  If ((DlgSearch.FormValid) and
+    (DlgSearch.CBShowMatchesOnly.Checked = False)) Then
   Begin
     // When pressing F3 and we didn't filter on previous search, then search next ...
-    SearchNext ;
-  End Else
+    SearchNext;
+  End
+  Else
   Begin
-    ALSearchNew.Execute ;
+    ALSearchNew.Execute;
   End;
 end;
 
 procedure TMainForm.ALVideoLinkExecute(Sender: TObject);
 begin
   If VideoLink.IsAvailable Then
-    VideoLink.ShowVideoForm ;
+    VideoLink.ShowVideoForm;
 end;
 
 procedure TMainForm.ALAppendClipboardExecute(Sender: TObject);
 VAR
-  LastCount : Integer ;
-  ClipStr : String ;
+  LastCount: Integer;
+  ClipStr: String;
 begin
-  LastCount := PLLoaded.Count ;
+  if Assigned(VideoLink) then VideoLink.FullClose;
+  LastCount := PLLoaded.Count;
 
-  If (not Clipboard.HasFormat(CF_TEXT)) or (Clipboard.AsText = '') Then Exit ;
+  If (not Clipboard.HasFormat(CF_TEXT)) or (Clipboard.AsText = '') Then
+    Exit;
 
-  ClipStr := Clipboard.AsText ;
+  ClipStr := Clipboard.AsText;
   // Some messings around so copy/paste from various sources/os work
-  ClipStr := ReplaceStr(ClipStr,#10#13,#13);
-  ClipStr := ReplaceStr(ClipStr,#13#10,#13);
-  ClipStr := ReplaceStr(ClipStr,#13,#13#10);
+  ClipStr := ReplaceStr(ClipStr, #10#13, #13);
+  ClipStr := ReplaceStr(ClipStr, #13#10, #13);
+  ClipStr := ReplaceStr(ClipStr, #13, #13#10);
 
-  If PLLoaded.LoadFromFile('',ClipStr) Then
+  If PLLoaded.LoadFromFile('', ClipStr) Then
   Begin
     If PLLoaded.Count <= LastCount Then
     Begin
-      ShowMessage('Clipboard did not seem to contain any valid packet data ...'#10#13+ClipStr);
-      Caption := MyAppName ;
-      Exit ;
+      ShowMessage
+        ('Clipboard did not seem to contain any valid packet data ...'#10#13
+        + ClipStr);
+      Caption := MyAppName;
+      Exit;
     End;
+    If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
 
-    LBPackets.Clear ;
+    LBPackets.Clear;
     // Fill listbox
     PL.ClearFilters;
     PL.CopyFrom(PLLoaded);
 
-    FillListBox ;
+    FillListBox;
 
-    Caption := MyAppName + ' - clipboard data loaded' ;
-    VideoLink.LinkSourceFile := '' ; // disable link file
-  End else
+    Caption := MyAppName + ' - clipboard data loaded';
+    VideoLink.LinkSourceFile := ''; // disable link file
+  End
+  else
   Begin
     // Clear Listbox
     LBPackets.Items.Add('Failed Loading Data');
-    Caption := MyAppName ;
+    Caption := MyAppName;
   End;
   //
 end;
 
-Procedure TMainForm.AddSGRow(Pos : Integer; VarName:String; Val:String;DataSize : Integer = 1);
+Procedure TMainForm.AddSGRow(Pos: Integer; VarName: String; Val: String;
+  DataSize: Integer = 1);
 Begin
-  SG.RowCount := SG.RowCount + 1 ;
-  SG.Cells[0,SG.RowCount-1] := '0x'+IntToHex(Pos,2);
-  SG.Cells[1,SG.RowCount-1] := IntToStr(DataSize);
-  SG.Cells[2,SG.RowCount-1] := VarName ;
-  SG.Cells[3,SG.RowCount-1] := Val ;
+  SG.RowCount := SG.RowCount + 1;
+  SG.Cells[0, SG.RowCount - 1] := '0x' + IntToHex(Pos, 2);
+  SG.Cells[1, SG.RowCount - 1] := IntToStr(DataSize);
+  SG.Cells[2, SG.RowCount - 1] := VarName;
+  SG.Cells[3, SG.RowCount - 1] := Val;
 End;
 
-Procedure TMainForm.UpdatePacketDetails(ShowBlock:String);
+Procedure TMainForm.UpdatePacketDetails(ShowBlock: String);
 VAR
-  PD : TPacketData ;
-  S : String ;
-  I : Integer ;
+  PD: TPacketData;
+  S: String;
+  I: Integer;
 Begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
-  If Not Assigned(PD) Then Exit ;
-  CurrentSync := PD.PacketSync ;
-  LInfo.Caption := PD.OriginalHeader ;
+  If Not Assigned(PD) Then
+    Exit;
+  CurrentSync := PD.PacketSync;
+  LInfo.Caption := PD.OriginalHeader;
   // MInfo.Text := PD.RawText.Text ;
-  MInfo.Lines.Clear ;
+  MInfo.Lines.Clear;
   Case PD.PacketLogType Of
-    1 : S := 'OUT' ;
-    2 : S := 'IN ' ;
+    1:
+      S := 'OUT';
+    2:
+      S := 'IN ';
   Else
-    S := '???' ;
+    S := '???';
   End;
 
   // Raw Data viewer
-  MInfo.Lines.Clear ;
+  MInfo.Lines.Clear;
   If (CBOriginalData.Checked) Then
   Begin
-    MInfo.SelAttributes.Color := clBlack ;
+    MInfo.SelAttributes.Color := clBlack;
     MInfo.Lines.Add('Source:');
     MInfo.Lines.Add(PD.RawText.Text);
-    UpdateActiveRE := nil ; // Disable color fields
-  End Else
+    UpdateActiveRE := nil; // Disable color fields
+  End
+  Else
   Begin
     // MInfo.Lines.Add('RAW Data:');
     // MInfo.Lines.Add(PD.PrintRawBytesAsHex);
-    UpdateActiveRE := MInfo ; // Enable color fields
-    PrintRawBytesAsHexRE(PD,MInfo);
+    UpdateActiveRE := MInfo; // Enable color fields
+    PrintRawBytesAsHexRE(PD, MInfo);
   End;
 
   // Reset StringGrid
-  SG.RowCount := 0 ;
-  SG.ColCount := 4 ;
-  SG.ColWidths[0] := 40 ;
-  SG.ColWidths[1] := 0 ;
-  SG.ColWidths[2] := 150 ;
-  SG.ColWidths[3] := SG.Width - 220 ;
-  SG.Cols[0].Text := 'Pos' ;
-  SG.Cols[1].Text := 'Size' ;
-  SG.Cols[2].Text := 'VAR' ;
-  SG.Cols[3].Text := 'Value' ;
+  SG.RowCount := 0;
+  SG.ColCount := 4;
+  SG.ColWidths[0] := 40;
+  SG.ColWidths[1] := 0;
+  SG.ColWidths[2] := 150;
+  SG.ColWidths[3] := SG.Width - 220;
+  SG.Cols[0].Text := 'Pos';
+  SG.Cols[1].Text := 'Size';
+  SG.Cols[2].Text := 'VAR';
+  SG.Cols[3].Text := 'Value';
 
   // Add general header
-  AddSGRow($0,'ID',S + ' 0x' + IntToHex(PD.PacketID,3)+ ' - ' + PacketTypeToString(PD.PacketLogType,PD.PacketID),2 );
-  AddSGRow($2,'Size',IntToStr(PD.PacketDataSize) + ' (0x'+IntToHex(PD.PacketDataSize,2)+')',2);
-  AddSGRow($2,'Sync',IntToStr(PD.PacketSync) + ' (0x'+ IntToHex(PD.PacketSync,4)+')',2);
+  AddSGRow($0, 'ID', S + ' 0x' + IntToHex(PD.PacketID, 3) + ' - ' +
+    PacketTypeToString(PD.PacketLogType, PD.PacketID), 2);
+  AddSGRow($2, 'Size', IntToStr(PD.PacketDataSize) + ' (0x' +
+    IntToHex(PD.PacketDataSize, 2) + ')', 2);
+  AddSGRow($2, 'Sync', IntToStr(PD.PacketSync) + ' (0x' +
+    IntToHex(PD.PacketSync, 4) + ')', 2);
 
   // Clear switch block info
-  CBShowBlock.Enabled := False ;
-  CBShowBlock.Text := '' ;
+  CBShowBlock.Enabled := False;
+  CBShowBlock.Text := '';
   // Fill info grid
-  AddPacketInfoToStringGrid(PD,SG,ShowBlock);
+  AddPacketInfoToStringGrid(PD, SG, ShowBlock);
   // Re-Mark headers
-  SG.FixedCols := 1 ;
-  SG.FixedRows := 1 ;
+  SG.FixedCols := 1;
+  SG.FixedRows := 1;
 
   // Block switch combobox
   If (AvailableBlocks.Count > 0) Then
   Begin
-    CBShowBlock.Clear ;
+    CBShowBlock.Clear;
     CBShowBlock.Items.Add('');
     CBShowBlock.Items.AddStrings(AvailableBlocks);
-    CBShowBlock.Text := '' ;
-    CBShowBlock.ItemIndex := 0 ;
-    CBShowBlock.Enabled := True ;
-  End else
+    CBShowBlock.Text := '';
+    CBShowBlock.ItemIndex := 0;
+    CBShowBlock.Enabled := True;
+  End
+  else
   Begin
-    CBShowBlock.Text := '' ;
-    CBShowBlock.Clear ;
-    CBShowBlock.Enabled := False ;
+    CBShowBlock.Text := '';
+    CBShowBlock.Clear;
+    CBShowBlock.Enabled := False;
   End;
 
   CBShowBlock.Visible := AvailableBlocks.Count > 0;
-  LShowBlock.Visible := CBShowBlock.Visible ;
+  LShowBlock.Visible := CBShowBlock.Visible;
 
-  For I := CBShowBlock.Items.Count-1 DownTo 0  Do
-  If CBShowBlock.Items[I] = ShowBlock Then
-  Begin
-    CBShowBlock.ItemIndex := I ;
-    Break ;
-  End;
+  For I := CBShowBlock.Items.Count - 1 DownTo 0 Do
+    If CBShowBlock.Items[I] = ShowBlock Then
+    Begin
+      CBShowBlock.ItemIndex := I;
+      Break;
+    End;
 
-  UpdateActiveRE := nil ;
+  UpdateActiveRE := nil;
 End;
 
 procedure TMainForm.LBPacketsClick(Sender: TObject);
 begin
   If (LBPackets.ItemIndex < 0) or (LBPackets.ItemIndex >= LBPackets.Count) Then
   Begin
-    MInfo.Text := 'Please select a valid item from the left' ;
-  End else
+    MInfo.Text := 'Please select a valid item from the left';
+  End
+  else
   Begin
     UpdatePacketDetails('-');
-    CurrentDateTimeOffset := PL.GetPacket(LBPackets.ItemIndex).TimeStamp - PLLoaded.GetPacket(0).TimeStamp ;
+    CurrentDateTimeOffset := PL.GetPacket(LBPackets.ItemIndex).VirtualTimeStamp -
+      PLLoaded.GetPacket(0).VirtualTimeStamp;
     If VideoLink.IsAvailable Then
-      VideoLink.MoveToTimePacketOffset(CurrentDateTimeOffset) ;
+      VideoLink.MoveToTimePacketOffset(CurrentDateTimeOffset);
   End;
   LBPackets.Invalidate;
 end;
@@ -892,75 +987,80 @@ end;
 procedure TMainForm.LBPacketsDrawItem(Control: TWinControl; Index: Integer;
   Rect: TRect; State: TOwnerDrawState);
 VAR
-  S : String ;
-  B, BarOn : Boolean ;
-  Flags : LongInt ;
-  PD : TPacketData ;
-  BarCol, TextCol, BackCol : TColor ;
-  BarRect : TRect ;
+  S: String;
+  B, BarOn: Boolean;
+  Flags: LongInt;
+  PD: TPacketData;
+  BarCol, TextCol, BackCol: TColor;
+  BarRect: TRect;
 begin
   S := LBPackets.Items[Index];
   B := (Index = LBPackets.ItemIndex);
-  BarCol := clBlack ;
-  BarOn := False ;
+  BarCol := clBlack;
+  BarOn := False;
   PD := PL.GetPacket(Index);
   With (Control as TListBox) Do
   Begin
     if (Assigned(PD) and (PD.PacketLogType = 1)) Then
     Begin
-      TextCol := clBlue ;
+      TextCol := clBlue;
       If B THen
       Begin
-        BackCol := RGB($CC,$CC,$FF);
-        If (CurrentSync = PD.PacketSync) Then BarOn := True ;
-      End else
-      If (CurrentSync = PD.PacketSync) Then
+        BackCol := RGB($CC, $CC, $FF);
+        If (CurrentSync = PD.PacketSync) Then
+          BarOn := True;
+      End
+      else If (CurrentSync = PD.PacketSync) Then
       Begin
-        BackCol := RGB($88,$88,$FF);
-        BarOn := True ;
-      End Else
-        BackCol := RGB($EE,$EE,$FF);
-    End Else
-    if (Assigned(PD) and (PD.PacketLogType = 2)) Then
+        BackCol := RGB($88, $88, $FF);
+        BarOn := True;
+      End
+      Else
+        BackCol := RGB($EE, $EE, $FF);
+    End
+    Else if (Assigned(PD) and (PD.PacketLogType = 2)) Then
     Begin
-      TextCol := clGreen ;
+      TextCol := clGreen;
       If B Then
       Begin
-        BackCol := RGB($CC,$FF,$CC);
-        If (CurrentSync = PD.PacketSync) Then BarOn := True ;
-      end else
-      If (CurrentSync = PD.PacketSync) Then
+        BackCol := RGB($CC, $FF, $CC);
+        If (CurrentSync = PD.PacketSync) Then
+          BarOn := True;
+      end
+      else If (CurrentSync = PD.PacketSync) Then
       Begin
-        BackCol := RGB($88,$FF,$88);
-        BarOn := True ;
-      End Else
-        BackCol := RGB($EE,$FF,$EE);
-    End Else
+        BackCol := RGB($88, $FF, $88);
+        BarOn := True;
+      End
+      Else
+        BackCol := RGB($EE, $FF, $EE);
+    End
+    Else
     Begin
-      TextCol := clBlack ;
+      TextCol := clBlack;
       BackCol := clWhite;
     End;
     // Draw Background
-    Canvas.Brush.Color := BackCol ;
+    Canvas.Brush.Color := BackCol;
     Canvas.FillRect(Rect);
 
-    Canvas.Font.Color := TextCol ;
-    Canvas.Brush.Color := BackCol ;
+    Canvas.Font.Color := TextCol;
+    Canvas.Brush.Color := BackCol;
     Flags := DrawTextBiDiModeFlags(DT_SINGLELINE or DT_VCENTER or DT_NOPREFIX);
     DrawText(Canvas.Handle, Items[Index], Length(Items[Index]), Rect, Flags);
 
     // Draw Side-bar markings if needed
     If (BarOn) Then
     Begin
-      Canvas.Brush.Color := BarCol ;
-      BarRect := Rect ;
+      Canvas.Brush.Color := BarCol;
+      BarRect := Rect;
       If (B) Then
         BarRect.Left := Rect.Right - 12
       Else
-        BarRect.Left := Rect.Right - 8 ;
+        BarRect.Left := Rect.Right - 8;
 
       Canvas.FillRect(BarRect);
-      Canvas.Brush.Color := BackCol ;
+      Canvas.Brush.Color := BackCol;
     End;
 
   End;
@@ -968,25 +1068,30 @@ end;
 
 procedure TMainForm.PMPacketListEditParserClick(Sender: TObject);
 VAR
-  FN , FullFileName : String ;
-  PD : TPacketData ;
-  SL : TStringList ;
+  FN, FullFileName: String;
+  PD: TPacketData;
+  SL: TStringList;
 begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
 
   If Assigned(PD) and (PD.PacketLogType <> pltUnknown) Then
   Begin
-    FN := 'parse\' ;
-    If (PD.PacketLogType = pltIn) Then FN := FN + 'in-' ;
-    If (PD.PacketLogType = pltOut) Then FN := FN + 'out-' ;
-    FN := FN + '0x' + IntToHex(PD.PacketID,3) + '.txt' ;
-    FullFileName := ExtractFilePath(Application.ExeName) + FN ;
+    FN := 'parse\';
+    If (PD.PacketLogType = pltIn) Then
+      FN := FN + 'in-';
+    If (PD.PacketLogType = pltOut) Then
+      FN := FN + 'out-';
+    FN := FN + '0x' + IntToHex(PD.PacketID, 3) + '.txt';
+    FullFileName := ExtractFilePath(Application.ExeName) + FN;
 
     If Not FileExists(FullFileName) Then
-      If MessageDlg('No parser file for '+FN+#10#13'Do you want to create one ?',TMsgDlgType.mtConfirmation,[mbYes,mbNo],-1) = mrYes Then
+      If MessageDlg('No parser file for ' + FN +
+        #10#13'Do you want to create one ?', TMsgDlgType.mtConfirmation,
+        [mbYes, mbNo], -1) = mrYes Then
       Begin
-        SL := TStringList.Create ;
-        SL.Add('file;'+ChangeFileExt(ExtractFileName(FN),'') +';Unknown;Newly created parser.');
+        SL := TStringList.Create;
+        SL.Add('file;' + ChangeFileExt(ExtractFileName(FN), '') +
+          ';Unknown;Newly created parser.');
         SL.Add('');
         SL.Add('rem;Add your parser lines here');
         Try
@@ -998,19 +1103,17 @@ begin
         FreeAndNil(SL);
       End;
 
-
     If FileExists(FullFileName) Then
-      ShellExecute(Handle, 'open',PChar(FullFileName),nil,nil, SW_SHOWNORMAL)
+      ShellExecute(Handle, 'open', PChar(FullFileName), nil, nil, SW_SHOWNORMAL)
     Else
       ShowMessage('File not found to edit');
   End;
-
 
 end;
 
 procedure TMainForm.PMPacketListHideThisClick(Sender: TObject);
 VAR
-  PD : TPacketData ;
+  PD: TPacketData;
 begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
 
@@ -1018,41 +1121,41 @@ begin
   Begin
     If (PL.FilterOutType <> ftHidePackets) Then
     Begin
-      SetLength(PL.FilterOutList,0);
-      PL.FilterOutType := ftHidePackets ;
+      SetLength(PL.FilterOutList, 0);
+      PL.FilterOutType := ftHidePackets;
     End;
-    SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
-    PL.FilterOutList[Length(PL.FilterOutList)-1] := PD.PacketID ;
+    SetLength(PL.FilterOutList, Length(PL.FilterOutList) + 1);
+    PL.FilterOutList[Length(PL.FilterOutList) - 1] := PD.PacketID;
 
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
-    Exit ;
-  End Else
-  If Assigned(PD) and (PD.PacketLogType = pltIn) Then
+    Exit;
+  End
+  Else If Assigned(PD) and (PD.PacketLogType = pltIn) Then
   Begin
     If (PL.FilterInType <> ftHidePackets) Then
     Begin
-      SetLength(PL.FilterInList,0);
-      PL.FilterInType := ftHidePackets ;
+      SetLength(PL.FilterInList, 0);
+      PL.FilterInType := ftHidePackets;
     End;
 
-    SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
-    PL.FilterInList[Length(PL.FilterInList)-1] := PD.PacketID ;
+    SetLength(PL.FilterInList, Length(PL.FilterInList) + 1);
+    PL.FilterInList[Length(PL.FilterInList) - 1] := PD.PacketID;
 
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
-    Exit ;
+    Exit;
   End;
 
 end;
 
 procedure TMainForm.PMPacketListOnlyInClick(Sender: TObject);
 begin
-  PL.FilterOutType := ftAllowNone ;
+  PL.FilterOutType := ftAllowNone;
   If PL.FilterInType = ftAllowNone Then
-    PL.FilterInType := ftFilterOff ;
+    PL.FilterInType := ftFilterOff;
 
   PL.FilterFrom(PLLoaded);
   FillListBox;
@@ -1061,9 +1164,9 @@ end;
 
 procedure TMainForm.PMPacketListOnlyOutClick(Sender: TObject);
 begin
-  PL.FilterInType := ftAllowNone ;
+  PL.FilterInType := ftAllowNone;
   If PL.FilterOutType = ftAllowNone Then
-    PL.FilterOutType := ftFilterOff ;
+    PL.FilterOutType := ftFilterOff;
 
   PL.FilterFrom(PLLoaded);
   FillListBox;
@@ -1072,7 +1175,7 @@ end;
 
 procedure TMainForm.PMPacketListOnlyShowClick(Sender: TObject);
 VAR
-  PD : TPacketData ;
+  PD: TPacketData;
 begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
 
@@ -1080,122 +1183,134 @@ begin
   Begin
     If (PL.FilterOutType <> ftShowPackets) Then
     Begin
-      SetLength(PL.FilterOutList,0);
-      PL.FilterOutType := ftShowPackets ;
+      SetLength(PL.FilterOutList, 0);
+      PL.FilterOutType := ftShowPackets;
     End;
-    SetLength(PL.FilterOutList,Length(PL.FilterOutList)+1);
-    PL.FilterOutList[Length(PL.FilterOutList)-1] := PD.PacketID ;
+    SetLength(PL.FilterOutList, Length(PL.FilterOutList) + 1);
+    PL.FilterOutList[Length(PL.FilterOutList) - 1] := PD.PacketID;
 
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
-    Exit ;
-  End Else
-  If Assigned(PD) and (PD.PacketLogType = pltIn) Then
+    Exit;
+  End
+  Else If Assigned(PD) and (PD.PacketLogType = pltIn) Then
   Begin
     If (PL.FilterInType <> ftShowPackets) Then
     Begin
-      SetLength(PL.FilterInList,0);
-      PL.FilterInType := ftShowPackets ;
+      SetLength(PL.FilterInList, 0);
+      PL.FilterInType := ftShowPackets;
     End;
 
-    SetLength(PL.FilterInList,Length(PL.FilterInList)+1);
-    PL.FilterInList[Length(PL.FilterInList)-1] := PD.PacketID ;
+    SetLength(PL.FilterInList, Length(PL.FilterInList) + 1);
+    PL.FilterInList[Length(PL.FilterInList) - 1] := PD.PacketID;
 
     PL.FilterFrom(PLLoaded);
     FillListBox;
     MoveToSync;
-    Exit ;
+    Exit;
   End;
 
 end;
 
 procedure TMainForm.PMPacketListOpenFileClick(Sender: TObject);
 begin
-  ALOpenFile.Execute ;
+  ALOpenFile.Execute;
 end;
 
 procedure TMainForm.PMPacketListPopup(Sender: TObject);
 VAR
-  PD : TPacketData ;
+  PD: TPacketData;
 begin
   If (PLLoaded.Count = 0) Then
   Begin
-    PMPacketListOpenFile.Visible := True ;
-    PMPacketListShow.Visible := False ;
-    PMPacketListOnlyShow.Visible := False ;
-    PMPacketListHideThis.Visible := False ;
-    PMPacketListReset.Visible := False ;
-    PMPacketListOnlyOut.Visible := False ;
-    PMPacketListOnlyIn.Visible := False ;
-    PMPacketListEditParser.Visible := False ;
-    PMPacketListSavePacket.Visible := False ;
-  End Else
+    PMPacketListOpenFile.Visible := True;
+    PMPacketListShow.Visible := False;
+    PMPacketListOnlyShow.Visible := False;
+    PMPacketListHideThis.Visible := False;
+    PMPacketListReset.Visible := False;
+    PMPacketListOnlyOut.Visible := False;
+    PMPacketListOnlyIn.Visible := False;
+    PMPacketListEditParser.Visible := False;
+    PMPacketListSavePacket.Visible := False;
+  End
+  Else
   Begin
-    PMPacketListOpenFile.Visible := False ;
+    PMPacketListOpenFile.Visible := False;
 
     PD := PL.GetPacket(LBPackets.ItemIndex);
     If Assigned(PD) Then
     Begin
-      PMPacketListShow.Visible := True ;
-      PMPacketListShow.Caption := 'Packet 0x' + IntToHex(PD.PacketID,4);
-      PMPacketListSavePacket.Visible := True ;
+      PMPacketListShow.Visible := True;
+      PMPacketListShow.Caption := 'Packet 0x' + IntToHex(PD.PacketID, 4);
+      PMPacketListSavePacket.Visible := True;
       Case PD.PacketLogType Of
-        pltOut : Begin
-          PMPacketListShow.Caption := 'Outgoing 0x' + IntToHex(PD.PacketID,3);
-          PMPacketListEditParser.Caption := 'Edit  parse\out-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
-          PMPacketListEditParser.Visible := True ;
-          PMPacketListEditParser.Enabled := True ;
-        End;
-        pltIn  : Begin
-          PMPacketListShow.Caption := 'Incomming 0x' + IntToHex(PD.PacketID,3);
-          PMPacketListEditParser.Caption := 'Edit  parse\in-0x' + IntToHex(PD.PacketID,3)+'.txt' ;
-          PMPacketListEditParser.Visible := True ;
-          PMPacketListEditParser.Enabled := True ;
-        End
+        pltOut:
+          Begin
+            PMPacketListShow.Caption := 'Outgoing 0x' +
+              IntToHex(PD.PacketID, 3);
+            PMPacketListEditParser.Caption := 'Edit  parse\out-0x' +
+              IntToHex(PD.PacketID, 3) + '.txt';
+            PMPacketListEditParser.Visible := True;
+            PMPacketListEditParser.Enabled := True;
+          End;
+        pltIn:
+          Begin
+            PMPacketListShow.Caption := 'Incomming 0x' +
+              IntToHex(PD.PacketID, 3);
+            PMPacketListEditParser.Caption := 'Edit  parse\in-0x' +
+              IntToHex(PD.PacketID, 3) + '.txt';
+            PMPacketListEditParser.Visible := True;
+            PMPacketListEditParser.Enabled := True;
+          End
       Else
         Begin
-          PMPacketListShow.Caption := 'Unknown Packet Type 0x' + IntToHex(PD.PacketID,3);
+          PMPacketListShow.Caption := 'Unknown Packet Type 0x' +
+            IntToHex(PD.PacketID, 3);
           PMPacketListEditParser.Caption := 'Edit not supported';
-          PMPacketListEditParser.Visible := True ;
-          PMPacketListEditParser.Enabled := False ;
+          PMPacketListEditParser.Visible := True;
+          PMPacketListEditParser.Enabled := False;
         End;
       End;
 
-      PMPacketListOnlyShow.Visible := (PD.PacketLogType = pltOut) or (PD.PacketLogType = pltIn);
-      PMPacketListOnlyShow.Enabled := PMPacketListOnlyShow.Visible and
-        ( // (
-          (PD.PacketLogType = pltOut)// and (PL.FilterOutType = ft (PD.PacketID <> PL.FilterOutOnly))
-          or // (
-          (PD.PacketLogType = pltIn)// and (PD.PacketID <> PL.FilterInOnly))
+      PMPacketListOnlyShow.Visible := (PD.PacketLogType = pltOut) or
+        (PD.PacketLogType = pltIn);
+      PMPacketListOnlyShow.Enabled := PMPacketListOnlyShow.Visible and ( // (
+        (PD.PacketLogType = pltOut)
+        // and (PL.FilterOutType = ft (PD.PacketID <> PL.FilterOutOnly))
+        or // (
+        (PD.PacketLogType = pltIn) // and (PD.PacketID <> PL.FilterInOnly))
         );
 
-      PMPacketListHideThis.Visible := (PD.PacketLogType = pltOut) or (PD.PacketLogType = pltIn);
-      PMPacketListHideThis.Enabled := PMPacketListHideThis.Visible and PMPacketListOnlyShow.Enabled and
-        ( // (
-        (PD.PacketLogType = pltOut) // and (Not WordInArray(PD.PacketID,PL.FilterOutList)))
+      PMPacketListHideThis.Visible := (PD.PacketLogType = pltOut) or
+        (PD.PacketLogType = pltIn);
+      PMPacketListHideThis.Enabled := PMPacketListHideThis.Visible and
+        PMPacketListOnlyShow.Enabled and ( // (
+        (PD.PacketLogType = pltOut)
+        // and (Not WordInArray(PD.PacketID,PL.FilterOutList)))
         or // (
-        (PD.PacketLogType = pltIn) // and (Not WordInArray(PD.PacketID,PL.FilterInList)))
+        (PD.PacketLogType = pltIn)
+        // and (Not WordInArray(PD.PacketID,PL.FilterInList)))
         );
 
       PMPacketListOnlyOut.Visible := (PL.FilterOutType <> ftAllowNone);
       PMPacketListOnlyIn.Visible := (PL.FilterInType <> ftAllowNone);
 
-      PMPacketListReset.Visible := (PL.FilterOutType <> ftFilterOff) or (PL.FilterInType <> ftFilterOff);
-    End Else
+      PMPacketListReset.Visible := (PL.FilterOutType <> ftFilterOff) or
+        (PL.FilterInType <> ftFilterOff);
+    End
+    Else
     Begin
 
     End;
 
-
   End;
-
 
 end;
 
 procedure TMainForm.PMPacketListResetClick(Sender: TObject);
 begin
-  PL.ClearFilters ;
+  PL.ClearFilters;
   PL.CopyFrom(PLLoaded);
   FillListBox;
   MoveToSync;
@@ -1203,114 +1318,122 @@ end;
 
 procedure TMainForm.PMPacketListSavePacketClick(Sender: TObject);
 VAR
-  PD : TPacketData ;
-  BS : TBinaryWriter  ;
-  I : Integer ;
-  DefName : String ;
+  PD: TPacketData;
+  BS: TBinaryWriter;
+  I: Integer;
+  DefName: String;
 begin
   PD := PL.GetPacket(LBPackets.ItemIndex);
 
   DefName := ExtractFileName(SaveDialogRawPacket.FileName);
   If PD.PacketLogType = pltOut Then
-    DefName := 'o'+IntToHex(PD.PacketID,3)
+    DefName := 'o' + IntToHex(PD.PacketID, 3)
   Else If PD.PacketLogType = pltIn Then
-    DefName := 'i'+IntToHex(PD.PacketID,3)
+    DefName := 'i' + IntToHex(PD.PacketID, 3)
   Else
-    DefName := 'u'+IntToHex(PD.PacketID,3);
-  SaveDialogRawPacket.FileName := DefName ;
-
+    DefName := 'u' + IntToHex(PD.PacketID, 3);
+  SaveDialogRawPacket.FileName := DefName;
 
   If Assigned(PD) and SaveDialogRawPacket.Execute() Then
   Begin
     Try
-      BS := TBinaryWriter.Create(SaveDialogRawPacket.FileName,False);
-      For I := 0 To PD.RawSize-1 Do
+      BS := TBinaryWriter.Create(SaveDialogRawPacket.FileName, False);
+      For I := 0 To PD.RawSize - 1 Do
         BS.Write(PD.GetByteAtPos(I));
-      BS.Close ;
+      BS.Close;
     Except
       On E: Exception Do
-        ShowMessage('ERROR: '+E.Message);
+        ShowMessage('ERROR: ' + E.Message);
     End;
-    If Assigned(BS) Then FreeAndNil(BS);
+    If Assigned(BS) Then
+      FreeAndNil(BS);
   End;
 
 end;
 
-Procedure TMainForm.SearchNext ;
+Procedure TMainForm.SearchNext;
 VAR
-  StartIndex , Pos : Integer ;
-  PD : TPacketData ;
-  FoundThis , CheckCount : Integer ;
+  StartIndex, Pos: Integer;
+  PD: TPacketData;
+  FoundThis, CheckCount: Integer;
 Begin
   // Nothing ?
-  If LBPackets.Count <= 0 Then Exit ;
+  If LBPackets.Count <= 0 Then
+    Exit;
 
   // Safeguard start location
   If (LBPackets.ItemIndex < 0) or (LBPackets.ItemIndex >= LBPackets.Count) Then
   Begin
-    StartIndex := 0 ;
-    Pos := 0 ;
-    LBPackets.ItemIndex := 0 ;
-  End Else
+    StartIndex := 0;
+    Pos := 0;
+    LBPackets.ItemIndex := 0;
+  End
+  Else
   Begin
-    StartIndex := LBPackets.ItemIndex ;
-    Pos := StartIndex + 1 ;
+    StartIndex := LBPackets.ItemIndex;
+    Pos := StartIndex + 1;
   End;
 
   // Save Location
   Repeat
     PD := PL.GetPacket(Pos);
 
-    If ((PD.PacketLogType = pltOut)and(DlgSearch.SearchOut)) or
-       ((PD.PacketLogType = pltIn)and(DlgSearch.SearchIn)) Then
+    If ((PD.PacketLogType = pltOut) and (DlgSearch.SearchOut)) or
+      ((PD.PacketLogType = pltIn) and (DlgSearch.SearchIn)) Then
     Begin
       // Only search types we selected
-      FoundThis := 0 ;
-      CheckCount := 0 ;
+      FoundThis := 0;
+      CheckCount := 0;
 
       If (DlgSearch.PacketFilterOn) Then
       Begin
-        CheckCount := CheckCount + 1 ;
-        If (PD.PacketID = DlgSearch.PacketFilter) Then FoundThis := FoundThis + 1 ;
+        CheckCount := CheckCount + 1;
+        If (PD.PacketID = DlgSearch.PacketFilter) Then
+          FoundThis := FoundThis + 1;
       End;
 
       If (DlgSearch.SyncFilterOn) Then
       Begin
-        CheckCount := CheckCount + 1 ;
-        If (PD.PacketSync = DlgSearch.SyncFilter) Then FoundThis := FoundThis + 1 ;
+        CheckCount := CheckCount + 1;
+        If (PD.PacketSync = DlgSearch.SyncFilter) Then
+          FoundThis := FoundThis + 1;
       End;
 
       If (DlgSearch.ByteFilterOn) Then
       Begin
-        CheckCount := CheckCount + 1 ;
-        If (PD.FindByte(DlgSearch.ByteFilter) >= 0) Then FoundThis := FoundThis + 1 ;
+        CheckCount := CheckCount + 1;
+        If (PD.FindByte(DlgSearch.ByteFilter) >= 0) Then
+          FoundThis := FoundThis + 1;
       End;
 
       If (DlgSearch.UInt16FilterOn) Then
       Begin
-        CheckCount := CheckCount + 1 ;
-        If (PD.FindUInt16(DlgSearch.UInt16Filter) >= 0) Then FoundThis := FoundThis + 1 ;
+        CheckCount := CheckCount + 1;
+        If (PD.FindUInt16(DlgSearch.UInt16Filter) >= 0) Then
+          FoundThis := FoundThis + 1;
       End;
 
       If (DlgSearch.UInt32FilterOn) Then
       Begin
-        CheckCount := CheckCount + 1 ;
-        If (PD.FindUInt32(DlgSearch.UInt32Filter) >= 0) Then FoundThis := FoundThis + 1 ;
+        CheckCount := CheckCount + 1;
+        If (PD.FindUInt32(DlgSearch.UInt32Filter) >= 0) Then
+          FoundThis := FoundThis + 1;
       End;
 
       If (CheckCount > 0) and (FoundThis = CheckCount) Then
       Begin
-        LBPackets.ItemIndex := Pos ;
+        LBPackets.ItemIndex := Pos;
         LBPacketsClick(LBPackets);
-        LBPackets.Invalidate ;
-        Exit ;
+        LBPackets.Invalidate;
+        Exit;
       End;
 
     End;
 
-    Pos := Pos + 1 ;
-    If Pos >= LBPackets.Count Then Pos := 0 ;
-  Until Pos = StartIndex ;
+    Pos := Pos + 1;
+    If Pos >= LBPackets.Count Then
+      Pos := 0;
+  Until Pos = StartIndex;
 
   ShowMessage('No more matches found!');
 End;
@@ -1318,44 +1441,47 @@ End;
 procedure TMainForm.SGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 VAR
-  SG : TStringGrid ;
-  Canvas : TCanvas ;
+  SG: TStringGrid;
+  Canvas: TCanvas;
 begin
-  If (ACol = 0) and (CBOriginalData.Checked = false) Then
+  If (ACol = 0) and (CBOriginalData.Checked = False) Then
   Begin
     SG := (Sender as TStringGrid);
-    Canvas := SG.Canvas ;
-    Canvas.Brush.Color := clWindow ;
+    Canvas := SG.Canvas;
+    Canvas.Brush.Color := clWindow;
     // Canvas.Brush.Color := RGB($EE,$EE,$EE);
     Canvas.FillRect(Rect);
     If (ARow > 3) Then
-      Canvas.Font.Color := DataCol(ARow-3)
+      Canvas.Font.Color := DataCol(ARow - 3)
     Else
-      Canvas.Font.Color := clBlack ;
+      Canvas.Font.Color := clBlack;
 
-    Canvas.TextOut(Rect.Left + BevelWidth+1,Rect.CenterPoint.Y - (Canvas.TextHeight('0') div 2) - BevelWidth,(Sender as TStringGrid).Cells[ACol,ARow]);
+    Canvas.TextOut(Rect.Left + BevelWidth + 1, Rect.CenterPoint.Y -
+      (Canvas.TextHeight('0') div 2) - BevelWidth, (Sender as TStringGrid)
+      .Cells[ACol, ARow]);
   End;
 end;
 
 procedure TMainForm.SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
 VAR
-  N,S : Integer ;
+  N, S: Integer;
 begin
   // Only try if using custom raw data, and clicking a used row header
   If (CBOriginalData.Checked = False) and (ACol = 0) and (ARow > 0) then
-    If TryStrToInt(SG.Cells[ACol,ARow],N) Then
+    If TryStrToInt(SG.Cells[ACol, ARow], N) Then
     Begin
-      MInfo.SelectAll ;
-      MInfo.SelAttributes.Color := clGray ;
+      MInfo.SelectAll;
+      MInfo.SelAttributes.Color := clGray;
       // Try to grab size from grid
-      If Not TryStrToInt(SG.Cells[1,ARow],S) Then S := 1 ; // default to 1
-      MarkREBytes(MInfo,N,S,clBlue);
+      If Not TryStrToInt(SG.Cells[1, ARow], S) Then
+        S := 1; // default to 1
+      MarkREBytes(MInfo, N, S, clBlue);
     End;
 end;
 
 procedure TMainForm.SplitterVerticalMoved(Sender: TObject);
 begin
-  LBPackets.Invalidate ;
+  LBPackets.Invalidate;
 end;
 
 end.

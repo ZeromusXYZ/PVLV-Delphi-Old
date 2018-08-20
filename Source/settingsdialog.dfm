@@ -79,4 +79,14 @@ object DlgSettings: TDlgSettings
       'Normal Font'
       'Small Font')
   end
+  object CBVirtualTime: TCheckBox
+    Left = 8
+    Top = 83
+    Width = 393
+    Height = 17
+    Alignment = taLeftJustify
+    Caption = 'Use time smoothing for syncing packets to video'
+    TabOrder = 3
+    OnClick = CBVirtualTimeClick
+  end
 end

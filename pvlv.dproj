@@ -103,8 +103,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_MinorVer>4</VerInfo_MinorVer>
-        <VerInfo_Build>39</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.4.0.39;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Build>41</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=Viewer for PacketViewer logs;FileVersion=0.4.0.41;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=pvlv.exe;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>

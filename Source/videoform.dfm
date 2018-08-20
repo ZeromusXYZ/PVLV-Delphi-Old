@@ -119,9 +119,14 @@ object VideoLink: TVideoLink
     Top = 104
   end
   object PosUpdateTimer: TTimer
-    Interval = 250
+    Interval = 500
     OnTimer = PosUpdateTimerTimer
     Left = 144
     Top = 104
+  end
+  object ApplicationEventsVideo: TApplicationEvents
+    OnIdle = ApplicationEventsVideoIdle
+    Left = 240
+    Top = 103
   end
 end

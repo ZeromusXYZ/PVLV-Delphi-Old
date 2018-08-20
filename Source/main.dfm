@@ -50,8 +50,10 @@ object MainForm: TMainForm
       Height = 545
       Style = lbOwnerDrawFixed
       Anchors = [akLeft, akTop, akRight, akBottom]
+      DoubleBuffered = True
       ExtendedSelect = False
       ItemHeight = 15
+      ParentDoubleBuffered = False
       PopupMenu = PMPacketList
       TabOrder = 0
       OnClick = LBPacketsClick
@@ -114,9 +116,11 @@ object MainForm: TMainForm
         Height = 322
         Anchors = [akLeft, akTop, akRight, akBottom]
         ColCount = 4
+        DoubleBuffered = True
         FixedColor = clGray
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goFixedColClick, goFixedRowClick]
+        ParentDoubleBuffered = False
         TabOrder = 0
         OnDrawCell = SGDrawCell
         OnFixedCellClick = SGFixedCellClick
@@ -392,7 +396,7 @@ object MainForm: TMainForm
     Top = 80
   end
   object AutoExecTimer: TTimer
-    Interval = 50
+    Interval = 25
     OnTimer = AutoExecTimerTimer
     Left = 176
     Top = 80

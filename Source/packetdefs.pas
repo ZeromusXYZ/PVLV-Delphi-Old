@@ -2,167 +2,170 @@
 
 interface
 
-uses Classes, System.Contnrs, loadingform ;
+uses Classes, System.Contnrs, loadingform;
 
 TYPE
-  TEncoded6BitStringKey = Array [0..63] of Char ;
+  TEncoded6BitStringKey = Array [0 .. 63] of Char;
 
 CONST
-  pltUnknown = 0 ;
-  pltOut     = 1 ;
-  pltIn      = 2 ;
+  pltUnknown = 0;
+  pltOut = 1;
+  pltIn = 2;
 
-  EncodeItemStr : TEncoded6BitStringKey = (
-    #0 ,'0','1','2','3','4','5','6',  '7','9','8','A','B','C','D','E', // $00
-    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $10
-    'V','W','X','Y','Z','a','b','c',  'd','e','f','g','h','i','j','k', // $20
-    'l','m','n','o','p','q','r','s',  't','u','v','w','x','y','z',#0   // $30
-  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+  EncodeItemStr: TEncoded6BitStringKey = (
+      #0 ,'0','1','2','3','4','5','6', '7','9','8','A','B','C','D','E', // $00
+      'F','G','H','I','J','K','L','M', 'N','O','P','Q','R','S','T','U', // $10
+      'V','W','X','Y','Z','a','b','c', 'd','e','f','g','h','i','j','k', // $20
+      'l','m','n','o','p','q','r','s', 't','u','v','w','x','y','z',#0   // $30
+    // 0   1   2   3   4   5   6   7    8   9   A   B   C   D   E   F
     );
 
-  EncodeLinkshellStr : TEncoded6BitStringKey = (
-    #0 ,'a','b','c','d','e','f','g',  'h','i','j','k','l','m','n','o', // $00
-    'p','q','r','s','t','u','v','w',  'x','y','z','A','B','C','D','E', // $10
-    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $20
-    'V','W','X','Y','Z',' ',' ',' ',  ' ',' ',' ',' ',' ',' ',' ', #0  // $30
-  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+  EncodeLinkshellStr: TEncoded6BitStringKey = (
+      #0 ,'a','b','c','d','e','f','g', 'h','i','j','k','l','m','n','o', // $00
+      'p','q','r','s','t','u','v','w', 'x','y','z','A','B','C','D','E', // $10
+      'F','G','H','I','J','K','L','M', 'N','O','P','Q','R','S','T','U', // $20
+      'V','W','X','Y','Z',' ',' ',' ', ' ',' ',' ',' ',' ',' ',' ',#0   // $30
+    // 0   1   2   3   4   5   6   7    8   9   A   B   C   D   E   F
     );
-
 
 TYPE
-  TFilterType = (
-    ftFilterOff,
-    ftHidePackets,
-    ftShowPackets,
-    ftAllowNone );
-
+  TFilterType = (ftFilterOff, ftHidePackets, ftShowPackets, ftAllowNone);
 
 TYPE
   TPacketData = Class
   Protected
-    fRawText : TStringList ;
-    fHeaderText : String ;
-    fOriginalHeaderText : String ;
-    fRawBytes : Array of Byte ;
-    fPacketLogType : Byte ; // 0 = unknown ; 1 = outgoing ; 2 = incomming
-    fPacketID : Word ;
-    fPacketDataSize : Word ;
-    fPacketSync : Word ;
-    fTimeStamp : TDateTime ;
-    fOriginalTimeString : String ;
+    fRawText: TStringList;
+    fHeaderText: String;
+    fOriginalHeaderText: String;
+    fRawBytes: Array of Byte;
+    fPacketLogType: Byte; // 0 = unknown ; 1 = outgoing ; 2 = incomming
+    fPacketID: Word;
+    fPacketDataSize: Word;
+    fPacketSync: Word;
+    fTimeStamp: TDateTime;
+    fVirtualTimeStamp: TDateTime;
+    fOriginalTimeString: String;
   Public
-    Constructor Create ;
-    Destructor Destroy ; Override ;
-    Function AddRawLineAsBytes(S : String):Integer;
-    Function AddRawPacketeerLineAsBytes(S : String):Integer;
-    Function PrintRawBytesAsHex() : String ;
-    Function GetByteAtPos(Pos:Integer):Byte;
-    Function GetBitAtPos(Pos,BitOffset:Integer):Boolean;
-    Function GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64; Overload ;
-    Function GetBitsAtPos(BitOffset,BitsSize:Integer):Int64; Overload ;
-    Function GetWordAtPos(Pos:Integer):Word;
-    Function GetInt16AtPos(Pos:Integer):Int16;
-    Function GetInt32AtPos(Pos:Integer):Int32;
-    Function GetUInt32AtPos(Pos:Integer):Cardinal;
-    Function GetFloatAtPos(Pos:Integer):Single;
-    Function GetTimeStampAtPos(Pos:Integer):String;
-    Function GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
-    Function GetDataAtPos(Pos,Size:Integer):String;
-    Function GetPackedString16AtPos(Pos:Integer;EncodeKey: TEncoded6BitStringKey):String;
-    Function GetIP4AtPos(Pos:Integer):String;
-    Function GetJobflagsAtPos(Pos:Integer):String;
-    Function CompileData:Boolean;
-    Function FindByte(AByte : Byte):Integer;
-    Function FindUInt16(AUInt16 : Word):Integer;
-    Function FindUInt32(AUInt32 : LongWord):Integer;
-    Function RawSize : Integer ;
-    Property RawText : TStringList read fRawText ;
-    Property Header : String read fHeaderText ;
-    Property OriginalHeader : String read fOriginalHeaderText ;
-    Property PacketLogType : Byte read fPacketLogType ;
-    Property PacketID : Word read fPacketID ;
-    Property PacketDataSize : Word read fPacketDataSize ;
-    Property PacketSync : Word read fPacketSync ;
-    property TimeStamp : TDateTime read fTimeStamp ;
+    Constructor Create;
+    Destructor Destroy; Override;
+    Function AddRawLineAsBytes(S: String): Integer;
+    Function AddRawPacketeerLineAsBytes(S: String): Integer;
+    Function PrintRawBytesAsHex(): String;
+    Function GetByteAtPos(Pos: Integer): Byte;
+    Function GetBitAtPos(Pos, BitOffset: Integer): Boolean;
+    Function GetBitsAtPos(Pos, BitOffset, BitsSize: Integer): Int64; Overload;
+    Function GetBitsAtPos(BitOffset, BitsSize: Integer): Int64; Overload;
+    Function GetWordAtPos(Pos: Integer): Word;
+    Function GetInt16AtPos(Pos: Integer): Int16;
+    Function GetInt32AtPos(Pos: Integer): Int32;
+    Function GetUInt32AtPos(Pos: Integer): Cardinal;
+    Function GetFloatAtPos(Pos: Integer): Single;
+    Function GetTimeStampAtPos(Pos: Integer): String;
+    Function GetStringAtPos(Pos: Integer; MaxSize: Integer = -1): String;
+    Function GetDataAtPos(Pos, Size: Integer): String;
+    Function GetPackedString16AtPos(Pos: Integer;
+      EncodeKey: TEncoded6BitStringKey): String;
+    Function GetIP4AtPos(Pos: Integer): String;
+    Function GetJobflagsAtPos(Pos: Integer): String;
+    Function CompileData: Boolean;
+    Function FindByte(AByte: Byte): Integer;
+    Function FindUInt16(AUInt16: Word): Integer;
+    Function FindUInt32(AUInt32: LongWord): Integer;
+    Function RawSize: Integer;
+    Property RawText: TStringList read fRawText;
+    Property Header: String read fHeaderText;
+    Property OriginalHeader: String read fOriginalHeaderText;
+    Property PacketLogType: Byte read fPacketLogType;
+    Property PacketID: Word read fPacketID;
+    Property PacketDataSize: Word read fPacketDataSize;
+    Property PacketSync: Word read fPacketSync;
+    property TimeStamp: TDateTime read fTimeStamp;
+    property VirtualTimeStamp: TDateTime read fVirtualTimeStamp;
   End;
 
   TPacketList = Class
   Protected
-    fPacketDataList : TObjectList ;
+    fPacketDataList: TObjectList;
   Public
-    FilterOutType : TFilterType ;
-    FilterOutList : Array of Word ;
-    FilterInType : TFilterType ;
-    FilterInList : Array of Word ;
+    FilterOutType: TFilterType;
+    FilterOutList: Array of Word;
+    FilterInType: TFilterType;
+    FilterInList: Array of Word;
 
-    Constructor Create(IsMaster:Boolean);
-    Destructor Destroy ; Override ;
-    Procedure Clear ;
+    Constructor Create(IsMaster: Boolean);
+    Destructor Destroy; Override;
+    Procedure Clear;
     Procedure ClearFilters;
-    Function LoadFromFile(Filename : String;AddedStringData:String):Boolean;
-    Function Count : Integer ;
-    Function GetPacket(ID : Integer):TPacketData;
-    Function CopyFrom(Original: TPacketList):Integer;
+    procedure BuildVirtualTimeStamps ;
+    Function LoadFromFile(Filename: String; AddedStringData: String): Boolean;
+    Function Count: Integer;
+    Function GetPacket(ID: Integer): TPacketData;
+    Function CopyFrom(Original: TPacketList): Integer;
     // Function FilteredFrom(Original: TPacketList;HideFilteredIn:Boolean;FilterIn:Array of Word;HideFilteredOut:Boolean;FilterOut:Array of Word):Integer;
-    Function FilterFrom(Original: TPacketList):Integer; // Uses filter vars to copy items
-    Function DoIShowThis(PacketID : Word;FT : TFilterType;FL : Array of Word) : Boolean ;
+    Function FilterFrom(Original: TPacketList): Integer;
+    // Uses filter vars to copy items
+    Function DoIShowThis(PacketID: Word; FT: TFilterType;
+      FL: Array of Word): Boolean;
   End;
 
-Function ByteToBit(B : Byte):String;
-Function WordInArray(AWord:Word;AArray: Array of Word):Boolean;
-Function PacketTypeToString(PacketLogType : Byte;PacketID : Word):String;
-Function EquipmentSlotName(SlotID:Byte):String;
-Function ContainerName(ContainerID:Byte):String;
-Function ByteToRotation(B : Byte):String;
-Function MSToStr(T : UInt32):String;
-Function FFXITimeStampToStr(T : UInt32):String;
-Function FramesToStr(T : UInt32):String;
-Function DWordToVanaTime(V : UInt32):String;
+Function ByteToBit(B: Byte): String;
+Function WordInArray(AWord: Word; AArray: Array of Word): Boolean;
+Function PacketTypeToString(PacketLogType: Byte; PacketID: Word): String;
+Function EquipmentSlotName(SlotID: Byte): String;
+Function ContainerName(ContainerID: Byte): String;
+Function ByteToRotation(B: Byte): String;
+Function MSToStr(T: UInt32): String;
+Function FFXITimeStampToStr(T: UInt32): String;
+Function FramesToStr(T: UInt32): String;
+Function DWordToVanaTime(V: UInt32): String;
 
-Function ToBitStr(var V):String;
+Function ToBitStr(var V): String;
 
 implementation
 
-Uses System.SysUtils, DateUtils , System.Variants, datalookups, Vcl.Dialogs, System.UITypes  ;
+Uses System.SysUtils, DateUtils, System.Variants, datalookups, Vcl.Dialogs,
+  System.UITypes;
 
 CONST
-  CompasDirectionNames : Array[0..15] of String = ('E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N', 'NNE', 'NE', 'ENE');
+  CompasDirectionNames: Array [0 .. 15] of String = ('E', 'ESE', 'SE', 'SSE',
+    'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N', 'NNE', 'NE', 'ENE');
 
-Function ByteToRotation(B : Byte):String;
+Function ByteToRotation(B: Byte): String;
 VAR
-  I : Integer ;
+  I: Integer;
 Begin
-  I := B * 360 ;
-  I := I div 256 ;
-  Result := CompasDirectionNames[(B div 16) mod 16] + ' (0x' + IntToHex(B,2) + ' ≈ '+IntToStr(I) + '°)' ;
+  I := B * 360;
+  I := I div 256;
+  Result := CompasDirectionNames[(B div 16) mod 16] + ' (0x' + IntToHex(B, 2) +
+    ' ≈ ' + IntToStr(I) + '°)';
 End;
 
-Function MSToStr(T : UInt32):String;
+Function MSToStr(T: UInt32): String;
 VAR
-  R, V : UInt32 ;
+  R, V: UInt32;
 Begin
-  R := T div 1000 ;
-  V := T mod 1000 ;
-  Result := Format('%.3d',[V]) + 'ms';
+  R := T div 1000;
+  V := T mod 1000;
+  Result := Format('%.3d', [V]) + 'ms';
 
   If (R > 0) Then
   Begin
-    V := R mod 60 ;
-    R := R div 60 ;
-    Result := Format('%.2d',[V]) + 's ' + Result ;
+    V := R mod 60;
+    R := R div 60;
+    Result := Format('%.2d', [V]) + 's ' + Result;
     If (R > 0) Then
     Begin
-      V := R mod 60 ;
-      R := R div 60 ;
-      Result := Format('%.2d',[V]) + 'm ' + Result ;
+      V := R mod 60;
+      R := R div 60;
+      Result := Format('%.2d', [V]) + 'm ' + Result;
       If (R > 0) Then
       Begin
-        V := R mod 24 ;
-        R := R div 24 ;
-        Result := Format('%.2d',[V]) + 'h ' + Result ;
+        V := R mod 24;
+        R := R div 24;
+        Result := Format('%.2d', [V]) + 'h ' + Result;
         If (R > 0) Then
         Begin
-          Result := Format('%d',[R]) + 'd ' + Result ;
+          Result := Format('%d', [R]) + 'd ' + Result;
         End;
       End;
     End;
@@ -170,10 +173,10 @@ Begin
 
 End;
 
-Function FFXITimeStampToStr(T : UInt32):String;
-//VAR
-//  DT : TDateTime ;
-//  Offset : TDateTime ;
+Function FFXITimeStampToStr(T: UInt32): String;
+// VAR
+// DT : TDateTime ;
+// Offset : TDateTime ;
 Begin
   If T = $7FFFFFFF Then
     Result := 'Infinite'
@@ -186,45 +189,44 @@ Begin
     // Example game 1318151468 -> 2018-07-29 12:18:31 +01:00
     // Difference =  214715243 ?
 
-
     {
-    Offset := EncodeDateTime(2001,12,31,15,0,0,0);
+      Offset := EncodeDateTime(2001,12,31,15,0,0,0);
 
-    DT := FileDateToDateTime(T + 214715243);
-    Result := DateTimeToStr(DT);
+      DT := FileDateToDateTime(T + 214715243);
+      Result := DateTimeToStr(DT);
     }
   End;
 End;
 
-Function FramesToStr(T : UInt32):String;
+Function FramesToStr(T: UInt32): String;
 VAR
-  R, V : UInt32 ;
+  R, V: UInt32;
 Begin
-  R := T div 60 ;
-  V := T mod 60 ;
-  Result := Format('%.2d',[V]) + 'f';
+  R := T div 60;
+  V := T mod 60;
+  Result := Format('%.2d', [V]) + 'f';
 
   If (R > 0) Then
   Begin
-    V := R mod 60 ;
-    R := R div 60 ;
-//    Result := Format('%.2d',[V]) + 's ' + Result ;
-    Result := Format('%.2d',[V]) + ' / ' + Result ;
+    V := R mod 60;
+    R := R div 60;
+    // Result := Format('%.2d',[V]) + 's ' + Result ;
+    Result := Format('%.2d', [V]) + ' / ' + Result;
     If (R > 0) Then
     Begin
-      V := R mod 60 ;
-      R := R div 60 ;
-//      Result := Format('%.2d',[V]) + 'm ' + Result ;
-      Result := Format('%.2d',[V]) + '.' + Result ;
+      V := R mod 60;
+      R := R div 60;
+      // Result := Format('%.2d',[V]) + 'm ' + Result ;
+      Result := Format('%.2d', [V]) + '.' + Result;
       If (R > 0) Then
       Begin
-        V := R mod 24 ;
-        R := R div 24 ;
-//        Result := Format('%.2d',[V]) + 'h ' + Result ;
-        Result := Format('%.2d',[V]) + ':' + Result ;
+        V := R mod 24;
+        R := R div 24;
+        // Result := Format('%.2d',[V]) + 'h ' + Result ;
+        Result := Format('%.2d', [V]) + ':' + Result;
         If (R > 0) Then
         Begin
-          Result := Format('%d',[R]) + 'd ' + Result ;
+          Result := Format('%d', [R]) + 'd ' + Result;
         End;
       End;
     End;
@@ -232,39 +234,43 @@ Begin
 
 End;
 
-Function ToBitStr(var V):String;
+Function ToBitStr(var V): String;
 VAR
-  I, N , ByteSize, S : Integer ;
-  //BitSize : Integer ;
-  B : Byte ;
-  BP : PByte ;
+  I, N, ByteSize, S: Integer;
+  // BitSize : Integer ;
+  B: Byte;
+  BP: PByte;
 Begin
-  {$POINTERMATH ON}
-  Result := '' ;
+{$POINTERMATH ON}
+  Result := '';
   ByteSize := SizeOf(V);
-  //BitSize := ByteSize * 8 ;
+  // BitSize := ByteSize * 8 ;
 
-  For N := 0 To ByteSize-1 Do
+  For N := 0 To ByteSize - 1 Do
   Begin
-    BP := @V ;
-    BP := BP + N ;
-    B := BP^ ;
-    S := 8 ;
+    BP := @V;
+    BP := BP + N;
+    B := BP^;
+    S := 8;
     For I := 1 to S do
     Begin
-      If (B and $01) = $01 Then Result := '1' + Result else Result := '0' + Result ;
-      B := B shr 1 ;
-      if ((I mod 4) = 0)and(I < S) Then Result := ' ' + Result ; // nibble formatting
+      If (B and $01) = $01 Then
+        Result := '1' + Result
+      else
+        Result := '0' + Result;
+      B := B shr 1;
+      if ((I mod 4) = 0) and (I < S) Then
+        Result := ' ' + Result; // nibble formatting
     End;
   End;
 
 End;
 
-Function PacketTypeToString(PacketLogType : Byte;PacketID : Word):String;
+Function PacketTypeToString(PacketLogType: Byte; PacketID: Word): String;
 VAR
-  R : String ;
+  R: String;
 Begin
-  R := '' ;
+  R := '';
   If PacketLogType = pltOut Then
   Begin
     R := NLU(LU_PacketOut).GetVal(PacketID);
@@ -273,86 +279,99 @@ Begin
   Begin
     R := NLU(LU_PacketIn).GetVal(PacketID);
   End;
-  If R = '' Then R := '??? unknown' ;
-  Result := R ;
+  If R = '' Then
+    R := '??? unknown';
+  Result := R;
 End;
 
-Function EquipmentSlotName(SlotID:Byte):String;
+Function EquipmentSlotName(SlotID: Byte): String;
 Begin
   Result := NLU(LU_EquipmentSlots).GetVal(SlotID);
   If (Result = '') Then
-    Result := 'SLOT_0x'+IntToHex(SlotID,2)
+    Result := 'SLOT_0x' + IntToHex(SlotID, 2)
   Else
-    Result := '0x'+IntToHex(SlotID,2)+' => ' + Result ;
+    Result := '0x' + IntToHex(SlotID, 2) + ' => ' + Result;
 End;
 
-Function ContainerName(ContainerID:Byte):String;
+Function ContainerName(ContainerID: Byte): String;
 Begin
   Result := NLU(LU_Container).GetVal(ContainerID);
   If (Result = '') Then
-    Result := 'LOC_0x'+IntToHex(ContainerID,2)
+    Result := 'LOC_0x' + IntToHex(ContainerID, 2)
   Else
-    Result := '0x'+IntToHex(ContainerID,2)+' => ' + Result ;
+    Result := '0x' + IntToHex(ContainerID, 2) + ' => ' + Result;
 End;
 
-Function ByteToBit(B : Byte):String;
+Function ByteToBit(B: Byte): String;
 VAR
-  I , S : Integer ;
+  I, S: Integer;
 Begin
-  Result := '' ;
-  S := (SizeOf(B)*8);
+  Result := '';
+  S := (SizeOf(B) * 8);
   For I := 1 to S do
   Begin
-    If (B and $01) = $01 Then Result := '1' + Result else Result := '0' + Result ;
-    B := B shr 1 ;
-    if ((I mod 4) = 0)and(I < S) Then Result := ' ' + Result ; // nibble formatting
+    If (B and $01) = $01 Then
+      Result := '1' + Result
+    else
+      Result := '0' + Result;
+    B := B shr 1;
+    if ((I mod 4) = 0) and (I < S) Then
+      Result := ' ' + Result; // nibble formatting
   End;
 End;
 
-Function VanaDoW(DoW : Byte):String;
+Function VanaDoW(DoW: Byte): String;
 Begin
   Case DoW Of
-    0 : Result := 'Firesday' ;
-    1 : Result := 'Earthsday' ;
-    2 : Result := 'Watersday' ;
-    3 : Result := 'Windsday' ;
-    4 : Result := 'Iceday' ;
-    5 : Result := 'Thundersday' ;
-    6 : Result := 'Lightsday' ;
-    7 : Result := 'Darksday' ;
+    0:
+      Result := 'Firesday';
+    1:
+      Result := 'Earthsday';
+    2:
+      Result := 'Watersday';
+    3:
+      Result := 'Windsday';
+    4:
+      Result := 'Iceday';
+    5:
+      Result := 'Thundersday';
+    6:
+      Result := 'Lightsday';
+    7:
+      Result := 'Darksday';
   Else
-    Result := '???_0x'+IntToHex(DoW,2);
+    Result := '???_0x' + IntToHex(DoW, 2);
   End;
 End;
 
-Function DWordToVanaTime(V : UInt32):String;
+Function DWordToVanaTime(V: UInt32): String;
 CONST
-  VTIME_BASEDATE = 1009810800	; // unix epoch - 1009810800 = se epoch (in earth seconds)
-  VTIME_YEAR   = 518400 ;       // 360 * GameDay
-  VTIME_MONTH  = 43200 ;        // 30 * GameDay
-  VTIME_WEEK   = 11520 ;        // 8 * GameDay
-  VTIME_DAY    = 1440	;         // 24 hours * GameHour
-  VTIME_HOUR   = 60	;           // 60 minutes
-  VTIME_FIRSTYEAR = 886 ;
+  VTIME_BASEDATE = 1009810800;
+  // unix epoch - 1009810800 = se epoch (in earth seconds)
+  VTIME_YEAR = 518400; // 360 * GameDay
+  VTIME_MONTH = 43200; // 30 * GameDay
+  VTIME_WEEK = 11520; // 8 * GameDay
+  VTIME_DAY = 1440; // 24 hours * GameHour
+  VTIME_HOUR = 60; // 60 minutes
+  VTIME_FIRSTYEAR = 886;
 
 VAR
-  VanaDate : UInt32 ;
-  vYear, vMonth, vDay, vDoW, vHour, vMinute : UInt32 ;
+  VanaDate: UInt32;
+  vYear, vMonth, vDay, vDoW, vHour, vMinute: UInt32;
 Begin
-  VanaDate := V ;
-  vYear := VanaDate div VTIME_YEAR ;
-  vMonth := ((VanaDate div VTIME_MONTH) mod 12) + 1 ;
-  vDay := ((VanaDate div VTIME_DAY) mod 30 ) + 1 ;
+  VanaDate := V;
+  vYear := VanaDate div VTIME_YEAR;
+  vMonth := ((VanaDate div VTIME_MONTH) mod 12) + 1;
+  vDay := ((VanaDate div VTIME_DAY) mod 30) + 1;
   vDoW := ((VanaDate mod VTIME_WEEK) div VTIME_DAY);
   vHour := ((VanaDate mod VTIME_DAY) div VTIME_HOUR);
   vMinute := (VanaDate mod VTIME_HOUR);
 
-  Result := VanaDoW(vDoW)+ ' - ' +
-    IntToStr(vYear+VTIME_FIRSTYEAR) + '/' + IntToStr(vMonth) + '/' + IntToStr(vDay) + ' - ' +
-    IntToStr(vHour) + ':' + IntToStr(vMinute) +
-    '  (0x'+IntToHex(V,8)+' - ' + IntToStr(V) +')';
+  Result := VanaDoW(vDoW) + ' - ' + IntToStr(vYear + VTIME_FIRSTYEAR) + '/' +
+    IntToStr(vMonth) + '/' + IntToStr(vDay) + ' - ' + IntToStr(vHour) + ':' +
+    IntToStr(vMinute) + '  (0x' + IntToHex(V, 8) + ' - ' + IntToStr(V) + ')';
 
-(*
+  (*
     m_vanaDate  = (uint32)(this->getVanaTime() / 60.0 * 25) + 886 * VTIME_YEAR; //convert vana time (from SE epoch in earth seconds) to vanadiel minutes and add 886 vana years
 
     m_vYear = (uint32)( m_vanaDate / VTIME_YEAR);
@@ -362,589 +381,634 @@ Begin
     m_vHour = (uint32)((m_vanaDate % VTIME_DAY)   / VTIME_HOUR);
     m_vMin  = (uint32)( m_vanaDate % VTIME_HOUR);
 
-  Result := '' ;
-  N := V mod 60 ; Result := '.' + IntToStr(N) + Result ; // Seconds
-  V := V div 60 ;
-  N := V mod 60 ; Result := ':' + IntToStr(N) + Result ; // Minutes
-  V := V div 60 ;
-  N := V mod 24 ; Result := ' - ' + IntToStr(N) + Result ; // Hours
-  V := V div 24 ;
-  N := V mod 30 ; Result := '/' + IntToStr(N) + Result ; // days
-  V := V div 30 ;
-  N := V mod 12 ; Result := '/' + IntToStr(N) + Result ; // months
-  V := V div 12 ;
-  Result := 'Vana-time ' + IntToStr(V) + Result ; // years
-*)
+    Result := '' ;
+    N := V mod 60 ; Result := '.' + IntToStr(N) + Result ; // Seconds
+    V := V div 60 ;
+    N := V mod 60 ; Result := ':' + IntToStr(N) + Result ; // Minutes
+    V := V div 60 ;
+    N := V mod 24 ; Result := ' - ' + IntToStr(N) + Result ; // Hours
+    V := V div 24 ;
+    N := V mod 30 ; Result := '/' + IntToStr(N) + Result ; // days
+    V := V div 30 ;
+    N := V mod 12 ; Result := '/' + IntToStr(N) + Result ; // months
+    V := V div 12 ;
+    Result := 'Vana-time ' + IntToStr(V) + Result ; // years
+  *)
 End;
 
-
-Function WordInArray(AWord:Word;AArray: Array of Word):Boolean;
+Function WordInArray(AWord: Word; AArray: Array of Word): Boolean;
 VAR
-  I : Integer ;
+  I: Integer;
 Begin
-  Result := False ;
-  For I := 0 To Length(AArray)-1 do
-  If (AWord = AArray[I]) Then
-  Begin
-    Result := true ;
-    exit ;
-  End;
+  Result := False;
+  For I := 0 To Length(AArray) - 1 do
+    If (AWord = AArray[I]) Then
+    Begin
+      Result := true;
+      exit;
+    End;
 End;
-
 
 Constructor TPacketData.Create;
 begin
-  Inherited Create ;
-  fRawText := TStringList.Create ;
-  fHeaderText := 'Unknown Header' ;
-  fOriginalHeaderText := '' ;
-  fPacketLogType := pltUnknown ;
-  fTimeStamp := 0 ;
-  fPacketID := $000 ;
-  fPacketDataSize := 0 ;
-  SetLength(fRawBytes,0);
+  Inherited Create;
+  fRawText := TStringList.Create;
+  fHeaderText := 'Unknown Header';
+  fOriginalHeaderText := '';
+  fPacketLogType := pltUnknown;
+  fTimeStamp := 0;
+  fVirtualTimeStamp := 0;
+  fPacketID := $000;
+  fPacketDataSize := 0;
+  SetLength(fRawBytes, 0);
 end;
 
-Destructor TPacketData.Destroy ;
+Destructor TPacketData.Destroy;
 Begin
   FreeAndNil(fRawText);
-  SetLength(fRawBytes,0);
-  Inherited Destroy ;
+  SetLength(fRawBytes, 0);
+  Inherited Destroy;
 End;
 
-Function TPacketData.AddRawLineAsBytes(S : String):Integer;
+Function TPacketData.AddRawLineAsBytes(S: String): Integer;
 VAR
-  H : String ;
-  I, C : Integer ;
-  B : Byte ;
+  H: String;
+  I, C: Integer;
+  B: Byte;
 Begin
-  Result := 0 ;
-  C := 0 ;
+  Result := 0;
+  C := 0;
 
-  //         1         2         3         4         5         6         7         8         9
-  //123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
-  //      5 | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    5 | ....------------
+  // 1         2         3         4         5         6         7         8         9
+  // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+  // 5 | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    5 | ....------------
 
-//  If Length(S) < 81 Then
+  // If Length(S) < 81 Then
   If Length(S) < 57 Then
   Begin
     // Doesn't look like the correct format
-    Exit ;
+    exit;
   End;
-  For I := 0 to $f Do
+  For I := 0 to $F Do
   Begin
-    H := Copy(S,11 + (I*3),2);
+    H := Copy(S, 11 + (I * 3), 2);
     If (H <> '--') Then
     Begin
-      B := StrToInt('$'+H);
+      B := StrToInt('$' + H);
       // B := Byte(S[66+I]);
-      SetLength(fRawBytes,Length(fRawBytes)+1);
-      fRawBytes[Length(fRawBytes)-1] := B ;
-      C := C + 1 ;
+      SetLength(fRawBytes, Length(fRawBytes) + 1);
+      fRawBytes[Length(fRawBytes) - 1] := B;
+      C := C + 1;
     End;
   End;
 
-  Result := C ;
+  Result := C;
 End;
 
-Function TPacketData.AddRawPacketeerLineAsBytes(S : String):Integer;
+Function TPacketData.AddRawPacketeerLineAsBytes(S: String): Integer;
 VAR
-  H : String ;
-  I, C , TryInt : Integer ;
-  B : Byte ;
+  H: String;
+  I, C, TryInt: Integer;
+  B: Byte;
 Begin
-  Result := 0 ;
-  C := 0 ;
+  Result := 0;
+  C := 0;
 
-  //          1         2         3         4         5         6         7         8         9
+  // 1         2         3         4         5         6         7         8         9
   // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
   // [C->S] Id: 001A | Size: 28
-  //     1A 0E ED 24 D5 10 10 01 D5 00 00 00 00 00 00 00  ..í$Õ...Õ.......
+  // 1A 0E ED 24 D5 10 10 01 D5 00 00 00 00 00 00 00  ..í$Õ...Õ.......
 
   If Length(S) < 51 Then
   Begin
     // Doesn't look like the correct format
-    Exit ;
+    exit;
   End;
-  For I := 0 to $f Do
+  For I := 0 to $F Do
   Begin
-    H := Copy(S,5 + (I*3),2);
-    If (H <> '--')and(H <> '  ')and(H <> ' ') Then
+    H := Copy(S, 5 + (I * 3), 2);
+    If (H <> '--') and (H <> '  ') and (H <> ' ') Then
     Begin
       // If this fails, we're probably at the end of the packet
       // Unlike windower, Packeteer doesn't add dashes for the blanks
-      If Not TryStrToInt('$'+H,TryInt) Then Break ;
-      B := TryInt ;
+      If Not TryStrToInt('$' + H, TryInt) Then
+        Break;
+      B := TryInt;
       // B := StrToInt('$'+H);
-      SetLength(fRawBytes,Length(fRawBytes)+1);
-      fRawBytes[Length(fRawBytes)-1] := B ;
-      C := C + 1 ;
+      SetLength(fRawBytes, Length(fRawBytes) + 1);
+      fRawBytes[Length(fRawBytes) - 1] := B;
+      C := C + 1;
     End;
   End;
 
-  Result := C ;
+  Result := C;
 End;
 
-
-Function TPacketData.PrintRawBytesAsHex() : String ;
+Function TPacketData.PrintRawBytesAsHex(): String;
 CONST
-  ValuesPerRow = 16 ;
+  ValuesPerRow = 16;
 VAR
-  S : String ;
-  I , L : Integer ;
-  B : Byte ;
+  S: String;
+  I, L: Integer;
+  B: Byte;
 Begin
-  Result := '' ;
-  Result := Result + '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' + #13#10 ;
-  Result := Result + '---+----------------------------------------------------' + #13#10 ;
-  L := 0 ;
-  For I := 0 To Length(fRawBytes)-1 Do
+  Result := '';
+  Result := Result +
+    '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' + #13#10;
+  Result := Result + '---+----------------------------------------------------'
+    + #13#10;
+  L := 0;
+  For I := 0 To Length(fRawBytes) - 1 Do
   Begin
     If ((I mod ValuesPerRow) = 0) Then
     Begin
-      Result := Result + IntToHex(L,2) + ' | ' ;
+      Result := Result + IntToHex(L, 2) + ' | ';
     End;
 
     B := fRawBytes[I];
-    S := IntToHex(B,2);
-    Result := Result + S ;
-    If (I mod ValuesPerRow) = ValuesPerRow-1 Then
+    S := IntToHex(B, 2);
+    Result := Result + S;
+    If (I mod ValuesPerRow) = ValuesPerRow - 1 Then
     Begin
-      Result := Result + #13#10 ;
-      L := L + 1 ;
-    End Else
+      Result := Result + #13#10;
+      L := L + 1;
+    End
+    Else
     Begin
-      Result := Result + ' ' ;
-      If (I mod 4) = 3 Then Result := Result + ' ' ; // extra spacing every 4 bytes
+      Result := Result + ' ';
+      If (I mod 4) = 3 Then
+        Result := Result + ' '; // extra spacing every 4 bytes
     End;
   End;
 End;
 
-Function TPacketData.GetWordAtPos(Pos:Integer):Word;
+Function TPacketData.GetWordAtPos(Pos: Integer): Word;
 VAR
-  V : ^Word ;
+  V: ^Word;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-2) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 2) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
 End;
 
-Function TPacketData.GetInt16AtPos(Pos:Integer):Int16;
+Function TPacketData.GetInt16AtPos(Pos: Integer): Int16;
 VAR
-  V : ^Int16 ;
+  V: ^Int16;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-2) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 2) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
 End;
 
-Function TPacketData.GetInt32AtPos(Pos:Integer):Int32;
+Function TPacketData.GetInt32AtPos(Pos: Integer): Int32;
 VAR
-  V : ^Int32 ;
+  V: ^Int32;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-4) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 4) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
 End;
 
-Function TPacketData.GetUInt32AtPos(Pos:Integer):Cardinal;
+Function TPacketData.GetUInt32AtPos(Pos: Integer): Cardinal;
 VAR
-  V : ^Cardinal ;
+  V: ^Cardinal;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-4) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 4) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
 End;
 
-Function TPacketData.GetTimeStampAtPos(Pos:Integer):String;
+Function TPacketData.GetTimeStampAtPos(Pos: Integer): String;
 VAR
-  DT : ^UInt32 ;
+  DT: ^UInt32;
 Begin
-  Result := '???' ;
+  Result := '???';
   Try
-    If (Pos > length(fRawBytes)-4) Then Exit ;
-    DT := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 4) Then
+      exit;
+    DT := @fRawBytes[Pos];
     Result := DateTimeToStr(UnixToDateTime(DT^));
-    Exit ;
+    exit;
   Except
-    Result := 'ERROR' ;
+    Result := 'ERROR';
   End;
 End;
 
-Function TPacketData.GetStringAtPos(Pos:Integer;MaxSize:Integer = -1):String;
+Function TPacketData.GetStringAtPos(Pos: Integer;
+  MaxSize: Integer = -1): String;
 VAR
-  I : Integer ;
+  I: Integer;
 Begin
-  Result := '' ;
-  I := Pos ;
-  While (I < length(fRawBytes)-1) and (fRawBytes[I] <> 0) and ((MaxSize = -1) or (Length(Result) < MaxSize) ) Do
+  Result := '';
+  I := Pos;
+  While (I < Length(fRawBytes) - 1) and (fRawBytes[I] <> 0) and
+    ((MaxSize = -1) or (Length(Result) < MaxSize)) Do
   Begin
     Result := Result + Char(fRawBytes[I]);
-    I := I + 1 ;
+    I := I + 1;
   End;
 End;
 
-Function TPacketData.GetDataAtPos(Pos,Size:Integer):String;
+Function TPacketData.GetDataAtPos(Pos, Size: Integer): String;
 VAR
-  I : Integer ;
+  I: Integer;
 Begin
-  Result := '' ;
-  I := 0 ;
-  While ((I + Pos) < length(fRawBytes)) and (I < Size) and (I < 256) Do
+  Result := '';
+  I := 0;
+  While ((I + Pos) < Length(fRawBytes)) and (I < Size) and (I < 256) Do
   Begin
-    Result := Result + IntToHex(fRawBytes[I+Pos],2) + ' ' ;
-    I := I + 1 ;
+    Result := Result + IntToHex(fRawBytes[I + Pos], 2) + ' ';
+    I := I + 1;
   End;
 End;
 
-Function TPacketData.GetPackedString16AtPos(Pos:Integer;EncodeKey: TEncoded6BitStringKey):String;
+Function TPacketData.GetPackedString16AtPos(Pos: Integer;
+  EncodeKey: TEncoded6BitStringKey): String;
 VAR
-  N : Integer ;
-  B : Byte ;
-  Offset : Integer ;
-  LastChar : Char ;
-  Bit : Boolean ;
+  N: Integer;
+  B: Byte;
+  Offset: Integer;
+  LastChar: Char;
+  Bit: Boolean;
 Begin
-  Result := '' ;
+  Result := '';
 
   // Hex: B8 81 68 24  72 14 4F 10  54 0C 8F 00  00 00 00 00
   // Bit: 101110 00
-  //      1000 0001
-  //      01 101000
-  //      001001 00
-  //      0111 0010
-  //      00 010100
-  //      010011 11
-  //      0001 0000
-  //      01 010100
-  //      000011 00
-  //      1000 1111
-  //      00 000000
+  // 1000 0001
 
-  // PackedString: TheNightsWatch (with no spaces)
-  // PackedNum: 2E 08 05 ...
-  //      101110  T
-  //      001000  h
-  //      000101  e
-  //
+  // 01 101000
 
-  //A_  6F F0    011011 11-1111 0000  =>  1B 3F 00  =>  A
-  //B_  73 F0    011100 11-1111 0000  =>  1C 3F 00  =>  B
-  //F_  83 F0    100000 11-1111 0000  =>  20 3F 00  =>  F
+  // 001001 00
 
-//  EncodeLSStr : Array [0..63] of Char = (
-//    #0 ,'a','b','c','d','e','f','g',  'h','i','j','k','l','m','n','o', // $00
-//    'p','q','r','s','t','u','v','w',  'x','y','z','A','B','C','D','E', // $10
-//    'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $20
-//    'V','W','X','Y','Z',' ',' ',' ',  ' ',' ',' ',' ',' ',' ',' ', #0  // $30
-//  // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
-//    );
+  // 0111 0010
 
-  LastChar := #255 ;
-  Offset := 0 ;
+  // 00 010100
+
+  // 010011 11
+
+  // 0001 0000
+
+  // 01 010100
+
+  // 000011 00
+
+  // 1000 1111
+
+  // 00 000000
+
+
+  // PackedString: TheNightsWatch (with no spaces)
+
+  // PackedNum: 2E 08 05 ...
+
+  // 101110  T
+
+  // 001000  h
+
+  // 000101  e
+
+  //
+
+
+  // A_  6F F0    011011 11-1111 0000  =>  1B 3F 00  =>  A
+
+  // B_  73 F0    011100 11-1111 0000  =>  1C 3F 00  =>  B
+
+  // F_  83 F0    100000 11-1111 0000  =>  20 3F 00  =>  F
+
+
+  // EncodeLSStr : Array [0..63] of Char = (
+
+  // #0 ,'a','b','c','d','e','f','g',  'h','i','j','k','l','m','n','o', // $00
+
+  // 'p','q','r','s','t','u','v','w',  'x','y','z','A','B','C','D','E', // $10
+  // 'F','G','H','I','J','K','L','M',  'N','O','P','Q','R','S','T','U', // $20
+  // 'V','W','X','Y','Z',' ',' ',' ',  ' ',' ',' ',' ',' ',' ',' ', #0  // $30
+  // // 0   1   2   3   4   5   6   7     8   9   A   B   C   D   E   F
+  // );
+
+  LastChar := #255;
+
+  Offset := 0;
   // Bit := False ;
-  While (LastChar <> #0)and( (Offset div 8) < 15) Do
+  While (LastChar <> #0) and ((Offset div 8) < 15) Do
   Begin
-    B := $00 ;
+    B := $00;
     For N := 0 to 5 Do
     Begin
-      B := B shl 1 ;
+      B := B shl 1;
       Bit := GetBitAtPos(Pos + (Offset div 8), 7 - (Offset mod 8));
-      If Bit Then B := B + 1 ;
-      Offset := Offset + 1 ;
+      If Bit Then
+        B := B + 1;
+      Offset := Offset + 1;
     End;
     LastChar := EncodeKey[B];
-    Result := Result + LastChar ;
+    Result := Result + LastChar;
 
   End;
 
 End;
 
-Function TPacketData.GetIP4AtPos(Pos:Integer):String;
+Function TPacketData.GetIP4AtPos(Pos: Integer): String;
 Begin
-  Result := '' ;
-  If (Pos >= Length(fRawBytes)-4) Then Exit ;
-  Result := IntToStr(fRawBytes[Pos+0]) + '.' + IntToStr(fRawBytes[Pos+1]) + '.' + IntToStr(fRawBytes[Pos+2]) + '.' + IntToStr(fRawBytes[Pos+3]);
+  Result := '';
+  If (Pos >= Length(fRawBytes) - 4) Then
+    exit;
+  Result := IntToStr(fRawBytes[Pos + 0]) + '.' + IntToStr(fRawBytes[Pos + 1]) +
+    '.' + IntToStr(fRawBytes[Pos + 2]) + '.' + IntToStr(fRawBytes[Pos + 3]);
 End;
 
-
-Function TPacketData.GetJobflagsAtPos(Pos:Integer):String;
+Function TPacketData.GetJobflagsAtPos(Pos: Integer): String;
 VAR
-  Flags : UInt32 ;
-  BitShiftCount : Integer ;
-  JobName : String ;
+  Flags: UInt32;
+  BitShiftCount: Integer;
+  JobName: String;
 Begin
-  Result := '' ;
-  If (Pos >= Length(fRawBytes)-4) Then Exit ;
+  Result := '';
+  If (Pos >= Length(fRawBytes) - 4) Then
+    exit;
   Flags := GetUInt32AtPos(Pos);
   For BitShiftCount := 0 To 31 Do
   Begin
     If ((Flags and $0000001) = 1) Then
     Begin
       Case BitShiftCount Of
-        0 : JobName := 'SubJob' ;
+        0:
+          JobName := 'SubJob';
       Else
         JobName := NLU(LU_Job).GetVal(BitShiftCount);
-        If (JobName = '') Then JobName := '[Bit'+IntToStr(BitShiftCount)+']';
+        If (JobName = '') Then
+          JobName := '[Bit' + IntToStr(BitShiftCount) + ']';
       End;
-      Result := Result + JobName + ' ' ;
+      Result := Result + JobName + ' ';
     End;
-    Flags := Flags shr 1 ;
+    Flags := Flags shr 1;
   End;
 End;
 
-Function TPacketData.GetByteAtPos(Pos:Integer):Byte;
+Function TPacketData.GetByteAtPos(Pos: Integer): Byte;
 VAR
-  V : ^Byte ;
+  V: ^Byte;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-1) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 1) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
 End;
 
-Function TPacketData.GetBitAtPos(Pos,BitOffset:Integer):Boolean;
+Function TPacketData.GetBitAtPos(Pos, BitOffset: Integer): Boolean;
 VAR
-  V : ^Byte ;
-  BitFilter : Byte ;
+  V: ^Byte;
+  BitFilter: Byte;
 Begin
-  Result := False ;
+  Result := False;
   Try
-    If (Pos > length(fRawBytes)-2) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 2) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    BitFilter := $01 ;
+    BitFilter := $01;
     While BitOffset > 0 Do
     Begin
-      BitFilter := BitFilter shl 1 ;
-      BitOffset := BitOffset - 1 ;
+      BitFilter := BitFilter shl 1;
+      BitOffset := BitOffset - 1;
     End;
 
     Result := ((V^ and BitFilter) <> 0);
-    Exit ;
+    exit;
   Except
-    Result := False ;
+    Result := False;
   End;
 End;
 
-Function TPacketData.GetBitsAtPos(Pos,BitOffset,BitsSize:Integer):Int64;
+Function TPacketData.GetBitsAtPos(Pos, BitOffset, BitsSize: Integer): Int64;
 VAR
-  P, B, Rest : Integer ;
-  Mask : Int64 ;
+  P, B, Rest: Integer;
+  Mask: Int64;
 Begin
-  Result := 0 ;
-  P := Pos ;
-  B := BitOffset ;
-  Rest := BitsSize ;
-  Mask := 1 ;
+  Result := 0;
+  P := Pos;
+  B := BitOffset;
+  Rest := BitsSize;
+  Mask := 1;
   While Rest > 0 Do
   Begin
     // Add mask value if bit set
-    If GetBitAtPos(P,B) Then Result := Result + Mask ;
+    If GetBitAtPos(P, B) Then
+      Result := Result + Mask;
     // count down remaining bits to check
-    Rest := Rest - 1 ;
+    Rest := Rest - 1;
     // Multiply mask by 2
-    Mask := Mask shl 1 ;
+    Mask := Mask shl 1;
     // Increase current bit counter
-    B := B + 1 ;
+    B := B + 1;
     // If too high, jump to next byte
     If B >= 8 Then
     Begin
-      P := P + 1 ;
-      B := 0 ;
+      P := P + 1;
+      B := 0;
     End;
   End;
 
 End;
 
-
-Function TPacketData.GetBitsAtPos(BitOffset,BitsSize:Integer):Int64;
+Function TPacketData.GetBitsAtPos(BitOffset, BitsSize: Integer): Int64;
 Begin
-  Result := GetBitsAtPos(BitOffset div 8,BitOffset mod 8,BitsSize);
+  Result := GetBitsAtPos(BitOffset div 8, BitOffset mod 8, BitsSize);
 End;
 
-Function TPacketData.GetFloatAtPos(Pos:Integer):Single;
+Function TPacketData.GetFloatAtPos(Pos: Integer): Single;
 VAR
-  V : ^Single ;
+  V: ^Single;
 Begin
-  Result := 0 ;
+  Result := 0;
   Try
-    If (Pos > length(fRawBytes)-4) Then Exit ;
-    V := @fRawBytes[Pos] ;
+    If (Pos > Length(fRawBytes) - 4) Then
+      exit;
+    V := @fRawBytes[Pos];
     // Result := fRawBytes[Pos] + (fRawBytes[Pos+1] * $100);
-    Result := V^ ;
-    Exit ;
+    Result := V^;
+    exit;
   Except
-    Result := 0 ;
+    Result := 0;
   End;
-//  Result := Round(Result * 100) / 100.0 ;
+  // Result := Round(Result * 100) / 100.0 ;
 End;
 
-
-
-Function TPacketData.CompileData:Boolean;
+Function TPacketData.CompileData: Boolean;
 VAR
-  S, TS : String ;
-  P1, P2 : Integer ;
+  S, TS: String;
+  P1, P2: Integer;
 begin
-  Result := False ;
+  Result := False;
   If Length(fRawBytes) < 4 then
   Begin
-    fPacketID := $FFFF ; // invalid data
-    fPacketDataSize := 0 ;
-    fHeaderText := 'Invalid Packet Size < 4' ;
-    Exit ;
+    fPacketID := $FFFF; // invalid data
+    fPacketDataSize := 0;
+    fHeaderText := 'Invalid Packet Size < 4';
+    exit;
   End;
-  fPacketID := fRawBytes[$0] + ((fRawBytes[$1] AND $01) * $100) ;
-  fPacketDataSize := (fRawBytes[$1] AND $FE) * 2; // basically, all packets are always multiples of 4 bytes
+  fPacketID := fRawBytes[$0] + ((fRawBytes[$1] AND $01) * $100);
+  fPacketDataSize := (fRawBytes[$1] AND $FE) * 2;
+  // basically, all packets are always multiples of 4 bytes
   fPacketSync := fRawBytes[$2] + (fRawBytes[$3] * $100); // packet order number
 
-
-
-  If (Pos('[c->s]',LowerCase(fOriginalTimeString))>0) or (Pos('[s->c]',LowerCase(fOriginalTimeString))>0) Then
+  If (Pos('[c->s]', LowerCase(fOriginalTimeString)) > 0) or
+    (Pos('[s->c]', LowerCase(fOriginalTimeString)) > 0) Then
   Begin
     // Packeteer doesn't have time info (yet)
-    TS := '' ;
-    fTimeStamp := 0 ;
-    fOriginalTimeString := '0000-00-00 00:00' ;
-  End Else
+    TS := '';
+    fTimeStamp := 0;
+    fVirtualTimeStamp := 0;
+    fOriginalTimeString := '0000-00-00 00:00';
+  End
+  Else
   Begin
     // Try to determine timestamp from header
-    fOriginalTimeString := '' ;
-    P1 := Pos('[',fOriginalHeaderText);
-    P2 := Pos(']',fOriginalHeaderText);
+    fOriginalTimeString := '';
+    P1 := Pos('[', fOriginalHeaderText);
+    P2 := Pos(']', fOriginalHeaderText);
     If (P1 > 0) and (P2 > 0) and (P2 > P1) Then
     Begin
-      fOriginalTimeString := Copy(fOriginalHeaderText,P1+1,P2-P1-1);
+      fOriginalTimeString := Copy(fOriginalHeaderText, P1 + 1, P2 - P1 - 1);
       If (Length(fOriginalTimeString) > 0) Then
-      Try
-        fTimeStamp := VarToDateTime(fOriginalTimeString); // <-- seems to work better than anything I'd like to try
-        // fTimeStamp := StrToDateTime(fOriginalTimeString);
-        DateTimeToString(TS,'hh:nn:ss',TimeStamp);
-      Except
-        TS := '' ;
-        fTimeStamp := 0 ;
-        fOriginalTimeString := '0000-00-00 00:00' ;
-      End;
+        Try
+          fTimeStamp := VarToDateTime(fOriginalTimeString);
+          fVirtualTimeStamp := fTimeStamp ;
+          // <-- seems to work better than anything I'd like to try
+          // fTimeStamp := StrToDateTime(fOriginalTimeString);
+          DateTimeToString(TS, 'hh:nn:ss', TimeStamp);
+        Except
+          TS := '';
+          fTimeStamp := 0;
+          fVirtualTimeStamp := 0 ;
+          fOriginalTimeString := '0000-00-00 00:00';
+        End;
     End;
   End;
 
-  If (fTimeStamp = 0) Then TS := '' ;
-//  If (fTimeStamp = 0) Then TS := '??:??:??' ;
+  If (fTimeStamp = 0) Then
+    TS := '';
+  // If (fTimeStamp = 0) Then TS := '??:??:??' ;
 
   Case PacketLogType Of
-    1 : S := 'OUT ' ;
-    2 : S := 'IN  ' ;
+    1:
+      S := 'OUT ';
+    2:
+      S := 'IN  ';
   Else
-    S := '??? ' ;
+    S := '??? ';
   End;
-  S := TS + ' : ' + S + '0x' + IntToHex(PacketID,3) + ' - ' ;
+  S := TS + ' : ' + S + '0x' + IntToHex(PacketID, 3) + ' - ';
 
-  fHeaderText := S + PacketTypeToString(PacketLogType,PacketID);
-  Result := True ;
+  fHeaderText := S + PacketTypeToString(PacketLogType, PacketID);
+  Result := true;
 end;
 
-Function TPacketData.FindByte(AByte : Byte):Integer;
+Function TPacketData.FindByte(AByte: Byte): Integer;
 VAR
-  I : Integer ;
+  I: Integer;
 Begin
-  Result := -1 ;
-  For I := 0 to Length(fRawBytes)-1 Do
-  If (fRawBytes[I] = AByte) Then
-  Begin
-    Result := I ;
-    Exit ;
-  End;
+  Result := -1;
+  For I := 0 to Length(fRawBytes) - 1 Do
+    If (fRawBytes[I] = AByte) Then
+    Begin
+      Result := I;
+      exit;
+    End;
 End;
 
-Function TPacketData.FindUInt16(AUInt16 : Word):Integer;
+Function TPacketData.FindUInt16(AUInt16: Word): Integer;
 VAR
-  I : Integer ;
-  SUInt16 : Word ;
+  I: Integer;
+  SUInt16: Word;
 Begin
-  Result := -1 ;
-  For I := 0 to Length(fRawBytes)-2 Do
+  Result := -1;
+  For I := 0 to Length(fRawBytes) - 2 Do
   Begin
     SUInt16 := GetWordAtPos(I);
     If (SUInt16 = AUInt16) Then
     Begin
-      Result := I ;
-      Exit ;
+      Result := I;
+      exit;
     End;
   End;
 End;
 
-Function TPacketData.FindUInt32(AUInt32 : LongWord):Integer;
+Function TPacketData.FindUInt32(AUInt32: LongWord): Integer;
 VAR
-  I : Integer ;
-  SUInt32 : LongWord ;
+  I: Integer;
+  SUInt32: LongWord;
 Begin
-  Result := -1 ;
-  For I := 0 to Length(fRawBytes)-4 Do
+  Result := -1;
+  For I := 0 to Length(fRawBytes) - 4 Do
   Begin
     SUInt32 := GetUInt32AtPos(I);
     If (SUInt32 = AUInt32) Then
     Begin
-      Result := I ;
-      Exit ;
+      Result := I;
+      exit;
     End;
   End;
 End;
 
-
-Function TPacketData.RawSize : Integer ;
+Function TPacketData.RawSize: Integer;
 Begin
   Result := Length(fRawBytes);
 End;
 
-
-
-Constructor TPacketList.Create(IsMaster:Boolean);
+Constructor TPacketList.Create(IsMaster: Boolean);
 begin
-  Inherited Create ;
+  Inherited Create;
   fPacketDataList := TObjectList.Create(IsMaster);
-  ClearFilters ;
+  ClearFilters;
 end;
 
-Destructor TPacketList.Destroy ;
+Destructor TPacketList.Destroy;
 Begin
   FreeAndNil(fPacketDataList);
 
-  Inherited Destroy ;
+  Inherited Destroy;
 End;
 
 Procedure TPacketList.Clear;
@@ -954,67 +1018,120 @@ end;
 
 Procedure TPacketList.ClearFilters;
 Begin
-  SetLength(FilterOutList,0);
-  FilterOutType := ftFilterOff ;
-  SetLength(FilterInList,0);
-  FilterInType := ftFilterOff ;
+  SetLength(FilterOutList, 0);
+  FilterOutType := ftFilterOff;
+  SetLength(FilterInList, 0);
+  FilterInType := ftFilterOff;
 End;
 
-Function TPacketList.LoadFromFile(Filename : String;AddedStringData:String):Boolean;
+procedure TPacketList.BuildVirtualTimeStamps ;
 VAR
-  FileData : TStringList;
-  I : Integer ;
-  PD : TPacketData ;
-  S : String ;
-  PreferedPacketType : Byte ;
+  LastTimeStamp : TDateTime ;
+  FirstOfGroupTime : TDateTime ;
+  FirstOfGroupIndex : Integer ;
+  Divider : Double ;
+  StepTime : TDateTime ;
+  I, N : Integer ;
+Begin
+  if fPacketDataList.Count <= 0 then exit ;
+
+  I := 0 ;
+  Divider := 0.0 ;
+  FirstOfGroupTime := GetPacket(0).TimeStamp ;
+  FirstOfGroupIndex := 0 ;
+  LastTimeStamp := FirstOfGroupTime ;
+  while (I < fPacketDataList.Count) do
+  Begin
+    if (GetPacket(I).TimeStamp = LastTimeStamp) then
+    Begin
+      // Same packet Group
+      Divider := Divider + 1.0 ;
+
+    End;
+    if (GetPacket(I).TimeStamp <> LastTimeStamp)or(I >= fPacketDataList.Count) then
+    Begin
+      // Last packet of the group
+      for N := 1 to Round(Divider)-1 do
+      Begin
+        StepTime := (1.0 / 24.0 / 60.0 / 60.0 / Divider * (N * 1.0));
+        GetPacket(N+FirstOfGroupIndex).fVirtualTimeStamp := FirstOfGroupTime + StepTime ;
+      End;
+
+      if (I < fPacketDataList.Count-1) then
+      Begin
+        // If not last one
+        FirstOfGroupTime := GetPacket(I+1).TimeStamp ;
+        FirstOfGroupIndex := I+1 ;
+        Divider := 0.0 ;
+      End;
+    End;
+
+    LastTimeStamp := GetPacket(I).TimeStamp ;
+
+    I := I + 1 ;
+  End;
+
+End;
+
+
+Function TPacketList.LoadFromFile(Filename: String;
+  AddedStringData: String): Boolean;
+VAR
+  FileData: TStringList;
+  I: Integer;
+  PD: TPacketData;
+  S: String;
+  PreferedPacketType: Byte;
   // StartTime : TDateTime ;
-  IsUndefined, AskForType  : Boolean ;
-  LogFileType : Byte ; // 0 unknown ; 1 Windower PacketViewer ; 2 Ashita Packeteer
+  IsUndefined, AskForType: Boolean;
+  LogFileType: Byte; // 0 unknown ; 1 Windower PacketViewer ; 2 Ashita Packeteer
 Begin
   // StartTime := Now ;
 
-  IsUndefined := True ;
-  AskForType := True ;
-  PreferedPacketType := 0 ;
-  LogFileType := 0 ;
+  IsUndefined := true;
+  AskForType := true;
+  PreferedPacketType := 0;
+  LogFileType := 0;
   Try
-    if (LowerCase(ExtractFileExt(FileName)) = '.log') Then LogFileType := 1 ;
+    if (LowerCase(ExtractFileExt(Filename)) = '.log') Then
+      LogFileType := 1;
     // if (LowerCase(ExtractFileExt(FileName)) = '.txt') Then LogFileType := 2 ;
 
-    if (Pos('outgoing',LowerCase(Filename)) > 0) Then
+    if (Pos('outgoing', LowerCase(Filename)) > 0) Then
     Begin
-      PreferedPacketType := 1 ;
-      IsUndefined := False ;
-    End Else
-    if (Pos('incoming',LowerCase(Filename)) > 0) Then
+      PreferedPacketType := 1;
+      IsUndefined := False;
+    End
+    Else if (Pos('incoming', LowerCase(Filename)) > 0) Then
     Begin
-      PreferedPacketType := 2 ;
-      IsUndefined := False ;
+      PreferedPacketType := 2;
+      IsUndefined := False;
     End;
 
-    FileData := TStringList.Create ;
-    If (FileName <> '') and (FileExists(Filename)) Then
+    FileData := TStringList.Create;
+    If (Filename <> '') and (FileExists(Filename)) Then
       FileData.LoadFromFile(Filename);
     FileData.Add('');
     If (AddedStringData <> '') Then
-      FileData.Text := FileData.Text + AddedStringData ;
-    FileData.Add(''); // Add dummy blank lines to fix a bug of ignoring last packet if isn't finished by a blank line
+      FileData.Text := FileData.Text + AddedStringData;
     FileData.Add('');
-    I := 0 ;
-    PD := Nil ;
+    // Add dummy blank lines to fix a bug of ignoring last packet if isn't finished by a blank line
+    FileData.Add('');
+    I := 0;
+    PD := Nil;
 
-    FormLoading.Show ;
-    FormLoading.BringToFront ;
-    FormLoading.Caption := 'Loading ' + Filename ;
+    FormLoading.Show;
+    FormLoading.BringToFront;
+    FormLoading.Caption := 'Loading ' + Filename;
 
-    While I < FileData.Count-1 Do
+    While I < FileData.Count - 1 Do
     Begin
       If FormLoading.Visible and ((I mod 50) = 0) Then
       Begin
-        FormLoading.Repaint ;
-        FormLoading.PB.Max := FileData.Count ;
-        FormLoading.PB.Min := 0 ;
-        FormLoading.PB.Position := I ;
+        FormLoading.Repaint;
+        FormLoading.PB.Max := FileData.Count;
+        FormLoading.PB.Min := 0;
+        FormLoading.PB.Position := I;
       End;
 
       S := FileData.Strings[I];
@@ -1022,87 +1139,96 @@ Begin
       Begin
         // Begin building new packet
         PD := TPacketData.Create;
-        if (Pos('outgoing',LowerCase(S)) > 0) Then
+        if (Pos('outgoing', LowerCase(S)) > 0) Then
         Begin
-          PD.fPacketLogType := pltOut ;
-          IsUndefined := False ;
-          LogFileType := 1 ; // Looks like a packetviewer log
-        End Else
-        if (Pos('incoming',LowerCase(S)) > 0) Then
+          PD.fPacketLogType := pltOut;
+          IsUndefined := False;
+          LogFileType := 1; // Looks like a packetviewer log
+        End
+        Else if (Pos('incoming', LowerCase(S)) > 0) Then
         Begin
-          PD.fPacketLogType := pltIn ;
-          IsUndefined := False ;
-          LogFileType := 1 ; // Looks like a packetviewer log
-        End else
-        if (Pos('[c->s]',LowerCase(S)) > 0) Then
+          PD.fPacketLogType := pltIn;
+          IsUndefined := False;
+          LogFileType := 1; // Looks like a packetviewer log
+        End
+        else if (Pos('[c->s]', LowerCase(S)) > 0) Then
         Begin
-          PD.fPacketLogType := pltOut ;
-          IsUndefined := False ;
-          AskForType := False ;
-          LogFileType := 2 ; // This is a Packeteer file for sure
-        End Else
-        if (Pos('[s->c]',LowerCase(S)) > 0) Then
+          PD.fPacketLogType := pltOut;
+          IsUndefined := False;
+          AskForType := False;
+          LogFileType := 2; // This is a Packeteer file for sure
+        End
+        Else if (Pos('[s->c]', LowerCase(S)) > 0) Then
         Begin
-          PD.fPacketLogType := pltIn ;
-          IsUndefined := False ;
-          AskForType := False ;
-          LogFileType := 2 ; // This is a Packeteer file for sure
-        End else
+          PD.fPacketLogType := pltIn;
+          IsUndefined := False;
+          AskForType := False;
+          LogFileType := 2; // This is a Packeteer file for sure
+        End
+        else
         Begin
-          PD.fPacketLogType := PreferedPacketType ;
+          PD.fPacketLogType := PreferedPacketType;
         End;
 
-        If (
-          (Copy(S,1,2) <> '--') and // Ignore comment lines
+        If ((Copy(S, 1, 2) <> '--') and // Ignore comment lines
           (S <> '')) and // Ignore blank lines
-          (IsUndefined and AskForType and (PD.fPacketLogType = 0) and // Only if we didn't define yet
+          (IsUndefined and AskForType and (PD.fPacketLogType = 0) and
+          // Only if we didn't define yet
           (LogFileType <> 2) // And not using packeteer files
           ) Then
         Begin
-          AskForType := False ;
-          Case MessageDlg( 'Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined'#10#13#10#13'LineData:'#10#13'  '+Copy(S,1,100)+' ...' ,mtConfirmation,[mbYes,mbOK,mbCancel],-1) Of
-            mrOK : Begin
-                PreferedPacketType := pltIn ;
-                IsUndefined := False ;
-                PD.fPacketLogType := PreferedPacketType ;
+          AskForType := False;
+          Case MessageDlg
+            ('Unable to indentify the packet type. Do you want to assign a default type ?'#10#13#10#13'Press OK for Incomming'#10#13'Press Yes for outgoing'#10#13#10#13'Press Cancel to keep it undefined'#10#13#10#13'LineData:'#10#13'  '
+            + Copy(S, 1, 100) + ' ...', mtConfirmation,
+            [mbYes, mbOK, mbCancel], -1) Of
+            mrOK:
+              Begin
+                PreferedPacketType := pltIn;
+                IsUndefined := False;
+                PD.fPacketLogType := PreferedPacketType;
               End;
-            mrYes : Begin
-                PreferedPacketType := pltOut ;
-                IsUndefined := False ;
-                PD.fPacketLogType := PreferedPacketType ;
+            mrYes:
+              Begin
+                PreferedPacketType := pltOut;
+                IsUndefined := False;
+                PD.fPacketLogType := PreferedPacketType;
               End;
           End;
         End;
 
-
         PD.fRawText.Add(S);
-        PD.fHeaderText := S ;
-        PD.fOriginalHeaderText := S ;
+        PD.fHeaderText := S;
+        PD.fOriginalHeaderText := S;
 
-      End else
-      If ((S <> '') and Assigned(PD) and (LogFileType <> 2)) Then
+      End
+      else If ((S <> '') and Assigned(PD) and (LogFileType <> 2)) Then
       Begin
         // Add line of data
         PD.fRawText.Add(S);
-        If (PD.fRawText.Count > 3) Then // Actual packet data starts at the 3rd line after the header
+        If (PD.fRawText.Count > 3) Then
+        // Actual packet data starts at the 3rd line after the header
         Begin
           PD.AddRawLineAsBytes(S);
 
         End;
-      End else
+      End
+      else
 
-      If ((S <> '') and Assigned(PD) and (LogFileType = 2)) Then
+        If ((S <> '') and Assigned(PD) and (LogFileType = 2)) Then
       Begin
         // Add line of data
         PD.fRawText.Add(S);
-        If (PD.fRawText.Count > 1) Then // Actual packet data starts at the 1st line after the header
+        If (PD.fRawText.Count > 1) Then
+        // Actual packet data starts at the 1st line after the header
         Begin
           PD.AddRawPacketeerLineAsBytes(S);
 
         End;
-      End else
+      End
+      else
 
-      If ((S = '') and Assigned(PD)) Then
+        If ((S = '') and Assigned(PD)) Then
       Begin
         // Close this packet and add it to the list
         If PD.CompileData Then
@@ -1110,125 +1236,130 @@ Begin
         Else
           FreeAndNil(PD); // Free it if it's invalid
         // null our reference
-        PD := nil ;
-      End else
-      If ((S = '') and (Not Assigned(PD)) ) Then
+        PD := nil;
+      End
+      else If ((S = '') and (Not Assigned(PD))) Then
       Begin
         // Blank line, do nothing
-      End else
-      If ((Copy(S,1,2) = '--') and (Not Assigned(PD)) ) Then
+      End
+      else If ((Copy(S, 1, 2) = '--') and (Not Assigned(PD))) Then
       Begin
         // comment-line, do nothing (for packateer)
-      End else
+      End
+      else
       begin
         // ERROR, unexpected entry, but let's just ignore it
       end;
-      I := I + 1 ;
+      I := I + 1;
     End;
 
-    Result := True ;
+    Result := true;
   Except
-    Result := False ;
+    Result := False;
   End;
-  If Assigned(FileData) Then FreeAndNil(FileData);
+  If Assigned(FileData) Then
+    FreeAndNil(FileData);
 
+  If Assigned(PD) Then
+    FreeAndNil(PD);
 
-  If Assigned(PD) Then FreeAndNil(PD);
-  If Assigned(FormLoading) Then FormLoading.Hide ;
+  // BuildVirtualTimeStamps; // move to mainform with a setting
+
+  If Assigned(FormLoading) Then
+    FormLoading.Hide;
 End;
 
-Function TPacketList.Count : Integer ;
+Function TPacketList.Count: Integer;
 Begin
-  Result := fPacketDataList.Count ;
+  Result := fPacketDataList.Count;
 End;
 
-Function TPacketList.GetPacket(ID : Integer):TPacketData;
+Function TPacketList.GetPacket(ID: Integer): TPacketData;
 Begin
   If (ID >= 0) and (ID < fPacketDataList.Count) Then
     Result := (fPacketDataList.Items[ID] as TPacketData)
   Else
-    Result := Nil ;
+    Result := Nil;
 End;
 
-Function TPacketList.CopyFrom(Original: TPacketList):Integer;
+Function TPacketList.CopyFrom(Original: TPacketList): Integer;
 VAR
-  I, C : Integer ;
+  I, C: Integer;
 begin
-  C := 0 ;
-  Clear ;
+  C := 0;
+  Clear;
 
-  For I := 0 To Original.fPacketDataList.Count-1 do
+  For I := 0 To Original.fPacketDataList.Count - 1 do
   Begin
     fPacketDataList.Add(Original.fPacketDataList.Items[I]);
-    C := C + 1 ;
+    C := C + 1;
   End;
 
-  Result := C ;
+  Result := C;
 end;
 
-Function TPacketList.DoIShowThis(PacketID : Word;FT : TFilterType;FL : Array of Word) : Boolean ;
+Function TPacketList.DoIShowThis(PacketID: Word; FT: TFilterType;
+  FL: Array of Word): Boolean;
 Begin
-  Result := True ;
+  Result := true;
   If (FT = ftFilterOff) Then
   Begin
-    Result := True ;
-    Exit ;
+    Result := true;
+    exit;
   End;
   If (FT = ftAllowNone) Then
   Begin
-    Result := False ;
-    Exit ;
+    Result := False;
+    exit;
   End;
   If (FT = ftShowPackets) Then
   Begin
-    Result := WordInArray(PacketID,FL);
-    Exit ;
+    Result := WordInArray(PacketID, FL);
+    exit;
   End;
   If (FT = ftHidePackets) Then
   Begin
-    Result := Not WordInArray(PacketID,FL);
-    Exit ;
+    Result := Not WordInArray(PacketID, FL);
+    exit;
   End;
 End;
 
-Function TPacketList.FilterFrom(Original: TPacketList):Integer;
+Function TPacketList.FilterFrom(Original: TPacketList): Integer;
 VAR
-  I, C : Integer ;
-  DoAdd : Boolean ;
-  PD : TPacketData ;
+  I, C: Integer;
+  DoAdd: Boolean;
+  PD: TPacketData;
 begin
-  C := 0 ;
-  Clear ;
+  C := 0;
+  Clear;
 
-  For I := 0 To Original.fPacketDataList.Count-1 do
+  For I := 0 To Original.fPacketDataList.Count - 1 do
   Begin
-    DoAdd := True ;
+    DoAdd := true;
     PD := Original.GetPacket(I);
 
     // Out filters
     If (PD.PacketLogType = pltOut) Then
     Begin
       // Outgoing
-      DoAdd := DoIShowThis(PD.PacketID,FilterOutType,FilterOutList);
+      DoAdd := DoIShowThis(PD.PacketID, FilterOutType, FilterOutList);
     End;
 
     // In filters
     If (PD.PacketLogType = pltIn) Then
     Begin
       // Incomming
-      DoAdd := DoIShowThis(PD.PacketID,FilterInType,FilterInList);
+      DoAdd := DoIShowThis(PD.PacketID, FilterInType, FilterInList);
     End;
 
     If DoAdd Then
     Begin
       fPacketDataList.Add(Original.fPacketDataList.Items[I]);
-      C := C + 1 ;
+      C := C + 1;
     End;
   End;
 
-  Result := C ;
+  Result := C;
 end;
-
-
 
 end.
