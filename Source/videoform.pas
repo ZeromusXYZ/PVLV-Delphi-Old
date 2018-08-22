@@ -342,6 +342,7 @@ procedure TVideoLink.BtnCloseClick(Sender: TObject);
 begin
   If Assigned(vlcMediaPlayer) Then
   Begin
+    Screen.Cursor := crHourGlass ;
     // release vlc media player
     libvlc_media_player_release(vlcMediaPlayer);
     vlcMediaPlayer := nil;
@@ -351,6 +352,7 @@ begin
   End;
   LinkFile := '';
   LinkOffset := 0;
+  Screen.Cursor := crDefault ;
   Close;
 end;
 

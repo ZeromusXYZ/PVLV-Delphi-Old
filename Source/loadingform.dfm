@@ -14,6 +14,8 @@ object FormLoading: TFormLoading
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object PB: TProgressBar
@@ -23,9 +25,5 @@ object FormLoading: TFormLoading
     Height = 33
     Align = alClient
     TabOrder = 0
-    ExplicitLeft = 216
-    ExplicitTop = 8
-    ExplicitWidth = 150
-    ExplicitHeight = 17
   end
 end

@@ -261,7 +261,7 @@ procedure TMainForm.FillListBox;
 VAR
   I: Integer;
 Begin
-  LBPackets.Cursor := crHourGlass;
+  Screen.Cursor := crHourGlass;
   Application.ProcessMessages;
   LBPackets.Clear;
 
@@ -297,7 +297,7 @@ Begin
     LBPackets.ItemIndex := 0;
   End;
   LBPackets.Invalidate;
-  LBPackets.Cursor := crDefault;
+  Screen.Cursor := crDefault;
   If Assigned(FormLoading) Then
     FormLoading.Hide;
 End;

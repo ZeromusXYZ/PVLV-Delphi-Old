@@ -10,6 +10,8 @@ uses
 type
   TFormLoading = class(TForm)
     PB: TProgressBar;
+    procedure FormShow(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -22,5 +24,15 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFormLoading.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Screen.Cursor := crDefault ;
+end;
+
+procedure TFormLoading.FormShow(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass ;
+end;
 
 end.

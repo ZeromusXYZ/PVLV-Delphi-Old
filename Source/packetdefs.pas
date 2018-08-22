@@ -1264,7 +1264,6 @@ Begin
     FreeAndNil(PD);
 
   // BuildVirtualTimeStamps; // move to mainform with a setting
-
   If Assigned(FormLoading) Then
     FormLoading.Hide;
 End;
