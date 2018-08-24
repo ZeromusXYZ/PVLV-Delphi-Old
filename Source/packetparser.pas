@@ -695,7 +695,7 @@ Begin
           ColIndex := ColIndex + 1;
           If Assigned(UpdateActiveRE) Then
             MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-          AddSGRow(SG, LOffset, LName, IntToStr(PD.GetUInt32AtPos(LOffset)), 4);
+          AddSGRow(SG, LOffset, LName, FormatFloat('0.00', PD.GetFloatAtPos(LOffset)), 4);
 
         End
         Else
