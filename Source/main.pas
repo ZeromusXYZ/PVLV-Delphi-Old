@@ -205,17 +205,16 @@ End;
 Procedure TMainForm.MoveToOffset(Offset: Int64);
 VAR
   I: Integer;
-  FindTime, OffsetAsTime : TDateTime;
+  FindTime, OffsetAsTime: TDateTime;
   CurrentPos, LBCenterPos: Integer;
 Begin
   If PLLoaded.Count <= 0 Then
     Exit;
   OffsetAsTime := (1.0 / 24.0 / 60.0 / 60.0 / 1000.0 * Offset);
-  FindTime := PLLoaded.GetPacket(0).VirtualTimeStamp + OffsetAsTime ;
+  FindTime := PLLoaded.GetPacket(0).VirtualTimeStamp + OffsetAsTime;
   CurrentPos := LBPackets.ItemIndex;
 
-  LBCenterPos := (LBPackets.Height div LBPackets.ItemHeight) div 2 ;
-
+  LBCenterPos := (LBPackets.Height div LBPackets.ItemHeight) div 2;
 
   // Start loop from current pos, likely to find it faster
   For I := CurrentPos to PL.Count - 1 Do
@@ -253,7 +252,6 @@ Begin
       End;
       Exit;
     End;
-
 
 End;
 
@@ -564,7 +562,8 @@ begin
 
   If Stuffloaded > 0 Then
   Begin
-    If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
+    If DlgSettings.UseVirtualTime Then
+      PLLoaded.BuildVirtualTimeStamps;
     LBPackets.Clear;
     PL.Clear;
     PL.ClearFilters;
@@ -651,12 +650,14 @@ procedure TMainForm.ALAppendFileExecute(Sender: TObject);
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
-    if Assigned(VideoLink) then VideoLink.FullClose;
+    if Assigned(VideoLink) then
+      VideoLink.FullClose;
 
     LBPackets.Clear;
     If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName, '') Then
     Begin
-      If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
+      If DlgSettings.UseVirtualTime Then
+        PLLoaded.BuildVirtualTimeStamps;
       // Fill listbox
       PL.ClearFilters;
       PL.CopyFrom(PLLoaded);
@@ -699,15 +700,17 @@ procedure TMainForm.ALOpenFileExecute(Sender: TObject);
 begin
   If OpenDialogLogFiles.Execute() Then
   Begin
-    if Assigned(VideoLink) then VideoLink.FullClose;
-    
+    if Assigned(VideoLink) then
+      VideoLink.FullClose;
+
     LBPackets.Clear;
     PL.Clear;
     PL.ClearFilters;
     PLLoaded.Clear;
     If PLLoaded.LoadFromFile(OpenDialogLogFiles.FileName, '') Then
     Begin
-      If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
+      If DlgSettings.UseVirtualTime Then
+        PLLoaded.BuildVirtualTimeStamps;
       // Fill listbox
       PL.ClearFilters;
       PL.CopyFrom(PLLoaded);
@@ -719,7 +722,7 @@ begin
         '.pvlvvl')) Then
       Begin
         VideoLink.ShowVideoForm;
-        MMVideoLinkSave.Enabled := False ;
+        MMVideoLinkSave.Enabled := False;
       End;
     End
     else
@@ -816,7 +819,8 @@ VAR
   LastCount: Integer;
   ClipStr: String;
 begin
-  if Assigned(VideoLink) then VideoLink.FullClose;
+  if Assigned(VideoLink) then
+    VideoLink.FullClose;
   LastCount := PLLoaded.Count;
 
   If (not Clipboard.HasFormat(CF_TEXT)) or (Clipboard.AsText = '') Then
@@ -838,7 +842,8 @@ begin
       Caption := MyAppName;
       Exit;
     End;
-    If DlgSettings.UseVirtualTime Then PLLoaded.BuildVirtualTimeStamps ;
+    If DlgSettings.UseVirtualTime Then
+      PLLoaded.BuildVirtualTimeStamps;
 
     LBPackets.Clear;
     // Fill listbox
@@ -976,8 +981,8 @@ begin
   else
   Begin
     UpdatePacketDetails('-');
-    CurrentDateTimeOffset := PL.GetPacket(LBPackets.ItemIndex).VirtualTimeStamp -
-      PLLoaded.GetPacket(0).VirtualTimeStamp;
+    CurrentDateTimeOffset := PL.GetPacket(LBPackets.ItemIndex).VirtualTimeStamp
+      - PLLoaded.GetPacket(0).VirtualTimeStamp;
     If VideoLink.IsAvailable Then
       VideoLink.MoveToTimePacketOffset(CurrentDateTimeOffset);
   End;

@@ -27,12 +27,12 @@ implementation
 
 procedure TFormLoading.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Screen.Cursor := crDefault ;
+  Screen.Cursor := crDefault;
 end;
 
 procedure TFormLoading.FormShow(Sender: TObject);
 begin
-  Screen.Cursor := crHourGlass ;
+  Screen.Cursor := crHourGlass;
 end;
 
 end.

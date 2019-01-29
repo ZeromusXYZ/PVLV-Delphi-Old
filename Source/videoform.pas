@@ -53,7 +53,7 @@ type
     Procedure ShowVideoForm;
     Procedure MoveToTimePacketOffset(TimeOffset: TDateTime);
     Procedure MoveToOffset(TimeOffset: Int64);
-    Procedure FullClose ;
+    Procedure FullClose;
 
     Property CurrentSize: Int64 read fCurrentSize;
     Property CurrentPos: Int64 read fCurrentPos;
@@ -252,14 +252,14 @@ end;
 
 procedure TVideoLink.BtnSetSyncClick(Sender: TObject);
 VAR
-  NewPos : Int64 ;
+  NewPos: Int64;
 begin
   NewPos := Round(MainForm.CurrentDateTimeOffset * 24 * 60 * 60 * 1000) -
     CurrentPos;
-  if (NewPos <> LinkOffset)or(NewPos = 0) then
+  if (NewPos <> LinkOffset) or (NewPos = 0) then
   Begin
-    LinkOffset := NewPos ;
-    MainForm.MMVideoLinkSave.Enabled := True ;
+    LinkOffset := NewPos;
+    MainForm.MMVideoLinkSave.Enabled := True;
   End;
 end;
 
@@ -331,10 +331,11 @@ begin
   Begin
     PosUpdateTimerTimer(nil);
     Sleep(5);
-    Done := False ;
-  End Else
+    Done := False;
+  End
+  Else
   Begin
-    Done := True ;
+    Done := True;
   End;
 end;
 
@@ -342,7 +343,7 @@ procedure TVideoLink.BtnCloseClick(Sender: TObject);
 begin
   If Assigned(vlcMediaPlayer) Then
   Begin
-    Screen.Cursor := crHourGlass ;
+    Screen.Cursor := crHourGlass;
     // release vlc media player
     libvlc_media_player_release(vlcMediaPlayer);
     vlcMediaPlayer := nil;
@@ -352,7 +353,7 @@ begin
   End;
   LinkFile := '';
   LinkOffset := 0;
-  Screen.Cursor := crDefault ;
+  Screen.Cursor := crDefault;
   Close;
 end;
 
@@ -475,11 +476,10 @@ begin
   End;
 end;
 
-Procedure TVideoLink.FullClose ;
+Procedure TVideoLink.FullClose;
 Begin
   BtnCloseClick(nil);
 End;
-
 
 Function TVideoLink.TryOpenVideoLink(FN: String): Boolean;
 VAR
@@ -597,9 +597,9 @@ Begin
     Exit;
 
   TrackBar1.Tag := 1;
-  libvlc_media_player_set_pause(vlcMediaPlayer,1);
+  libvlc_media_player_set_pause(vlcMediaPlayer, 1);
   libvlc_media_player_set_time(vlcMediaPlayer, TimeOffset);
-  CBFollow.Checked := False ;
+  CBFollow.Checked := False;
   TrackBar1.Tag := 0;
 End;
 

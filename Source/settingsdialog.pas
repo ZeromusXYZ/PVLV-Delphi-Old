@@ -28,7 +28,7 @@ type
     { Public declarations }
     UseLibVLC: Boolean;
     GridFontType: Integer;
-    UseVirtualTime : Boolean;
+    UseVirtualTime: Boolean;
 
     Procedure LoadDefaults;
     Procedure LoadSettings;
@@ -49,7 +49,7 @@ CONST
   RegRoot = HKEY_CURRENT_USER;
   RegKey_UseVLC = 'UseLibVLC';
   RegKey_GridFont = 'GridFontType';
-  RegKey_UseVirtualTime = 'VideoTimeSmoothing' ;
+  RegKey_UseVirtualTime = 'VideoTimeSmoothing';
 
 Procedure TDlgSettings.LoadSettings;
 VAR

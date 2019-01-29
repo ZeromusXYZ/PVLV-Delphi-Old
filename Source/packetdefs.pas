@@ -12,19 +12,25 @@ CONST
   pltOut = 1;
   pltIn = 2;
 
-  EncodeItemStr: TEncoded6BitStringKey = (
-      #0 ,'0','1','2','3','4','5','6', '7','9','8','A','B','C','D','E', // $00
-      'F','G','H','I','J','K','L','M', 'N','O','P','Q','R','S','T','U', // $10
-      'V','W','X','Y','Z','a','b','c', 'd','e','f','g','h','i','j','k', // $20
-      'l','m','n','o','p','q','r','s', 't','u','v','w','x','y','z',#0   // $30
+  EncodeItemStr: TEncoded6BitStringKey = (#0, '0', '1', '2', '3', '4', '5', '6',
+    '7', '9', '8', 'A', 'B', 'C', 'D', 'E', // $00
+    'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+    'U', // $10
+    'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', // $20
+    'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
+    'z', #0 // $30
     // 0   1   2   3   4   5   6   7    8   9   A   B   C   D   E   F
     );
 
-  EncodeLinkshellStr: TEncoded6BitStringKey = (
-      #0 ,'a','b','c','d','e','f','g', 'h','i','j','k','l','m','n','o', // $00
-      'p','q','r','s','t','u','v','w', 'x','y','z','A','B','C','D','E', // $10
-      'F','G','H','I','J','K','L','M', 'N','O','P','Q','R','S','T','U', // $20
-      'V','W','X','Y','Z',' ',' ',' ', ' ',' ',' ',' ',' ',' ',' ',#0   // $30
+  EncodeLinkshellStr: TEncoded6BitStringKey = (#0, 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', // $00
+    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D',
+    'E', // $10
+    'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+    'U', // $20
+    'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+    ' ', #0 // $30
     // 0   1   2   3   4   5   6   7    8   9   A   B   C   D   E   F
     );
 
@@ -96,7 +102,7 @@ TYPE
     Destructor Destroy; Override;
     Procedure Clear;
     Procedure ClearFilters;
-    procedure BuildVirtualTimeStamps ;
+    procedure BuildVirtualTimeStamps;
     Function LoadFromFile(Filename: String; AddedStringData: String): Boolean;
     Function Count: Integer;
     Function GetPacket(ID: Integer): TPacketData;
@@ -515,8 +521,8 @@ Begin
   Result := '';
   Result := Result +
     '   |  0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F' + #13#10;
-  Result := Result + '---+----------------------------------------------------'
-    + #13#10;
+  Result := Result +
+    '---+----------------------------------------------------' + #13#10;
   L := 0;
   For I := 0 To Length(fRawBytes) - 1 Do
   Begin
@@ -914,14 +920,14 @@ begin
       If (Length(fOriginalTimeString) > 0) Then
         Try
           fTimeStamp := VarToDateTime(fOriginalTimeString);
-          fVirtualTimeStamp := fTimeStamp ;
+          fVirtualTimeStamp := fTimeStamp;
           // <-- seems to work better than anything I'd like to try
           // fTimeStamp := StrToDateTime(fOriginalTimeString);
           DateTimeToString(TS, 'hh:nn:ss', TimeStamp);
         Except
           TS := '';
           fTimeStamp := 0;
-          fVirtualTimeStamp := 0 ;
+          fVirtualTimeStamp := 0;
           fOriginalTimeString := '0000-00-00 00:00';
         End;
     End;
@@ -1024,55 +1030,57 @@ Begin
   FilterInType := ftFilterOff;
 End;
 
-procedure TPacketList.BuildVirtualTimeStamps ;
+procedure TPacketList.BuildVirtualTimeStamps;
 VAR
-  LastTimeStamp : TDateTime ;
-  FirstOfGroupTime : TDateTime ;
-  FirstOfGroupIndex : Integer ;
-  Divider : Double ;
-  StepTime : TDateTime ;
-  I, N : Integer ;
+  LastTimeStamp: TDateTime;
+  FirstOfGroupTime: TDateTime;
+  FirstOfGroupIndex: Integer;
+  Divider: Double;
+  StepTime: TDateTime;
+  I, N: Integer;
 Begin
-  if fPacketDataList.Count <= 0 then exit ;
+  if fPacketDataList.Count <= 0 then
+    exit;
 
-  I := 0 ;
-  Divider := 0.0 ;
-  FirstOfGroupTime := GetPacket(0).TimeStamp ;
-  FirstOfGroupIndex := 0 ;
-  LastTimeStamp := FirstOfGroupTime ;
+  I := 0;
+  Divider := 0.0;
+  FirstOfGroupTime := GetPacket(0).TimeStamp;
+  FirstOfGroupIndex := 0;
+  LastTimeStamp := FirstOfGroupTime;
   while (I < fPacketDataList.Count) do
   Begin
     if (GetPacket(I).TimeStamp = LastTimeStamp) then
     Begin
       // Same packet Group
-      Divider := Divider + 1.0 ;
+      Divider := Divider + 1.0;
 
     End;
-    if (GetPacket(I).TimeStamp <> LastTimeStamp)or(I >= fPacketDataList.Count) then
+    if (GetPacket(I).TimeStamp <> LastTimeStamp) or (I >= fPacketDataList.Count)
+    then
     Begin
       // Last packet of the group
-      for N := 1 to Round(Divider)-1 do
+      for N := 1 to Round(Divider) - 1 do
       Begin
         StepTime := (1.0 / 24.0 / 60.0 / 60.0 / Divider * (N * 1.0));
-        GetPacket(N+FirstOfGroupIndex).fVirtualTimeStamp := FirstOfGroupTime + StepTime ;
+        GetPacket(N + FirstOfGroupIndex).fVirtualTimeStamp := FirstOfGroupTime
+          + StepTime;
       End;
 
-      if (I < fPacketDataList.Count-1) then
+      if (I < fPacketDataList.Count - 1) then
       Begin
         // If not last one
-        FirstOfGroupTime := GetPacket(I+1).TimeStamp ;
-        FirstOfGroupIndex := I+1 ;
-        Divider := 0.0 ;
+        FirstOfGroupTime := GetPacket(I + 1).TimeStamp;
+        FirstOfGroupIndex := I + 1;
+        Divider := 0.0;
       End;
     End;
 
-    LastTimeStamp := GetPacket(I).TimeStamp ;
+    LastTimeStamp := GetPacket(I).TimeStamp;
 
-    I := I + 1 ;
+    I := I + 1;
   End;
 
 End;
-
 
 Function TPacketList.LoadFromFile(Filename: String;
   AddedStringData: String): Boolean;

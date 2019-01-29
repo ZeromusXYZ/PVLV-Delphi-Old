@@ -532,9 +532,7 @@ Begin
           // Just displays the comment field of this line
           AddSGRow(SG, LOffset, LName, LDescription, 0);
         End
-        Else
-
-          If (LType = 'switchblock') Then
+        Else If (LType = 'switchblock') Then
         Begin
           If (AllowAutoSwitchBlock) Then
           Begin
@@ -554,9 +552,8 @@ Begin
             End;
           End;
         End
-        Else
-
-          If ((LType = 'switchbitsblock') or (LType = 'bitsswitchblock')) Then
+        Else If ((LType = 'switchbitsblock') or
+          (LType = 'bitsswitchblock')) Then
         Begin
           If (AllowAutoSwitchBlock) Then
           Begin
@@ -577,9 +574,7 @@ Begin
             End;
           End;
         End
-        Else
-
-          If ((LType = 'byte') or (LType = 'char') or (LType = 'b') or
+        Else If ((LType = 'byte') or (LType = 'char') or (LType = 'b') or
           (LType = 'unsigned char')) Then
         Begin
           If (LOffset >= LastPos) Then
@@ -695,1047 +690,915 @@ Begin
           ColIndex := ColIndex + 1;
           If Assigned(UpdateActiveRE) Then
             MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-          AddSGRow(SG, LOffset, LName, FormatFloat('0.00', PD.GetFloatAtPos(LOffset)), 4);
+          AddSGRow(SG, LOffset, LName, FormatFloat('0.00',
+            PD.GetFloatAtPos(LOffset)), 4);
 
         End
-        Else
-          // Special types
-          If (LType = 'pos') Then
+        // Special types
+        Else If (LType = 'pos') Then
+        Begin
+          // Position coordinates, float x3
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 12;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 12, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, 'X:' + FormatFloat('0.00',
+            PD.GetFloatAtPos(LOffset)) + ' Y:' + FormatFloat('0.00',
+            PD.GetFloatAtPos(LOffset + 4)) + ' Z:' + FormatFloat('0.00',
+            PD.GetFloatAtPos(LOffset + 8)), 12);
+
+        End
+        Else If (LType = 'dir') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          // Direction as byte
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName,
+            ByteToRotation(PD.GetByteAtPos(LOffset)), 1);
+
+        End
+        Else If (LType = 'ms') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          // Milliseconds
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, MSToStr(PD.GetUInt32AtPos(LOffset)), 4);
+
+        End
+        Else If (LType = 'timestamp') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          // Milliseconds
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName,
+            FFXITimeStampToStr(PD.GetUInt32AtPos(LOffset)), 4);
+
+        End
+        Else If (LType = 'vanatime') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          // date/time
+          // DT := EncodeDate(1970,1,1) + PD.GetUInt32AtPos(LOffset) / 86400 ;
+          // AddSGRow(SG,LOffset,LName,FormatDateTime('yyyy/mm/dd hh:nn:ss',DT));
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName,
+            DWordToVanaTime(PD.GetUInt32AtPos(LOffset)), 4);
+        End
+        Else If ((LType = 'frames') or (LType = 'frame')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          // Milliseconds
+          AddSGRow(SG, LOffset, LName,
+            FramesToStr(PD.GetUInt32AtPos(LOffset)), 4);
+
+        End
+        Else If (Copy(LType, 1, 6) = 'string') Then
+        Begin
+          // Zero terminated String
+          ColIndex := ColIndex + 1;
+          DataSize := StrToIntDef(Copy(LType, 7, Length(LType)), -1);
+
+          C := DataSize;
+          If C <= 0 Then
+            C := Length(PD.GetStringAtPos(LOffset)) + 1;
+
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset,
+              Length(PD.GetStringAtPos(LOffset, DataSize)) + 1,
+              DataCol(ColIndex));
+
+          AddSGRow(SG, LOffset, LName, PD.GetStringAtPos(LOffset, DataSize), C);
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + C;
+
+        End
+        Else If (LType = 'linkshellstring') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 16;
+
+          // Zero terminated String
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 15, DataCol(ColIndex));
+
+          AddSGRow(SG, LOffset, LName, PD.GetPackedString16AtPos(LOffset,
+            EncodeLinkshellStr), 15);
+        End
+        Else If (LType = 'inscribestring') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 16;
+
+          // Zero terminated String
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 15, DataCol(ColIndex));
+
+          AddSGRow(SG, LOffset, LName, PD.GetPackedString16AtPos(LOffset,
+            EncodeItemStr), 15);
+        End
+        Else If (Copy(LType, 1, 4) = 'data') Then
+        Begin
+          // simple byte data
+          ColIndex := ColIndex + 1;
+          DataSize := StrToIntDef(Copy(LType, 5, Length(LType)), 1);
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, DataSize, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, PD.GetDataAtPos(LOffset, DataSize),
+            DataSize);
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + DataSize;
+
+        End
+        Else If ((LType = 'ip4') or (LType = 'ip')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName,
+            '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
+            PD.GetIP4AtPos(LOffset), 4);
+        End
+        // Specialized items
+        Else If ((LType = 'equipsetitem') or (LType = 'equipsetbuild')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          // Slot
+          T := '';
+          If PD.GetBitAtPos(LOffset, 0) Then
+            T := T + 'Active ';
+          If PD.GetBitAtPos(LOffset, 1) Then
+            T := T + 'Bit1Set? ';
+          T := T + 'Bag: ' + NLU(LU_Container)
+            .GetVal(PD.GetBitsAtPos(LOffset, 2, 6)) + ' ';
+          T := T + 'InvIndex: ' + IntToStr(PD.GetByteAtPos(LOffset + 1)) + ' ';
+          T := T + 'Item: ' + NLU(LU_Item).GetVal(PD.GetWordAtPos(LOffset + 2));
+          AddSGRow(SG, LOffset, LName,
+            '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' + T, 1);
+
+        End
+        Else If ((LType = 'equipsetitemlist') or
+          (LType = 'equipsetbuildlist')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+
+          If (LSubOffset <= 0) then
+            LSubOffset := PD.GetByteAtPos($04);
+
+          C := 0;
+          N := LOffset;
+          While (C < LSubOffset) and (N <= PD.RawSize - 4) do
           Begin
-            // Position coordinates, float x3
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 12;
+            T := '';
+            If PD.GetBitAtPos(N, 0) Then
+              T := T + 'Active ';
+            If PD.GetBitAtPos(N, 1) Then
+              T := T + 'Bit1Set? ';
+            T := T + 'Bag: ' + NLU(LU_Container)
+              .GetVal(PD.GetBitsAtPos(N, 2, 6)) + ' ';
+            T := T + 'InvIndex: ' + IntToStr(PD.GetByteAtPos(N + 1)) + ' ';
+            T := T + 'Item: ' + NLU(LU_Item).GetVal(PD.GetWordAtPos(N + 2));
+            AddSGRow(SG, LOffset, LName + ' #' + IntToStr(C),
+              '0x' + IntToHex(PD.GetUInt32AtPos(N), 8) + ' => ' + T, 1);
+            C := C + 1;
+            N := N + 4;
+          End;
+        End
+        Else If (LType = 'abilityrecastlist') Then
+        Begin
+          // If (LOffset >= LastPos) Then LastPos := LOffset + 8 ;
+
+          If (LSubOffset <= 0) then
+            LSubOffset := 0;
+
+          C := 0;
+          N := LOffset;
+          While ((C < LSubOffset) or (LSubOffset = 0)) and
+            (N <= PD.RawSize - 8) do
+          Begin
+
             ColIndex := ColIndex + 1;
             If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 12, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName, 'X:' + FormatFloat('0.00',
-              PD.GetFloatAtPos(LOffset)) + ' Y:' + FormatFloat('0.00',
-              PD.GetFloatAtPos(LOffset + 4)) + ' Z:' + FormatFloat('0.00',
-              PD.GetFloatAtPos(LOffset + 8)), 12);
+              MarkREBytes(UpdateActiveRE, N, 8, DataCol(ColIndex));
 
-          End
-          Else
+            T := '';
+            T := T + 'ID: 0x' + IntToHex(PD.GetByteAtPos(N + 3), 2) + ' (' +
+              NLU(LU_ARecast).GetVal(PD.GetByteAtPos(N + 3)) + ') ';
+            T := T + 'Duration: ' + IntToStr(PD.GetWordAtPos(N)) + '  - ';
+            T := T + 'byte@2: 0x' + IntToHex(PD.GetByteAtPos(N + 2), 2) + ' ';
+            T := T + 'uint32@4: 0x' +
+              IntToHex(PD.GetUInt32AtPos(N + 4), 8) + ' ';
 
-            If (LType = 'dir') Then
+            If (PD.GetByteAtPos(N + 3) <> 0) or (C = 0) Then
+              AddSGRow(SG, N, LName + ' #' + IntToStr(C), T, 8);
+            // Only show used recasts
+
+            C := C + 1;
+            N := N + 8;
+          End;
+          LastPos := N - 1;
+
+        End
+        Else If ((LType = 'equipslot') or (LType = 'slot')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          // Slot
+          AddSGRow(SG, LOffset, LName,
+            EquipmentSlotName(PD.GetByteAtPos(LOffset)), 1);
+        End
+        Else If ((LType = 'container') or (LType = 'inventory') or
+          (LType = 'bag')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          // Inventory Bag
+          AddSGRow(SG, LOffset, LName,
+            ContainerName(PD.GetByteAtPos(LOffset)), 1);
+
+        End
+        Else If ((LType = 'zone') or (LType = 'map')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          // Inventory Bag
+          AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
+            ' => ' + NLU(LU_Zones).GetVal(PD.GetWordAtPos(LOffset)), 2);
+
+        End
+        Else If (LType = 'job') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          // Job
+          AddSGRow(SG, LOffset, LName, IntToStr(PD.GetByteAtPos(LOffset)) +
+            ' => ' + NLU(LU_Job).GetVal(PD.GetByteAtPos(LOffset)), 1);
+
+        End
+        Else If (LType = 'jobflags') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          // Job unlock flags
+          AddSGRow(SG, LOffset, LName,
+            '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
+            PD.GetJobflagsAtPos(LOffset), 4);
+        End
+        Else If (LType = 'partymemberflag') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          // Party Member Flags
+          C := PD.GetWordAtPos(LOffset);
+          T := '';
+          If ((C and $0001) <> 0) Then
+            T := T + '2nd_Party ';
+          If ((C and $0002) <> 0) Then
+            T := T + '3nd_Party ';
+          If ((C and $0004) <> 0) Then
+            T := T + 'Party_Leader ';
+          If ((C and $0008) <> 0) Then
+            T := T + 'Alliance_Leader ';
+          If ((C and $0010) <> 0) Then
+            T := T + 'Quartermaster ';
+          If ((C and $0020) <> 0) Then
+            T := T + 'Flag0x0020 ';
+          If ((C and $0040) <> 0) Then
+            T := T + 'Flag0x0040 ';
+          If ((C and $0080) <> 0) Then
+            T := T + 'Flag0x0080 ';
+          If ((C and $0100) <> 0) Then
+            T := T + 'LevelSync ';
+          If ((C and $0200) <> 0) Then
+            T := T + 'Flag0x0200 ';
+          If ((C and $0400) <> 0) Then
+            T := T + 'Flag0x0400 ';
+          If ((C and $0800) <> 0) Then
+            T := T + 'Flag0x0800 ';
+          If ((C and $1000) <> 0) Then
+            T := T + 'Flag0x1000 ';
+          If ((C and $2000) <> 0) Then
+            T := T + 'Flag0x2000 ';
+          If ((C and $4000) <> 0) Then
+            T := T + 'Flag0x4000 ';
+          If ((C and $8000) <> 0) Then
+            T := T + 'Flag0x8000 ';
+          If (T = '') Then
+            T := 'None';
+
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(C, 4) + ' => ' + T, 2);
+        End
+        Else If (LType = 'blacklistentry') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 20;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 20, DataCol(ColIndex));
+          // Blacklist entry
+          AddSGRow(SG, LOffset, LName,
+            'ID: 0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
+            PD.GetStringAtPos(LOffset + 4, 16), 20);
+        End
+        Else If (LType = 'meritentries') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+
+          // Subvalue is the adress for the counter to use
+          If LSubOffset > 1 Then
+            LSubOffset := PD.GetByteAtPos(LSubOffset);
+
+          While (N < PD.RawSize - 4) and (C < LSubOffset) Do
           Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 1;
-            // Direction as byte
-            ColIndex := ColIndex + 1;
-            If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName,
-              ByteToRotation(PD.GetByteAtPos(LOffset)), 1);
+            C := C + 1;
 
-          End
-          Else
-
-            If (LType = 'ms') Then
-          Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 4;
-            // Milliseconds
             ColIndex := ColIndex + 1;
             If Assigned(UpdateActiveRE) Then
               MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName,
-              MSToStr(PD.GetUInt32AtPos(LOffset)), 4);
 
-          End
-          Else
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C),
+              'ID: 0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' + NLU(LU_Merit)
+              .GetVal(PD.GetWordAtPos(N)) + ' - ' + 'Next Cost: ' +
+              IntToStr(PD.GetByteAtPos(N + 2)) + ' - ' + 'Value: ' +
+              IntToStr(PD.GetByteAtPos(N + 3)), 4);
 
-            If (LType = 'timestamp') Then
+            N := N + 4;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'playercheckitems') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+
+          // Subvalue is the adress for the counter to use, defaults to previous byte
+          If LSubOffset <= 1 Then
+            LSubOffset := PD.GetByteAtPos(LOffset - 1);
+
+          While (N < PD.RawSize - $1C) and (C < LSubOffset) Do
           Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 4;
-            // Milliseconds
+            C := C + 1;
+
             ColIndex := ColIndex + 1;
             If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName,
-              FFXITimeStampToStr(PD.GetUInt32AtPos(LOffset)), 4);
+              MarkREBytes(UpdateActiveRE, LOffset, $1C, DataCol(ColIndex));
 
-          End
-          Else
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C) + ' ID',
+              '0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' + NLU(LU_Item)
+              .GetVal(PD.GetWordAtPos(N)), 2);
+            AddSGRow(SG, N + 2, LName + ' #' + IntToStr(C) + ' Slot',
+              '0x' + IntToHex(PD.GetByteAtPos(N + 2), 2) + '  ' +
+              NLU(LU_EquipmentSlots).GetVal(PD.GetByteAtPos(N + 2)), 1);
+            AddSGRow(SG, N + 3, LName + ' #' + IntToStr(C) + ' ???',
+              '0x' + IntToHex(PD.GetByteAtPos(N + 3), 2) + '  ' +
+              IntToStr(PD.GetByteAtPos(N + 3)), 1);
+            AddSGRow(SG, N + 4, LName + ' #' + IntToStr(C) + ' ExtData',
+              PD.GetDataAtPos(N + 4, 24), 24);
 
-            If (LType = 'vanatime') Then
+            N := N + $1C;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'bufficons') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+
+          // Subvalue is count to use
+          If LSubOffset <= 1 Then
+            LSubOffset := 1;
+
+          While (N < PD.RawSize - 2) and (C < LSubOffset) Do
           Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 4;
-            // date/time
-            // DT := EncodeDate(1970,1,1) + PD.GetUInt32AtPos(LOffset) / 86400 ;
-            // AddSGRow(SG,LOffset,LName,FormatDateTime('yyyy/mm/dd hh:nn:ss',DT));
+            C := C + 1;
+
             ColIndex := ColIndex + 1;
             If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName,
-              DWordToVanaTime(PD.GetUInt32AtPos(LOffset)), 4);
-          End
-          Else
+              MarkREBytes(UpdateActiveRE, N, 2, DataCol(ColIndex));
 
-            If ((LType = 'frames') or (LType = 'frame')) Then
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C),
+              '0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' + NLU('buffs')
+              .GetVal(PD.GetWordAtPos(N)), 2);
+
+            N := N + 2;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'bufftimers') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+
+          // Subvalue is count to use
+          If LSubOffset <= 1 Then
+            LSubOffset := 1;
+
+          While (N < PD.RawSize - 4) and (C < LSubOffset) Do
           Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 4;
+            C := C + 1;
+
             ColIndex := ColIndex + 1;
             If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-            // Milliseconds
-            AddSGRow(SG, LOffset, LName,
-              FramesToStr(PD.GetUInt32AtPos(LOffset)), 4);
+              MarkREBytes(UpdateActiveRE, N, 4, DataCol(ColIndex));
 
-          End
-          Else
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C),
+              '0x' + IntToHex(PD.GetInt32AtPos(N), 8) + ' - ' +
+              MSToStr(PD.GetInt32AtPos(N)), 4);
 
-            If (Copy(LType, 1, 6) = 'string') Then
+            N := N + 4;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'buffs') Then
+        Begin
+          // If (LOffset >= LastPos) Then LastPos := LOffset ;
+
+          // Subvalue is count to use
+          If LSubOffset <= 1 Then
+            LSubOffset := 1;
+          If LSizeOffset <= 1 Then
+            LSizeOffset := 1;
+
+          N := LOffset;
+          C := 0;
+
+          While (N + (LSizeOffset * 2) < PD.RawSize - 4) and
+            (C < LSizeOffset) Do
           Begin
-            // Zero terminated String
             ColIndex := ColIndex + 1;
-            DataSize := StrToIntDef(Copy(LType, 7, Length(LType)), -1);
-
-            C := DataSize;
-            If C <= 0 Then
-              C := Length(PD.GetStringAtPos(LOffset)) + 1;
-
             If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset,
-                Length(PD.GetStringAtPos(LOffset, DataSize)) + 1,
+            Begin
+              MarkREBytes(UpdateActiveRE, N, 2, DataCol(ColIndex));
+              MarkREBytes(UpdateActiveRE, LOffset + (LSizeOffset * 2) + (C * 4),
+                4, DataCol(ColIndex));
+            End;
+
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C),
+              '0x' + IntToHex(PD.GetWordAtPos(N), 4) + ' (' +
+              IntToStr(PD.GetWordAtPos(N)) + ') => ' + NLU('buffs')
+              .GetVal(PD.GetWordAtPos(N)) + '  - EndTime: 0x' +
+              IntToHex(PD.GetUInt32AtPos(LOffset + (LSizeOffset * 2) + (C * 4)),
+              8) + '  ' + FFXITimeStampToStr(PD.GetInt32AtPos(LOffset +
+              (LSizeOffset * 2) + (C * 4))), 2);
+
+            N := N + 2;
+            C := C + 1;
+          End;
+          LastPos := LOffset + (LSizeOffset * 6) + 4;
+        End
+        Else If (LType = 'jobpointentries') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+
+          While (N < PD.RawSize - 4) Do
+          Begin
+            C := C + 1;
+
+            ColIndex := ColIndex + 1;
+            If Assigned(UpdateActiveRE) Then
+              MarkREBytes(UpdateActiveRE, LOffset + C - 1, 4,
                 DataCol(ColIndex));
 
-            AddSGRow(SG, LOffset, LName, PD.GetStringAtPos(LOffset,
-              DataSize), C);
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + C;
+            AddSGRow(SG, N, LName + ' #' + IntToStr(C),
+              'ID: 0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' +
+              NLU(LU_JobPoint).GetVal(PD.GetWordAtPos(N)) + ' - ' + 'Level: ' +
+              IntToStr(PD.GetBitsAtPos(N + 3, 2)) + ' - ' + '???: ' +
+              IntToStr(PD.GetBitsAtPos(N + 2, 10)), 1);
 
-          End
-          Else
+            N := N + 4;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'bitflaglist') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
 
-            If (LType = 'linkshellstring') Then
+          // Subvalue amount of bits to use, default to 64, just because
+          If LSubOffset <= 0 Then
+            LSubOffset := 64;
+
+          // Description will be the lookup filename for every field
+
+          N := LOffset;
+          C := -1;
+
+          FoundCount := 0;
+          While (N < PD.RawSize) and (C < LSubOffset) Do
           Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 16;
+            C := C + 1;
 
-            // Zero terminated String
-            ColIndex := ColIndex + 1;
-            If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 15, DataCol(ColIndex));
-
-            AddSGRow(SG, LOffset, LName, PD.GetPackedString16AtPos(LOffset,
-              EncodeLinkshellStr), 15);
-          End
-          Else
-
-            If (LType = 'inscribestring') Then
-          Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 16;
-
-            // Zero terminated String
-            ColIndex := ColIndex + 1;
-            If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 15, DataCol(ColIndex));
-
-            AddSGRow(SG, LOffset, LName, PD.GetPackedString16AtPos(LOffset,
-              EncodeItemStr), 15);
-          End
-          Else
-
-            If (Copy(LType, 1, 4) = 'data') Then
-          Begin
-            // simple byte data
-            ColIndex := ColIndex + 1;
-            DataSize := StrToIntDef(Copy(LType, 5, Length(LType)), 1);
-            If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, DataSize, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName, PD.GetDataAtPos(LOffset, DataSize),
-              DataSize);
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + DataSize;
-
-          End
-          Else
-
-            If ((LType = 'ip4') or (LType = 'ip')) Then
-          Begin
-            If (LOffset >= LastPos) Then
-              LastPos := LOffset + 4;
-            ColIndex := ColIndex + 1;
-            If Assigned(UpdateActiveRE) Then
-              MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-            AddSGRow(SG, LOffset, LName,
-              '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
-              PD.GetIP4AtPos(LOffset), 4);
-          End
-          Else
-
-            // Specialized items
-
-            If ((LType = 'equipsetitem') or (LType = 'equipsetbuild')) Then
+            If PD.GetBitsAtPos(LOffset + (C div 8), C mod 8, 1) > 0 Then
             Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 4;
+              FoundCount := FoundCount + 1;
+
               ColIndex := ColIndex + 1;
               If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-              // Slot
-              T := '';
-              If PD.GetBitAtPos(LOffset, 0) Then
-                T := T + 'Active ';
-              If PD.GetBitAtPos(LOffset, 1) Then
-                T := T + 'Bit1Set? ';
-              T := T + 'Bag: ' + NLU(LU_Container)
-                .GetVal(PD.GetBitsAtPos(LOffset, 2, 6)) + ' ';
-              T := T + 'InvIndex: ' +
-                IntToStr(PD.GetByteAtPos(LOffset + 1)) + ' ';
-              T := T + 'Item: ' + NLU(LU_Item)
-                .GetVal(PD.GetWordAtPos(LOffset + 2));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' + T, 1);
-
-            End
-            Else
-
-              If ((LType = 'equipsetitemlist') or
-              (LType = 'equipsetbuildlist')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 4;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-
-              If (LSubOffset <= 0) then
-                LSubOffset := PD.GetByteAtPos($04);
-
-              C := 0;
-              N := LOffset;
-              While (C < LSubOffset) and (N <= PD.RawSize - 4) do
-              Begin
-                T := '';
-                If PD.GetBitAtPos(N, 0) Then
-                  T := T + 'Active ';
-                If PD.GetBitAtPos(N, 1) Then
-                  T := T + 'Bit1Set? ';
-                T := T + 'Bag: ' + NLU(LU_Container)
-                  .GetVal(PD.GetBitsAtPos(N, 2, 6)) + ' ';
-                T := T + 'InvIndex: ' + IntToStr(PD.GetByteAtPos(N + 1)) + ' ';
-                T := T + 'Item: ' + NLU(LU_Item).GetVal(PD.GetWordAtPos(N + 2));
-                AddSGRow(SG, LOffset, LName + ' #' + IntToStr(C),
-                  '0x' + IntToHex(PD.GetUInt32AtPos(N), 8) + ' => ' + T, 1);
-                C := C + 1;
-                N := N + 4;
-              End;
-            End
-            Else
-
-              If (LType = 'abilityrecastlist') Then
-            Begin
-              // If (LOffset >= LastPos) Then LastPos := LOffset + 8 ;
-
-              If (LSubOffset <= 0) then
-                LSubOffset := 0;
-
-              C := 0;
-              N := LOffset;
-              While ((C < LSubOffset) or (LSubOffset = 0)) and
-                (N <= PD.RawSize - 8) do
-              Begin
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, N, 8, DataCol(ColIndex));
-
-                T := '';
-                T := T + 'ID: 0x' + IntToHex(PD.GetByteAtPos(N + 3), 2) + ' (' +
-                  NLU(LU_ARecast).GetVal(PD.GetByteAtPos(N + 3)) + ') ';
-                T := T + 'Duration: ' + IntToStr(PD.GetWordAtPos(N)) + '  - ';
-                T := T + 'byte@2: 0x' +
-                  IntToHex(PD.GetByteAtPos(N + 2), 2) + ' ';
-                T := T + 'uint32@4: 0x' + IntToHex(PD.GetUInt32AtPos(N + 4),
-                  8) + ' ';
-
-                If (PD.GetByteAtPos(N + 3) <> 0) or (C = 0) Then
-                  AddSGRow(SG, N, LName + ' #' + IntToStr(C), T, 8);
-                // Only show used recasts
-
-                C := C + 1;
-                N := N + 8;
-              End;
-              LastPos := N - 1;
-
-            End
-            Else
-
-              If ((LType = 'equipslot') or (LType = 'slot')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 1;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              // Slot
-              AddSGRow(SG, LOffset, LName,
-                EquipmentSlotName(PD.GetByteAtPos(LOffset)), 1);
-            End
-            Else
-
-              If ((LType = 'container') or (LType = 'inventory') or
-              (LType = 'bag')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 1;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              // Inventory Bag
-              AddSGRow(SG, LOffset, LName,
-                ContainerName(PD.GetByteAtPos(LOffset)), 1);
-
-            End
-            Else
-
-              If ((LType = 'zone') or (LType = 'map')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              // Inventory Bag
-              AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
-                ' => ' + NLU(LU_Zones).GetVal(PD.GetWordAtPos(LOffset)), 2);
-
-            End
-            Else
-
-              If (LType = 'job') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 1;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              // Job
-              AddSGRow(SG, LOffset, LName, IntToStr(PD.GetByteAtPos(LOffset)) +
-                ' => ' + NLU(LU_Job).GetVal(PD.GetByteAtPos(LOffset)), 1);
-
-            End
-            Else
-
-              If (LType = 'jobflags') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 4;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-              // Job unlock flags
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
-                PD.GetJobflagsAtPos(LOffset), 4);
-            End
-            Else
-
-              If (LType = 'partymemberflag') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              // Party Member Flags
-              C := PD.GetWordAtPos(LOffset);
-              T := '';
-              If ((C and $0001) <> 0) Then
-                T := T + '2nd_Party ';
-              If ((C and $0002) <> 0) Then
-                T := T + '3nd_Party ';
-              If ((C and $0004) <> 0) Then
-                T := T + 'Party_Leader ';
-              If ((C and $0008) <> 0) Then
-                T := T + 'Alliance_Leader ';
-              If ((C and $0010) <> 0) Then
-                T := T + 'Quartermaster ';
-              If ((C and $0020) <> 0) Then
-                T := T + 'Flag0x0020 ';
-              If ((C and $0040) <> 0) Then
-                T := T + 'Flag0x0040 ';
-              If ((C and $0080) <> 0) Then
-                T := T + 'Flag0x0080 ';
-              If ((C and $0100) <> 0) Then
-                T := T + 'LevelSync ';
-              If ((C and $0200) <> 0) Then
-                T := T + 'Flag0x0200 ';
-              If ((C and $0400) <> 0) Then
-                T := T + 'Flag0x0400 ';
-              If ((C and $0800) <> 0) Then
-                T := T + 'Flag0x0800 ';
-              If ((C and $1000) <> 0) Then
-                T := T + 'Flag0x1000 ';
-              If ((C and $2000) <> 0) Then
-                T := T + 'Flag0x2000 ';
-              If ((C and $4000) <> 0) Then
-                T := T + 'Flag0x4000 ';
-              If ((C and $8000) <> 0) Then
-                T := T + 'Flag0x8000 ';
-              If (T = '') Then
-                T := 'None';
-
-              AddSGRow(SG, LOffset, LName, '0x' + IntToHex(C, 4) +
-                ' => ' + T, 2);
-            End
-            Else
-
-              If (LType = 'blacklistentry') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 20;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 20, DataCol(ColIndex));
-              // Blacklist entry
-              AddSGRow(SG, LOffset, LName,
-                'ID: 0x' + IntToHex(PD.GetUInt32AtPos(LOffset), 8) + ' => ' +
-                PD.GetStringAtPos(LOffset + 4, 16), 20);
-            End
-            Else
-
-              If (LType = 'meritentries') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-
-              // Subvalue is the adress for the counter to use
-              If LSubOffset > 1 Then
-                LSubOffset := PD.GetByteAtPos(LSubOffset);
-
-              While (N < PD.RawSize - 4) and (C < LSubOffset) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C),
-                  'ID: 0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' +
-                  NLU(LU_Merit).GetVal(PD.GetWordAtPos(N)) + ' - ' +
-                  'Next Cost: ' + IntToStr(PD.GetByteAtPos(N + 2)) + ' - ' +
-                  'Value: ' + IntToStr(PD.GetByteAtPos(N + 3)), 4);
-
-                N := N + 4;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'playercheckitems') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-
-              // Subvalue is the adress for the counter to use, defaults to previous byte
-              If LSubOffset <= 1 Then
-                LSubOffset := PD.GetByteAtPos(LOffset - 1);
-
-              While (N < PD.RawSize - $1C) and (C < LSubOffset) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset, $1C, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C) + ' ID',
-                  '0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' + NLU(LU_Item)
-                  .GetVal(PD.GetWordAtPos(N)), 2);
-                AddSGRow(SG, N + 2, LName + ' #' + IntToStr(C) + ' Slot',
-                  '0x' + IntToHex(PD.GetByteAtPos(N + 2), 2) + '  ' +
-                  NLU(LU_EquipmentSlots).GetVal(PD.GetByteAtPos(N + 2)), 1);
-                AddSGRow(SG, N + 3, LName + ' #' + IntToStr(C) + ' ???',
-                  '0x' + IntToHex(PD.GetByteAtPos(N + 3), 2) + '  ' +
-                  IntToStr(PD.GetByteAtPos(N + 3)), 1);
-                AddSGRow(SG, N + 4, LName + ' #' + IntToStr(C) + ' ExtData',
-                  PD.GetDataAtPos(N + 4, 24), 24);
-
-                N := N + $1C;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'bufficons') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-
-              // Subvalue is count to use
-              If LSubOffset <= 1 Then
-                LSubOffset := 1;
-
-              While (N < PD.RawSize - 2) and (C < LSubOffset) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, N, 2, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C),
-                  '0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' + NLU('buffs')
-                  .GetVal(PD.GetWordAtPos(N)), 2);
-
-                N := N + 2;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'bufftimers') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-
-              // Subvalue is count to use
-              If LSubOffset <= 1 Then
-                LSubOffset := 1;
-
-              While (N < PD.RawSize - 4) and (C < LSubOffset) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, N, 4, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C),
-                  '0x' + IntToHex(PD.GetInt32AtPos(N), 8) + ' - ' +
-                  MSToStr(PD.GetInt32AtPos(N)), 4);
-
-                N := N + 4;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'buffs') Then
-            Begin
-              // If (LOffset >= LastPos) Then LastPos := LOffset ;
-
-              // Subvalue is count to use
-              If LSubOffset <= 1 Then
-                LSubOffset := 1;
-              If LSizeOffset <= 1 Then
-                LSizeOffset := 1;
-
-              N := LOffset;
-              C := 0;
-
-              While (N + (LSizeOffset * 2) < PD.RawSize - 4) and
-                (C < LSizeOffset) Do
-              Begin
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                Begin
-                  MarkREBytes(UpdateActiveRE, N, 2, DataCol(ColIndex));
-                  MarkREBytes(UpdateActiveRE, LOffset + (LSizeOffset * 2) +
-                    (C * 4), 4, DataCol(ColIndex));
-                End;
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C),
-                  '0x' + IntToHex(PD.GetWordAtPos(N), 4) + ' (' +
-                  IntToStr(PD.GetWordAtPos(N)) + ') => ' + NLU('buffs')
-                  .GetVal(PD.GetWordAtPos(N)) + '  - EndTime: 0x' +
-                  IntToHex(PD.GetUInt32AtPos(LOffset + (LSizeOffset * 2) +
-                  (C * 4)), 8) + '  ' + FFXITimeStampToStr
-                  (PD.GetInt32AtPos(LOffset + (LSizeOffset * 2) + (C * 4))), 2);
-
-                N := N + 2;
-                C := C + 1;
-              End;
-              LastPos := LOffset + (LSizeOffset * 6) + 4;
-            End
-            Else
-
-              If (LType = 'jobpointentries') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-
-              While (N < PD.RawSize - 4) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset + C - 1, 4,
-                    DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName + ' #' + IntToStr(C),
-                  'ID: 0x' + IntToHex(PD.GetWordAtPos(N), 4) + '  ' +
-                  NLU(LU_JobPoint).GetVal(PD.GetWordAtPos(N)) + ' - ' +
-                  'Level: ' + IntToStr(PD.GetBitsAtPos(N + 3, 2)) + ' - ' +
-                  '???: ' + IntToStr(PD.GetBitsAtPos(N + 2, 10)), 1);
-
-                N := N + 4;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'bitflaglist') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              // Subvalue amount of bits to use, default to 64, just because
-              If LSubOffset <= 0 Then
-                LSubOffset := 64;
-
-              // Description will be the lookup filename for every field
-
-              N := LOffset;
-              C := -1;
-
-              FoundCount := 0;
-              While (N < PD.RawSize) and (C < LSubOffset) Do
-              Begin
-                C := C + 1;
-
-                If PD.GetBitsAtPos(LOffset + (C div 8), C mod 8, 1) > 0 Then
-                Begin
-                  FoundCount := FoundCount + 1;
-
-                  ColIndex := ColIndex + 1;
-                  If Assigned(UpdateActiveRE) Then
-                    MarkREBytes(UpdateActiveRE, N, 1, DataCol(ColIndex));
-
-                  If NLU(LDescription).GetVal(C) <> '' Then
-                    AddSGRow(SG, N, LName + ' 0x' + IntToHex(C, 4),
-                      'Name: ' + NLU(LDescription).GetVal(C), 1)
-                  Else
-                    AddSGRow(SG, N, LName + ' 0x' + IntToHex(C, 4), '???', 1);
-                End;
-
-                If (C mod 8) = 7 Then
-                  N := N + 1;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-              If FoundCount <= 0 Then
-              Begin
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset, LSubOffset div 8,
-                    DataCol(ColIndex));
-
-                AddSGRow(SG, LOffset, LName, 'No bits set', LSubOffset div 8);
-              End;
-            End
-            Else
-
-              If (LType = 'shopitems') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              N := LOffset;
-              C := 0;
-              While (N < PD.RawSize - 1) Do
-              Begin
-                C := C + 1;
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset, $C, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName, '#' + IntToStr(C) + ': ' + 'Slot?: 0x' +
-                  IntToHex(PD.GetWordAtPos(N + 6), 4) + ' - ' + NLU(LU_Item)
-                  .GetVal(PD.GetWordAtPos(N + 4)) + ' => Gil: ' +
-                  IntToStr(PD.GetUInt32AtPos(N)) + ' Skill: 0x' +
-                  IntToHex(PD.GetWordAtPos(N + 8), 4) + ' Rank: 0x' +
-                  IntToHex(PD.GetWordAtPos(N + $A), 4), 14);
-
-                N := N + $C;
-                If (N >= LastPos) Then
-                  LastPos := N;
-              End;
-            End
-            Else
-
-              If (LType = 'guildshopitems') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset;
-
-              For C := 0 to 29 Do
-              Begin
-                N := LOffset + (C * 8);
-
-                ColIndex := ColIndex + 1;
-                If Assigned(UpdateActiveRE) Then
-                  MarkREBytes(UpdateActiveRE, LOffset, 8, DataCol(ColIndex));
-
-                AddSGRow(SG, N, LName, '#' + IntToStr(C + 1) + ': ' + 'Item: 0x'
-                  + IntToHex(PD.GetWordAtPos(N), 4) + ' - ' + NLU(LU_Item)
-                  .GetVal(PD.GetWordAtPos(N)) + ' => Price: ' +
-                  IntToStr(PD.GetUInt32AtPos(N + 4)) + ' - Stock: ' +
-                  IntToStr(PD.GetByteAtPos(N + 2)) + ' / ' +
-                  IntToStr(PD.GetWordAtPos(N + 3)), 8);
-
-                If (N + 8 >= LastPos) Then
-                  LastPos := N + 8;
-              End;
-            End
-            Else
-
-              If ((LType = 'item') or (LType = 'itemid')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + '  ' +
-                IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Item)
-                .GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-head') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-body') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-hands') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-legs') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-feet') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-main') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'item-sub') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If ((LType = 'item-ranged') or (LType = 'item-range')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' +
-                NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If ((LType = 'music') or (LType = 'bgm')) Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + '  ' +
-                IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Music)
-                .GetVal(PD.GetWordAtPos(LOffset)), 2);
-            End
-            Else
-
-              If (LType = 'weather') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              // Weather
-              AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
-                ' => ' + NLU(LU_Weather).GetVal(PD.GetWordAtPos(LOffset)), 2);
-
-            End
-            Else
-
-              If (LType = 'nation') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 1;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              Case PD.GetByteAtPos(LOffset) Of
-                0:
-                  S := 'San d''Oria';
-                1:
-                  S := 'Bastok';
-                2:
-                  S := 'Windurst';
-                3:
-                  S := 'Jeuno?';
+                MarkREBytes(UpdateActiveRE, N, 1, DataCol(ColIndex));
+
+              If NLU(LDescription).GetVal(C) <> '' Then
+                AddSGRow(SG, N, LName + ' 0x' + IntToHex(C, 4),
+                  'Name: ' + NLU(LDescription).GetVal(C), 1)
               Else
-                S := 'Nation? ' + IntToStr(PD.GetByteAtPos(LOffset))
-              End;
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetByteAtPos(LOffset), 2) + ' => ' + S);
-            End
-            Else
-
-              If (LType = 'unity') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 1;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              Case PD.GetByteAtPos(LOffset) Of
-                0:
-                  S := 'None';
-                1:
-                  S := 'Pieuje';
-                2:
-                  S := 'Ayame';
-                3:
-                  S := 'Invincible Shield';
-                4:
-                  S := 'Apururu';
-                5:
-                  S := 'Maat';
-                6:
-                  S := 'Aldo';
-                7:
-                  S := 'Jakoh Wahcondalo';
-                8:
-                  S := 'Naja Salaheem';
-                9:
-                  S := 'Flavira';
-                10:
-                  S := 'Sylvie';
-                11:
-                  S := 'Yoran-Oran';
-              Else
-                S := 'Unity? ' + IntToStr(PD.GetByteAtPos(LOffset))
-              End;
-              AddSGRow(SG, LOffset, LName,
-                '0x' + IntToHex(PD.GetByteAtPos(LOffset), 2) + ' => ' + S);
-            End
-            Else
-
-              If (LType = 'combatskill') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              // Combat Skill
-              If ((PD.GetWordAtPos(LOffset) and $8000) <> 0) Then
-                AddSGRow(SG, LOffset, LName,
-                  '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                  IntToStr(PD.GetWordAtPos(LOffset) mod $8000) + ' (Capped)', 2)
-              Else
-                AddSGRow(SG, LOffset, LName,
-                  '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
-                  IntToStr(PD.GetWordAtPos(LOffset) mod $8000), 2);
-            End
-            Else
-
-              If (LType = 'craftskill') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 2;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
-              // Combat Skill
-              If ((PD.GetWordAtPos(LOffset) and $8000) <> 0) Then
-                AddSGRow(SG, LOffset, LName,
-                  '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => Rank:' +
-                  IntToStr(PD.GetWordAtPos(LOffset) and $001F) + ' Level:' +
-                  IntToStr(((PD.GetWordAtPos(LOffset) shr 5) and $03FF)) +
-                  ' (Capped)', 2)
-              Else
-                AddSGRow(SG, LOffset, LName,
-                  '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => Rank:' +
-                  IntToStr(PD.GetWordAtPos(LOffset) and $001F) + ' Level:' +
-                  IntToStr(((PD.GetWordAtPos(LOffset) shr 5) and $03FF)), 2);
-            End
-            Else
-
-              If (LType = 'jobpoints') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 6;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 6, DataCol(ColIndex));
-              // Job unlock flags
-              AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
-                ' CP   ' + IntToStr(PD.GetWordAtPos(LOffset + 2)) + ' JP   ' +
-                IntToStr(PD.GetWordAtPos(LOffset + 4)) + ' Spent JP', 6);
-            End
-            Else
-
-              If (LType = 'roequest') Then
-            Begin
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 4;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
-              // Job unlock flags
-              C := PD.GetBitsAtPos(LOffset, 0, 12);
-              AddSGRow(SG, LOffset, LName, 'ID: 0x' + IntToHex(C, 3) + ' => (' +
-                NLU(LU_RoE).GetVal(C) + ')  Progress: ' +
-                IntToStr(PD.GetBitsAtPos(LOffset + 1, 4, 20)) + ' / ' +
-                NLU(LU_RoE).GetExtra(C), 4);
-            End
-            Else
-
-              If (LType = 'packet-in-0x028') Then
-            // Need to build a custom parser for this (atm)
-            Begin
-              // If (LOffset >= LastPos) Then LastPos := LOffset ;
-              LastPos := AddPacketInfoIn0x028(PD, SG);
-              {
-                While (N < PD.RawSize-1) Do
-                Begin
-                C := C + 1 ;
-
-                ColIndex := ColIndex + 1 ;
-                If Assigned(UpdateActiveRE) Then MarkREBytes(UpdateActiveRE,LOffset,$C,DataCol(ColIndex));
-
-
-                AddSGRow(SG,N,LName,
-                '#'+IntToStr(C)+ ': ' +
-                'Slot?: 0x'+IntToHex(PD.GetWordAtPos(N+6),4)+ ' - ' +
-                ItemNames.GetVal(PD.GetWordAtPos(N+4)) +
-                ' => Gil: '+IntToStr(PD.GetUInt32AtPos(N)) +
-                ' Skill: 0x'+IntToHex(PD.GetWordAtPos(N+8),4)+
-                ' Rank: 0x'+IntToHex(PD.GetWordAtPos(N+$A),4) ,14);
-
-                N := N + $C ;
-                If (N >= LastPos) Then LastPos := N ;
-                End;
-              }
-            End
-            Else
-
-            Begin
-              // this is a what now ?
-              If (LOffset >= LastPos) Then
-                LastPos := LOffset + 0;
-              ColIndex := ColIndex + 1;
-              If Assigned(UpdateActiveRE) Then
-                MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
-              AddSGRow(SG, LOffset, LName, 'unknown type ' + LType);
+                AddSGRow(SG, N, LName + ' 0x' + IntToHex(C, 4), '???', 1);
             End;
+
+            If (C mod 8) = 7 Then
+              N := N + 1;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+          If FoundCount <= 0 Then
+          Begin
+            ColIndex := ColIndex + 1;
+            If Assigned(UpdateActiveRE) Then
+              MarkREBytes(UpdateActiveRE, LOffset, LSubOffset div 8,
+                DataCol(ColIndex));
+
+            AddSGRow(SG, LOffset, LName, 'No bits set', LSubOffset div 8);
+          End;
+        End
+        Else If (LType = 'shopitems') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          N := LOffset;
+          C := 0;
+          While (N < PD.RawSize - 1) Do
+          Begin
+            C := C + 1;
+
+            ColIndex := ColIndex + 1;
+            If Assigned(UpdateActiveRE) Then
+              MarkREBytes(UpdateActiveRE, LOffset, $C, DataCol(ColIndex));
+
+            AddSGRow(SG, N, LName, '#' + IntToStr(C) + ': ' + 'Slot?: 0x' +
+              IntToHex(PD.GetWordAtPos(N + 6), 4) + ' - ' + NLU(LU_Item)
+              .GetVal(PD.GetWordAtPos(N + 4)) + ' => Gil: ' +
+              IntToStr(PD.GetUInt32AtPos(N)) + ' Skill: 0x' +
+              IntToHex(PD.GetWordAtPos(N + 8), 4) + ' Rank: 0x' +
+              IntToHex(PD.GetWordAtPos(N + $A), 4), 14);
+
+            N := N + $C;
+            If (N >= LastPos) Then
+              LastPos := N;
+          End;
+        End
+        Else If (LType = 'guildshopitems') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset;
+
+          For C := 0 to 29 Do
+          Begin
+            N := LOffset + (C * 8);
+
+            ColIndex := ColIndex + 1;
+            If Assigned(UpdateActiveRE) Then
+              MarkREBytes(UpdateActiveRE, LOffset, 8, DataCol(ColIndex));
+
+            AddSGRow(SG, N, LName, '#' + IntToStr(C + 1) + ': ' + 'Item: 0x' +
+              IntToHex(PD.GetWordAtPos(N), 4) + ' - ' + NLU(LU_Item)
+              .GetVal(PD.GetWordAtPos(N)) + ' => Price: ' +
+              IntToStr(PD.GetUInt32AtPos(N + 4)) + ' - Stock: ' +
+              IntToStr(PD.GetByteAtPos(N + 2)) + ' / ' +
+              IntToStr(PD.GetWordAtPos(N + 3)), 8);
+
+            If (N + 8 >= LastPos) Then
+              LastPos := N + 8;
+          End;
+        End
+        Else If ((LType = 'item') or (LType = 'itemid')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Item)
+            .GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-head') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $1000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-body') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $2000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-hands') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $3000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-legs') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $4000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-feet') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $5000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-main') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $6000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'item-sub') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $7000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If ((LType = 'item-ranged') or (LType = 'item-range')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + ' => ' + IntToStr(PD.GetWordAtPos(LOffset) - $8000) + ' ' +
+            NLU(LU_ItemModel).GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If ((LType = 'music') or (LType = 'bgm')) Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetWordAtPos(LOffset),
+            4) + '  ' + IntToStr(PD.GetWordAtPos(LOffset)) + ' ' + NLU(LU_Music)
+            .GetVal(PD.GetWordAtPos(LOffset)), 2);
+        End
+        Else If (LType = 'weather') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          // Weather
+          AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
+            ' => ' + NLU(LU_Weather).GetVal(PD.GetWordAtPos(LOffset)), 2);
+
+        End
+        Else If (LType = 'nation') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          Case PD.GetByteAtPos(LOffset) Of
+            0:
+              S := 'San d''Oria';
+            1:
+              S := 'Bastok';
+            2:
+              S := 'Windurst';
+            3:
+              S := 'Jeuno?';
+          Else
+            S := 'Nation? ' + IntToStr(PD.GetByteAtPos(LOffset))
+          End;
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetByteAtPos(LOffset),
+            2) + ' => ' + S);
+        End
+        Else If (LType = 'unity') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 1;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          Case PD.GetByteAtPos(LOffset) Of
+            0:
+              S := 'None';
+            1:
+              S := 'Pieuje';
+            2:
+              S := 'Ayame';
+            3:
+              S := 'Invincible Shield';
+            4:
+              S := 'Apururu';
+            5:
+              S := 'Maat';
+            6:
+              S := 'Aldo';
+            7:
+              S := 'Jakoh Wahcondalo';
+            8:
+              S := 'Naja Salaheem';
+            9:
+              S := 'Flavira';
+            10:
+              S := 'Sylvie';
+            11:
+              S := 'Yoran-Oran';
+          Else
+            S := 'Unity? ' + IntToStr(PD.GetByteAtPos(LOffset))
+          End;
+          AddSGRow(SG, LOffset, LName, '0x' + IntToHex(PD.GetByteAtPos(LOffset),
+            2) + ' => ' + S);
+        End
+        Else If (LType = 'combatskill') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          // Combat Skill
+          If ((PD.GetWordAtPos(LOffset) and $8000) <> 0) Then
+            AddSGRow(SG, LOffset, LName,
+              '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
+              IntToStr(PD.GetWordAtPos(LOffset) mod $8000) + ' (Capped)', 2)
+          Else
+            AddSGRow(SG, LOffset, LName,
+              '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => ' +
+              IntToStr(PD.GetWordAtPos(LOffset) mod $8000), 2);
+        End
+        Else If (LType = 'craftskill') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 2;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 2, DataCol(ColIndex));
+          // Combat Skill
+          If ((PD.GetWordAtPos(LOffset) and $8000) <> 0) Then
+            AddSGRow(SG, LOffset, LName,
+              '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => Rank:' +
+              IntToStr(PD.GetWordAtPos(LOffset) and $001F) + ' Level:' +
+              IntToStr(((PD.GetWordAtPos(LOffset) shr 5) and $03FF)) +
+              ' (Capped)', 2)
+          Else
+            AddSGRow(SG, LOffset, LName,
+              '0x' + IntToHex(PD.GetWordAtPos(LOffset), 4) + ' => Rank:' +
+              IntToStr(PD.GetWordAtPos(LOffset) and $001F) + ' Level:' +
+              IntToStr(((PD.GetWordAtPos(LOffset) shr 5) and $03FF)), 2);
+        End
+        Else If (LType = 'jobpoints') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 6;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 6, DataCol(ColIndex));
+          // Job unlock flags
+          AddSGRow(SG, LOffset, LName, IntToStr(PD.GetWordAtPos(LOffset)) +
+            ' CP   ' + IntToStr(PD.GetWordAtPos(LOffset + 2)) + ' JP   ' +
+            IntToStr(PD.GetWordAtPos(LOffset + 4)) + ' Spent JP', 6);
+        End
+        Else If (LType = 'roequest') Then
+        Begin
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 4;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 4, DataCol(ColIndex));
+          // Job unlock flags
+          C := PD.GetBitsAtPos(LOffset, 0, 12);
+          AddSGRow(SG, LOffset, LName, 'ID: 0x' + IntToHex(C, 3) + ' => (' +
+            NLU(LU_RoE).GetVal(C) + ')  Progress: ' +
+            IntToStr(PD.GetBitsAtPos(LOffset + 1, 4, 20)) + ' / ' + NLU(LU_RoE)
+            .GetExtra(C), 4);
+        End
+        Else If (LType = 'packet-in-0x028') Then
+        Begin
+          // Need to build a custom parser for this (atm)
+          // If (LOffset >= LastPos) Then LastPos := LOffset ;
+          LastPos := AddPacketInfoIn0x028(PD, SG);
+        End
+        Else
+
+        Begin
+          // this is a what now ?
+          If (LOffset >= LastPos) Then
+            LastPos := LOffset + 0;
+          ColIndex := ColIndex + 1;
+          If Assigned(UpdateActiveRE) Then
+            MarkREBytes(UpdateActiveRE, LOffset, 1, DataCol(ColIndex));
+          AddSGRow(SG, LOffset, LName, 'unknown type ' + LType);
+        End;
 
       End; // end linecount >= 2
 
