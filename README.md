@@ -1,5 +1,15 @@
 # PacketViewerLogViewer
 
+Note:
+This Delphi version of the PVLV project is no longer supported by me.
+If you want a more feature rich and up to date version, please visit the newer C# version of the project.
+
+https://github.com/ZeromusXYZ/PVLV
+
+<br><br>
+
+
+
 This program is meant to be used with .log files made with the Windower4 Packetviewer addon.
 It is also able to read Ashita Packeteer .txt log files.
 
